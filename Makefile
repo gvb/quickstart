@@ -58,18 +58,24 @@
 # * various Luminary Micro EKs.
 # *************************************************************************/
 
-RTOS_SOURCE_DIR=../../../Source
-DEMO_COMMON_DIR=../../Common/Minimal
-DEMO_INCLUDE_DIR=../../Common/include
-UIP_COMMON_DIR=../../Common/ethernet/uIP/uip-1.0/uip
-LUMINARY_DRIVER_DIR=../../Common/drivers/LuminaryMicro
+FREERTOS=../FreeRTOS
+
+RTOS_SOURCE_DIR=$(FREERTOS)/Source
+DEMO_COMMON_DIR=$(FREERTOS)/Common/Minimal
+DEMO_INCLUDE_DIR=$(FREERTOS)/Common/include
+UIP_COMMON_DIR=$(FREERTOS)/Common/ethernet/uIP/uip-1.0/uip
+LUMINARY_DRIVER_DIR=$(FREERTOS)/Common/drivers/LuminaryMicro
 
 CC=arm-none-eabi-gcc
 OBJCOPY=arm-none-eabi-objcopy
 LDSCRIPT=standalone.ld
+RM=rm
+
+# Main program root name
+PROG=RTOSDemo
 
 # should use --gc-sections but the debugger does not seem to be able to cope with the option.
-LINKER_FLAGS=-nostartfiles -Xlinker -oRTOSDemo.axf -Xlinker -M -Xlinker -Map=rtosdemo.map -Xlinker --no-gc-sections
+LINKER_FLAGS=-nostartfiles -Xlinker -o$(PROG).axf -Xlinker -M -Xlinker -Map=$(PROG).map -Xlinker --no-gc-sections
 
 DEBUG=-g
 OPTIM=-O0
@@ -118,12 +124,12 @@ LIBS= $(LUMINARY_DRIVER_DIR)/arm-none-eabi-gcc/libdriver.a $(LUMINARY_DRIVER_DIR
 
 OBJS = $(SOURCE:.c=.o)
 
-all: RTOSDemo.bin
+all: $(PROG).bin
 	 
-RTOSDemo.bin : RTOSDemo.axf
-	$(OBJCOPY) RTOSDemo.axf -O binary RTOSDemo.bin
+$(PROG).bin : $(PROG).axf
+	$(OBJCOPY) $(PROG).axf -O binary $(PROG).bin
 
-RTOSDemo.axf : $(OBJS) startup.o Makefile
+$(PROG).axf : $(OBJS) startup.o Makefile
 	$(CC) $(CFLAGS) $(OBJS) startup.o $(LIBS) $(LINKER_FLAGS)
 
 $(OBJS) : %.o : %.c Makefile FreeRTOSConfig.h
@@ -134,8 +140,6 @@ startup.o : startup.c Makefile
 		
 clean :
 	touch Makefile
-	cs-rm $(OBJS)
-	
-
-
+	$(RM) -f $(OBJS)
+	$(RM) -f $(PROG).axf $(PROG).bin $(PROG).map startup.o
 
