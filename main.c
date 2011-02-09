@@ -289,6 +289,8 @@ void prvSetupHardware( void )
 	GPIODirModeSet( GPIO_PORTF_BASE, (GPIO_PIN_2 | GPIO_PIN_3), GPIO_DIR_MODE_HW );
 	GPIOPadConfigSet( GPIO_PORTF_BASE, (GPIO_PIN_2 | GPIO_PIN_3 ), GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD );
 
+	SysCtlPeripheralEnable( SYSCTL_PERIPH_ADC0 );
+
 	vParTestInitialise();
 }
 /*-----------------------------------------------------------*/

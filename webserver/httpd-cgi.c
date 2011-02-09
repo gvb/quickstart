@@ -54,6 +54,11 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <hw_types.h>
+#include <hw_memmap.h>
+#include <hw_adc.h>
+#include <adc.h>
+
 HTTPD_CGI_CALL(file, "file-stats", file_stats);
 HTTPD_CGI_CALL(tcp, "tcp-connections", tcp_stats);
 HTTPD_CGI_CALL(net, "net-stats", net_stats);
@@ -235,6 +240,40 @@ extern unsigned long uxParTestGetLED( unsigned long uxLED );
 
 static unsigned short generate_io_state( void *arg )
 {
+#define VREF 3000	/* millivolts */
+	unsigned long adc[5];	/* library defines it unsigned long */
+	int samples;
+
+	ADCHardwareOversampleConfigure(ADC0_BASE, ADC_SAC_AVG_OFF);
+	ADCReferenceSet(ADC0_BASE, ADC_REF_INT);
+
+	/*
+	 * Create a sample sequence for our A/D (what inputs to sample).
+	 */
+	ADCSequenceConfigure(ADC0_BASE, 0, ADC_TRIGGER_PROCESSOR, 0);
+	ADCSequenceStepConfigure(ADC0_BASE, 0, 0, ADC_CTL_CH0);
+	ADCSequenceStepConfigure(ADC0_BASE, 0, 1, ADC_CTL_CH1);
+	ADCSequenceStepConfigure(ADC0_BASE, 0, 2, ADC_CTL_CH2);
+	ADCSequenceStepConfigure(ADC0_BASE, 0, 3, ADC_CTL_CH3);
+	ADCSequenceStepConfigure(ADC0_BASE, 0, 4, ADC_CTL_TS |  /* temp */
+		ADC_CTL_IE | ADC_CTL_END);
+	ADCSequenceEnable(ADC0_BASE, 0);
+	ADCProcessorTrigger(ADC0_BASE, 0);
+
+	/*
+	 * Wait until the sample sequence has completed.
+	 */
+	while(!ADCIntStatus(ADC0_BASE, 0, false))
+		;
+	/*
+	 * Read the value from the ADC.
+	 */
+	samples = ADCSequenceDataGet(ADC0_BASE, 0, adc);
+	if(samples != (sizeof(adc) / sizeof(unsigned long))) {
+		//gvb//spewPrintf("A/D samples: is %d, should be 5.\n", samples);
+	}
+
+
 	if( uxParTestGetLED( 0 ) )
 	{
 		pcStatus = "checked";
@@ -244,10 +283,26 @@ static unsigned short generate_io_state( void *arg )
 		pcStatus = "";
 	}
 
-	sprintf( uip_appdata,
-		"<input type=\"checkbox\" name=\"LED0\" value=\"1\" %s>LED"\
-		"<p>"\
-		"<input type=\"text\" name=\"LCD\" value=\"Enter LCD text\" size=\"16\">",
+	sprintf( uip_appdata, "\
+<table> \
+<tr><th> Analog			</th><th> Value </th><th> mVolts </th><th> Eng Units </th></tr> \
+<tr><td> NE28v			</td><td> %u </td><td> %u </td><td> </td></tr> \
+<tr><td> 2.048 vRef		</td><td> %u </td><td> %u </td><td> </td></tr> \
+<tr><td> BS P5v Monitor		</td><td> %u </td><td> %u </td><td> </td></tr> \
+<tr><td> Board temperature	</td><td> %u </td><td> %u </td><td> </td></tr> \
+<tr><td> Processor temperature	</td><td> %u </td><td> %u </td><td> %u&deg;C</td></tr> \
+</table> \
+<input type=\"checkbox\" name=\"LED0\" value=\"1\" %s>LED \
+<p> \
+<input type=\"text\" name=\"LCD\" value=\"Enter LCD text\" size=\"16\">",
+		adc[0], adc[0] * VREF / 1024,
+		adc[1], adc[1] * VREF / 1024,
+		adc[2], adc[2] * VREF / 1024,
+		adc[3], adc[3] * VREF / 1024,
+		adc[4], adc[4] * VREF / 1024,
+		/* SENSO = 2.7 - ((T + 55) / 75) */
+		/* T = ((2.7 - SENSO) * 75) - 55 */
+		(((2700 - (adc[4] * VREF) / 1024) * 75) - 55000) / 1000,
 		pcStatus );
 
 	return strlen( uip_appdata );
