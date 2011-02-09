@@ -715,7 +715,8 @@ OSRAM128x64x4Enable(unsigned long ulFrequency)
     //
     // Configure the SSI0 port for master mode.
     //
-    SSIConfig(SSI0_BASE, SSI_FRF_MOTO_MODE_2, SSI_MODE_MASTER, ulFrequency, 8);
+    SSIConfigSetExpClk(SSI0_BASE, SysCtlClockGet(), SSI_FRF_MOTO_MODE_2,
+                       SSI_MODE_MASTER, ulFrequency, 8);
 
     //
     // (Re)Enable SSI control of the FSS pin.
@@ -732,7 +733,7 @@ OSRAM128x64x4Enable(unsigned long ulFrequency)
     //
     // Drain the receive fifo.
     //
-    while(SSIDataNonBlockingGet(SSI0_BASE, &ulTemp) != 0)
+    while(SSIDataGetNonBlocking(SSI0_BASE, &ulTemp) != 0)
     {
     }
 
@@ -770,7 +771,7 @@ OSRAM128x64x4Disable(void)
     //
     // Drain the receive fifo.
     //
-    while(SSIDataNonBlockingGet(SSI0_BASE, &ulTemp) != 0)
+    while(SSIDataGetNonBlocking(SSI0_BASE, &ulTemp) != 0)
     {
     }
 

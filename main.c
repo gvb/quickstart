@@ -274,7 +274,7 @@ void prvSetupHardware( void )
 {
     /* If running on Rev A2 silicon, turn the LDO voltage up to 2.75V.  This is
     a workaround to allow the PLL to operate reliably. */
-    if( DEVICE_IS_REVA2 )
+    if( REVISION_IS_A2 )
     {
         SysCtlLDOSet( SYSCTL_LDO_2_75V );
     }
@@ -381,7 +381,7 @@ void ( *vOLEDClear )( void ) = NULL;
 
 	/* Map the OLED access functions to the driver functions that are appropriate
 	for the evaluation kit being used. */
-	switch( HWREG( SYSCTL_DID1 ) & SYSCTL_DID1_PRTNO_MASK )
+	switch( HWREG( SYSCTL_DID1 ) & SYSCTL_DID1_PRTNO_M )
 	{
 		case SYSCTL_DID1_PRTNO_6965	:
 		case SYSCTL_DID1_PRTNO_2965	:	vOLEDInit = OSRAM128x64x4Init;

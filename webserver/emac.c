@@ -119,7 +119,8 @@ portBASE_TYPE xReturn;
     EthernetIntClear( ETH_BASE, ulTemp );
 
 	/* Initialise the MAC and connect. */
-    EthernetInit( ETH_BASE );
+    EthernetInitExpClk( ETH_BASE, SysCtlClockGet() );
+
     EthernetConfigSet( ETH_BASE, ( ETH_CFG_TX_DPLXEN | ETH_CFG_TX_CRCEN | ETH_CFG_TX_PADEN ) );
     EthernetEnable( ETH_BASE );
 

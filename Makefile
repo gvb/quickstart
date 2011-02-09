@@ -59,12 +59,14 @@
 # *************************************************************************/
 
 FREERTOS=../FreeRTOS
+STELLARISWARE=../StellarisWare-ek-lm3s-8962-6734
+GRAPHICS_LIB=./Graphics
 
 RTOS_SOURCE_DIR=$(FREERTOS)/Source
 DEMO_COMMON_DIR=$(FREERTOS)/Common/Minimal
 DEMO_INCLUDE_DIR=$(FREERTOS)/Common/include
 UIP_COMMON_DIR=$(FREERTOS)/Common/ethernet/uIP/uip-1.0/uip
-LUMINARY_DRIVER_DIR=$(FREERTOS)/Common/drivers/LuminaryMicro
+LUMINARY_DRIVER_LIB=$(STELLARISWARE)/driverlib/gcc
 
 CC=arm-none-eabi-gcc
 OBJCOPY=arm-none-eabi-objcopy
@@ -83,8 +85,9 @@ OPTIM=-O0
 
 CFLAGS=$(DEBUG) -I . -I $(RTOS_SOURCE_DIR)/include -I $(RTOS_SOURCE_DIR)/portable/GCC/ARM_CM3 \
 		-I $(DEMO_INCLUDE_DIR) -D GCC_ARMCM3_LM3S102 -D inline= -mthumb -mcpu=cortex-m3 $(OPTIM) -T$(LDSCRIPT) \
-		-D PACK_STRUCT_END=__attribute\(\(packed\)\) -D ALIGN_STRUCT_END=__attribute\(\(aligned\(4\)\)\) -D sprintf=usprintf -D snprintf=usnprintf -D printf=uipprintf \
-		-I $(UIP_COMMON_DIR) -I ./webserver -ffunction-sections -fdata-sections -I $(LUMINARY_DRIVER_DIR)
+		-D PACK_STRUCT_END=__attribute\(\(packed\)\) -D ALIGN_STRUCT_END=__attribute\(\(aligned\(4\)\)\) -D sprintf=usprintf -D snprintf=usnprintf -D printf=uipprintf -D DEPRECATED \
+		-I $(UIP_COMMON_DIR) -I ./webserver -ffunction-sections -fdata-sections \
+		-I $(STELLARISWARE) -I $(STELLARISWARE)/driverlib -I $(STELLARISWARE)/inc -I $(GRAPHICS_LIB)
 
 SOURCE=	main.c \
 		timertest.c \
@@ -92,7 +95,7 @@ SOURCE=	main.c \
 		rit128x96x4.c \
 		osram128x64x4.c \
 		formike128x128x16.c \
-		$(LUMINARY_DRIVER_DIR)/ustdlib.c \
+		$(STELLARISWARE)/utils/ustdlib.c \
 		$(DEMO_COMMON_DIR)/BlockQ.c \
 		$(DEMO_COMMON_DIR)/blocktim.c \
 		$(DEMO_COMMON_DIR)/death.c \
@@ -120,7 +123,7 @@ SOURCE=	main.c \
 		$(RTOS_SOURCE_DIR)/portable/GCC/ARM_CM3/port.c \
 		$(RTOS_SOURCE_DIR)/portable/MemMang/heap_2.c
 
-LIBS= $(LUMINARY_DRIVER_DIR)/arm-none-eabi-gcc/libdriver.a $(LUMINARY_DRIVER_DIR)/arm-none-eabi-gcc/libgr.a
+LIBS= $(LUMINARY_DRIVER_LIB)/libdriver.a $(GRAPHICS_LIB)/libgr.a
 
 OBJS = $(SOURCE:.c=.o)
 
