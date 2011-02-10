@@ -59,7 +59,7 @@
 # *************************************************************************/
 
 FREERTOS=../FreeRTOS
-STELLARISWARE=../StellarisWare-ek-lm3s-8962-6734
+STELLARISWARE=../StellarisWare-ek-lm3s-8962
 GRAPHICS_LIB=./Graphics
 
 RTOS_SOURCE_DIR=$(FREERTOS)/Source
