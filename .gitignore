@@ -1,4 +1,5 @@
 *.o
-RTOSDemo.bin
-RTOSDemo.axf
-RTOSDemo.map
+*.d
+*.bin
+*.axf
+*.map

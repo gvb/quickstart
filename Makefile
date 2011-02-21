@@ -1,66 +1,16 @@
-#/*
-#    FreeRTOS V6.1.0 - Copyright (C) 2010 Real Time Engineers Ltd.
 #
-#    ***************************************************************************
-#    *                                                                         *
-#    * If you are:                                                             *
-#    *                                                                         *
-#    *    + New to FreeRTOS,                                                   *
-#    *    + Wanting to learn FreeRTOS or multitasking in general quickly       *
-#    *    + Looking for basic training,                                        *
-#    *    + Wanting to improve your FreeRTOS skills and productivity           *
-#    *                                                                         *
-#    * then take a look at the FreeRTOS books - available as PDF or paperback  *
-#    *                                                                         *
-#    *        "Using the FreeRTOS Real Time Kernel - a Practical Guide"        *
-#    *                  http://www.FreeRTOS.org/Documentation                  *
-#    *                                                                         *
-#    * A pdf reference manual is also available.  Both are usually delivered   *
-#    * to your inbox within 20 minutes to two hours when purchased between 8am *
-#    * and 8pm GMT (although please allow up to 24 hours in case of            *
-#    * exceptional circumstances).  Thank you for your support!                *
-#    *                                                                         *
-#    ***************************************************************************
+# Makefile.  But you knew that.
 #
-#    This file is part of the FreeRTOS distribution.
-#
-#    FreeRTOS is free software; you can redistribute it and/or modify it under
-#    the terms of the GNU General Public License (version 2) as published by the
-#    Free Software Foundation AND MODIFIED BY the FreeRTOS exception.
-#    ***NOTE*** The exception to the GPL is included to allow you to distribute
-#    a combined work that includes FreeRTOS without being obliged to provide the
-#    source code for proprietary components outside of the FreeRTOS kernel.
-#    FreeRTOS is distributed in the hope that it will be useful, but WITHOUT
-#    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-#    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-#    more details. You should have received a copy of the GNU General Public 
-#    License and the FreeRTOS license exception along with FreeRTOS; if not it 
-#    can be viewed here: http://www.freertos.org/a00114.html and also obtained 
-#    by writing to Richard Barry, contact details for whom are available on the
-#    FreeRTOS WEB site.
-#
-#    1 tab == 4 spaces!
-#
-#    http://www.FreeRTOS.org - Documentation, latest information, license and
-#    contact details.
-#
-#    http://www.SafeRTOS.com - A version that is certified for use in safety
-#    critical systems.
-#
-#    http://www.OpenRTOS.com - Commercial support, development, porting,
-#    licensing and training services.
-#*/
 
+COMPILER=GCC
+SUBARCH=ARM_CM3
+PROC=LM3S8962
+BOARD=LM3S8962_EVB
 
-#/************************************************************************* 
-# * Please ensure to read http://www.freertos.org/portLM3Sxxxx_Eclipse.html
-# * which provides information on configuring and running this demo for the
-# * various Luminary Micro EKs.
-# *************************************************************************/
-
-FREERTOS=../../FreeRTOS
-STELLARISWARE=../../StellarisWare-ek-lm3s-8962
-GRAPHICS_LIB=./Graphics
+# Where we get pieces from...
+SRC_DIR=src
+FREERTOS=../FreeRTOS
+STELLARISWARE=../StellarisWare-ek-lm3s-8962
 
 RTOS_SOURCE_DIR=$(FREERTOS)/Source
 RTOS_COMMON_DIR=$(FREERTOS)/Common/Minimal
@@ -68,63 +18,78 @@ RTOS_INCLUDE_DIR=$(FREERTOS)/Common/include
 UIP_COMMON_DIR=$(FREERTOS)/Common/ethernet/uIP/uip-1.0/uip
 LUMINARY_DRIVER_LIB=$(STELLARISWARE)/driverlib/gcc
 
-CC=arm-none-eabi-gcc
-OBJCOPY=arm-none-eabi-objcopy
+# Misc. executables.
+RM=/bin/rm
+DOXYGEN=/usr/bin/doxygen
+
+include makedefs
+
+PROG=LM3S8962_EVB
 LDSCRIPT=standalone.ld
-RM=rm
 
-# Main program root name
-PROG=RTOSDemo
+# should use --gc-sections but the debugger does not seem to be able to
+# cope with the option.
+LINKER_FLAGS +=\
+	-nostartfiles \
+	-Xlinker \
+	-M \
+	-Xlinker \
+	-Map=$(BUILD_DIR)$(PROG).map \
+	-Xlinker \
+	--no-gc-sections
 
-# should use --gc-sections but the debugger does not seem to be able to cope with the option.
-LINKER_FLAGS=-nostartfiles -Xlinker -o$(PROG).axf -Xlinker -M -Xlinker -Map=$(PROG).map -Xlinker --no-gc-sections
+#DEBUG=-g
+OPTIM=-Os
 
-DEBUG=-g
-OPTIM=-O0
-
-CFLAGS=\
-	$(DEBUG) $(OPTIM) -T $(LDSCRIPT) \
-	-ffunction-sections -fdata-sections \
-	-I . -I $(RTOS_SOURCE_DIR)/include \
+CPPFLAGS +=\
+	-I $(SRC_DIR) \
+	-I $(RTOS_SOURCE_DIR)/include \
 	-I $(RTOS_SOURCE_DIR)/portable/GCC/ARM_CM3 \
 	-I $(RTOS_INCLUDE_DIR) \
 	-I $(UIP_COMMON_DIR) \
 	-I $(STELLARISWARE) \
-	-I $(STELLARISWARE)/driverlib \
 	-I $(STELLARISWARE)/inc \
-	-I $(GRAPHICS_LIB) \
-	-I ./webserver \
-	-D GCC_ARMCM3_LM3S102 \
-	-D inline= -mthumb -mcpu=cortex-m3 \
+	-I $(STELLARISWARE)/utils \
+	-I $(STELLARISWARE)/driverlib \
+	-I $(STELLARISWARE)/boards/ek-lm3s8962 \
+	-I $(SRC_DIR)/webserver \
+	-D $(COMPILER)_$(SUBARCH) \
+	-D inline= \
 	-D PACK_STRUCT_END=__attribute\(\(packed\)\) \
 	-D ALIGN_STRUCT_END=__attribute\(\(aligned\(4\)\)\) \
-	-D sprintf=usprintf -D snprintf=usnprintf -D printf=uipprintf \
+	-D sprintf=usprintf -D snprintf=usnprintf \
+	-D vsnprintf=uvsnprintf -D printf=uipprintf \
+	-D $(BOARD) \
 	-D DEPRECATED
 
-SOURCE=	main.c \
-	timertest.c \
-	./ParTest/ParTest.c \
-	rit128x96x4.c \
-	osram128x64x4.c \
-	formike128x128x16.c \
+CFLAGS +=\
+	$(CPPFLAGS) \
+	$(DEBUG) $(OPTIM) \
+	-Wall
+
+VPATH = $(SRC_DIR) $(SRC_DIR)/webserver \
+	$(STELLARISWARE)/utils \
+	$(STELLARISWARE)/boards/ek-lm3s8962/drivers \
+	$(UIP_COMMON_DIR) \
+	$(RTOS_SOURCE_DIR) \
+	$(RTOS_SOURCE_DIR)/portable/$(COMPILER)/$(SUBARCH) \
+	$(RTOS_SOURCE_DIR)/portable/MemMang
+
+SOURCE =\
+	$(SRC_DIR)/main.c \
+	$(SRC_DIR)/io.c \
+	$(SRC_DIR)/util.c \
+	$(SRC_DIR)/partnum.c \
+	$(SRC_DIR)/logger.c \
+	$(SRC_DIR)/timertest.c \
+	$(SRC_DIR)/webserver/uIP_Task.c \
+	$(SRC_DIR)/webserver/emac.c \
+	$(SRC_DIR)/webserver/httpd.c \
+	$(SRC_DIR)/webserver/httpd-cgi.c \
+	$(SRC_DIR)/webserver/httpd-fs.c \
+	$(SRC_DIR)/webserver/http-strings.c \
 	$(STELLARISWARE)/utils/ustdlib.c \
-	$(RTOS_COMMON_DIR)/BlockQ.c \
-	$(RTOS_COMMON_DIR)/blocktim.c \
-	$(RTOS_COMMON_DIR)/death.c \
-	$(RTOS_COMMON_DIR)/integer.c \
-	$(RTOS_COMMON_DIR)/PollQ.c \
-	$(RTOS_COMMON_DIR)/semtest.c \
-	$(RTOS_COMMON_DIR)/GenQTest.c \
-	$(RTOS_COMMON_DIR)/QPeek.c \
-	$(RTOS_COMMON_DIR)/recmutex.c \
-	$(RTOS_COMMON_DIR)/IntQueue.c \
-	./IntQueueTimer.c \
-	./webserver/uIP_Task.c \
-	./webserver/emac.c \
-	./webserver/httpd.c \
-	./webserver/httpd-cgi.c \
-	./webserver/httpd-fs.c \
-	./webserver/http-strings.c \
+	$(STELLARISWARE)/boards/ek-lm3s8962/drivers/rit128x96x4.c \
 	$(UIP_COMMON_DIR)/uip_arp.c \
 	$(UIP_COMMON_DIR)/psock.c \
 	$(UIP_COMMON_DIR)/timer.c \
@@ -132,28 +97,58 @@ SOURCE=	main.c \
 	$(RTOS_SOURCE_DIR)/list.c \
 	$(RTOS_SOURCE_DIR)/queue.c \
 	$(RTOS_SOURCE_DIR)/tasks.c \
-	$(RTOS_SOURCE_DIR)/portable/GCC/ARM_CM3/port.c \
+	$(RTOS_SOURCE_DIR)/portable/$(COMPILER)/$(SUBARCH)/port.c \
 	$(RTOS_SOURCE_DIR)/portable/MemMang/heap_2.c
 
-LIBS= $(LUMINARY_DRIVER_LIB)/libdriver.a $(GRAPHICS_LIB)/libgr.a
+LIBS= $(LUMINARY_DRIVER_LIB)/libdriver.a
 
-OBJS = $(SOURCE:.c=.o)
+OBJS = $(addprefix $(BUILD_DIR), $(notdir $(SOURCE:.c=.o)))
 
-all: $(PROG).bin
- 
-$(PROG).bin : $(PROG).axf
-	$(OBJCOPY) $(PROG).axf -O binary $(PROG).bin
+.PHONY: all doxygen clean distclean webfiles webstrings
 
-$(PROG).axf : $(OBJS) startup.o Makefile
-	$(CC) $(CFLAGS) $(OBJS) startup.o $(LIBS) $(LINKER_FLAGS)
+all: $(BUILD_DIR)$(PROG).bin
 
-$(OBJS) : %.o : %.c Makefile FreeRTOSConfig.h
-	$(CC) -c $(CFLAGS) $< -o $@
+# Include the dependencies if they are available
 
-startup.o : startup.c Makefile
-	$(CC) -c $(CFLAGS) -O1 startup.c -o startup.o
+-include $(wildcard $(BUILD_DIR)*.d) __dummy__
+
+
+$(BUILD_DIR)$(PROG).bin : $(BUILD_DIR)$(PROG).axf
+
+$(BUILD_DIR)$(PROG).axf : $(BUILD_DIR)startup.o \
+	webfiles webstrings \
+	$(OBJS) $(LIBS)
+
+$(BUILD_DIR)startup.o : startup.c Makefile
+	@echo "  $(CC) $<"
+	$(Q)$(CC) $(CFLAGS) -O1 -o $(BUILD_DIR)$(notdir $@) $<
+
+# Phony targets to auto-generate the .c files for the webserver
+# This isn't right, causes rebuild every time.  Grrrstupid.
+webfiles:
+	(cd $(SRC_DIR)/webserver && ./makefsdata)
+
+webstrings:
+	(cd $(SRC_DIR)/webserver && ./makestrings)
+
+#$(SRC_DIR)/webserver/httpd-fsdata.c : \
+#		$(wildcard ($SRC_DIR)/webserver/httpd-fs/*)
+#	(cd $(SRC_DIR)/webserver && ./makefsdata)
+#
+#$(SRC_DIR)/webserver/http-strings.c : $(SRC_DIR)/webserver/http-strings
+#	(cd $(SRC_DIR)/webserver && ./makestrings)
+
+doxygen :
+	$(DOXYGEN) doxygen.cfg
 
 clean :
-	touch Makefile
-	$(RM) -f $(OBJS)
-	$(RM) -f $(PROG).axf $(PROG).bin $(PROG).map startup.o
+	#touch Makefile
+	$(RM) -f $(BUILD_DIR)*.[od]
+	rm -f $(SRC_DIR)/webserver/httpd-fsdata.c
+	rm -f $(SRC_DIR)/webserver/webserver/http-strings.[ch]
+	rm -rf doc
+
+distclean : clean
+	$(RM) -f $(BUILD_DIR)*.axf $(BUILD_DIR)*.bin $(BUILD_DIR)*.map
+	find . -name "*.~" -exec rm -f {} \;
+	find . -name "*.o" -exec rm -f {} \;

@@ -1,0 +1,115 @@
+#
+# Makefile
+#
+# CROSS_COMPILE specify the prefix used for all executables used
+# during compilation. Only gcc and related bin-utils executables
+# are prefixed with $(CROSS_COMPILE).
+#
+# CROSS_COMPILE can be set on the command line:
+#   make CROSS_COMPILE=arm-none-eabi-
+# or defeated:
+#   make CROSS_COMPILE=
+#
+# ARCH is the target architecture.
+
+# Quiet vs. verbose
+Q		= @
+
+ifndef CROSS_COMPILE
+CROSS_COMPILE	= arm-none-eabi-
+endif
+
+# Convention for where the build detritus ends up
+BUILD_DIR	= obj/
+
+# Make variables (CC, etc...)
+
+AS		= $(CROSS_COMPILE)as
+LD		= $(CROSS_COMPILE)ld
+CC		= $(CROSS_COMPILE)gcc
+CPP		= $(CC) -E
+AR		= $(CROSS_COMPILE)ar
+NM		= $(CROSS_COMPILE)nm
+STRIP		= $(CROSS_COMPILE)strip
+OBJCOPY		= $(CROSS_COMPILE)objcopy
+OBJDUMP		= $(CROSS_COMPILE)objdump
+
+CFLAGS_GCOV	= -fprofile-arcs -ftest-coverage
+
+#
+# Which part we are using
+#
+PART =		LM3S8962
+
+#
+# The flags passed to the assembler.
+#
+AFLAGS =	-mthumb \
+		-mcpu=cortex-m3 \
+		-MD
+
+#
+# The flags passed to the compiler.
+#
+CFLAGS =	-mthumb \
+		-mcpu=cortex-m3 \
+		-Os \
+		-ffunction-sections \
+		-fdata-sections \
+		-MD \
+		-std=c99 \
+		-Wall \
+		-pedantic \
+		-DPART_$(PART) \
+		-c
+
+ifdef DEBUG
+CFLAGS +=	-g -D DEBUG
+endif
+
+#
+# The flags passed to the linker.
+#
+LDFLAGS =\
+		-nostartfiles \
+		-Map=$(BUILD_DIR)/$(PROG).map \
+		--no-gc-sections
+
+
+#
+# Get the location of the libraries
+#
+LIBGCC=$(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
+LIBC=$(shell $(CC) $(CFLAGS) -print-file-name=libc.a)
+LIBM=$(shell $(CC) $(CFLAGS) -print-file-name=libm.a)
+
+$(BUILD_DIR)%.o: %.c
+	@echo "  $(CC) $<"
+	$(Q)$(CC) $(CFLAGS) -o $@ $<
+
+#
+# The rule for building the object file from each assembly source file.
+#
+$(BUILD_DIR)%.o: %.S
+	@echo "  $(AS) $<"
+	$(Q)$(CC) $(AFLAGS) -o $@ -c $<
+
+#
+# The rule for creating an object library.
+#
+$(BUILD_DIR)%.a:
+	@echo "  $(AR) $@"
+	$(Q)$(AR) -cr $@ $^
+
+#
+# The rule for linking the application.
+#
+$(BUILD_DIR)%.axf:
+	@echo "  $(LD) $@ $(LDSCRIPT)"
+	$(Q)$(LD) -T $(LDSCRIPT) \
+		$(LDFLAGS) -o $@ $(filter %.o %.a, $(^)) \
+		'$(LIBC)' '$(LIBM)' '$(LIBGCC)'
+
+%.bin: %.axf
+	@echo "  $(OBJCOPY) -O binary $< $@"
+	$(Q)$(OBJCOPY) -O binary $< $@
