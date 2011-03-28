@@ -133,7 +133,7 @@ clock_time_t clock_time( void )
 {
 	return xTaskGetTickCount();
 }
-
+/*-----------------------------------------------------------*/
 
 void vuIP_Task( void *pvParameters )
 {
@@ -290,6 +290,7 @@ static void process_button(portCHAR *pcInputString, portBASE_TYPE xInputLength)
 	enum pwr_sel whichpwr;
 #endif // COMMENT_OUT
 	enum dio_sel whichdio;
+	int pin;
 
 	c = strstr(pcInputString, "?");
 
@@ -306,6 +307,48 @@ static void process_button(portCHAR *pcInputString, portBASE_TYPE xInputLength)
 		whichdio = strtodio(c);
 		if (whichdio != dioInvalid) {
 			dio_set(whichdio, !dio(whichdio));
+			goto next;
+		}
+		if ((c[0] == 'p') && (c[1] == 'A')) {
+			pin = 1 << (c[2] - '0');
+			GPIOPinWrite(GPIO_PORTA_BASE, pin,
+				pin ^ GPIOPinRead(GPIO_PORTA_BASE, pin));
+			goto next;
+		}
+		if ((c[0] == 'p') && (c[1] == 'B')) {
+			pin = 1 << (c[2] - '0');
+			GPIOPinWrite(GPIO_PORTB_BASE, pin,
+				pin ^ GPIOPinRead(GPIO_PORTB_BASE, pin));
+			goto next;
+		}
+		if ((c[0] == 'p') && (c[1] == 'C')) {
+			pin = 1 << (c[2] - '0');
+			GPIOPinWrite(GPIO_PORTC_BASE, pin,
+				pin ^ GPIOPinRead(GPIO_PORTC_BASE, pin));
+			goto next;
+		}
+		if ((c[0] == 'p') && (c[1] == 'D')) {
+			pin = 1 << (c[2] - '0');
+			GPIOPinWrite(GPIO_PORTD_BASE, pin,
+				pin ^ GPIOPinRead(GPIO_PORTD_BASE, pin));
+			goto next;
+		}
+		if ((c[0] == 'p') && (c[1] == 'E')) {
+			pin = 1 << (c[2] - '0');
+			GPIOPinWrite(GPIO_PORTE_BASE, pin,
+				pin ^ GPIOPinRead(GPIO_PORTE_BASE, pin));
+			goto next;
+		}
+		if ((c[0] == 'p') && (c[1] == 'F')) {
+			pin = 1 << (c[2] - '0');
+			GPIOPinWrite(GPIO_PORTF_BASE, pin,
+				pin ^ GPIOPinRead(GPIO_PORTF_BASE, pin));
+			goto next;
+		}
+		if ((c[0] == 'p') && (c[1] == 'G')) {
+			pin = 1 << (c[2] - '0');
+			GPIOPinWrite(GPIO_PORTG_BASE, pin,
+				pin ^ GPIOPinRead(GPIO_PORTG_BASE, pin));
 			goto next;
 		}
 		/*

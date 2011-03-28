@@ -6,94 +6,221 @@
 %!: /ajax.js
 </script>
 </head>
-<body onload="startPoll('/proc_io_upd.shtml', 500);">
+<body onload="startPoll('/proc_io_upd.shtml', 500)">
 %!: /nav.inc
-<b>Processor Input / Output</b><br>
-
 <table>
-<tr><td valign="top">
-<table>
-<tr><th colspan="2">Discrete</th></tr>
 <tr>
-	<td class="c" id="dioGpsPps"><img src="/warn.png" /></td>
-	<td>GPS PPS</td>
-</tr><tr>
-	<td class="c" id="dioOpenGnd1OverI"><img src="/warn.png" /></td>
-	<td>Open/Ground 1 Overcurrent</td>
-</tr><tr>
-       <td class="c"><button type="button" OnClick="btnReport(this.id);" id="dioOpenGnd2Off_"><img src="/warn.png" /></button></td>
-	<td>Open/Ground 2 Off (CLR*)</td>
-</tr><tr>
-	<td class="c" id="dioNe28vOverVInt"><img src="/warn.png" /></td>
-	<td>NE28v Overvoltage Int</td>
-</tr><tr>
-	<td class="c" id="dioNe28vCapInRange"><img src="/warn.png" /></td>
-	<td>NE28v Soft-start Cap in Range</td>
-</tr><tr>
-	<td class="c" id="dioNe28vOverV_"><img src="/warn.png" /></td>
-	<td>NE28v Overvoltage</td>
-</tr><tr>
-	<td class="c" id="dioSuOverI_"><img src="/warn.png" /></td>
-	<td>Gimbal SU Overcurrent</td>
-</tr><tr>
-	<td class="c" id="dioVicor3xLossedBus_"><img src="/warn.png" /></td>
-	<td>Vicor 3x (Servo Bus) Loss</td>
-</tr><tr>
-	<td class="c" id="dioRccbOverI_"><img src="/warn.png" /></td>
-	<td>RCCB Overcurrent</td>
-</tr><tr>
-	<td class="c" id="dioVicor1xLossedBus_"><img src="/warn.png" /></td>
-	<td>Vicor 1x (Equipment Bus) Loss</td>
-</tr><tr>
-	<td class="c" id="dio28vAuxBOverI"><img src="/warn.png" /></td>
-	<td>28v Aux B Overcurrent</td>
-</tr><tr>
-	<td class="c" id="dioNe28vUnderV_"><img src="/warn.png" /></td>
-	<td>NE28v Undervoltage</td>
-</tr><tr>
-	<td class="c" id="dio28vAuxAOverI"><img src="/warn.png" /></td>
-	<td>28v Aux A Overcurrent</td>
-</tr><tr>
-       <td class="c"><button type="button" OnClick="btnReport(this.id);" id="dioMasterArm_"><img src="/warn.png" /></button></td>
-	<td>Power Master Arm*</td>
-</tr><tr>
-	<td class="c" id="dioOpenGnd2OverI"><img src="/warn.png" /></td>
-	<td>Open/Ground 2 Overcurrent</td>
-</tr><tr>
-       <td class="c"><button type="button" OnClick="btnReport(this.id);" id="dioOpenGnd2On_"><img src="/warn.png" /></button></td>
-	<td>Open/Ground 2 On (PRE*)</td>
-</tr></table>
-</td><td valign="top">
+<td valign="top">
 <table>
-<tr><th>Processor Analog</th>
-	<th>Value</th><th>mVolts</th><th colspan="2">Eng Units</th></tr>
-<tr><td class="r">NE28v</td>
-	<td id="adcNe28vProc">0</td>
-	<td id="adcNe28vProcmV">0</td>
-	<td id="adcNe28vProcEng">0.0</td>
-	<td>v</td></tr>
-<tr><td class="r">2.048 vRef</td>
-	<td id="adcVref2048">0</td>
-	<td id="adcVref2048mV">0</td>
-	<td id="adcVref2048Eng">0.000</td>
-	<td>v</td></tr>
-<tr><td class="r">BS P5v Monitor</td>
-	<td id="adcBootStrap5v">0</td>
-	<td id="adcBootStrap5vmV">0</td>
-	<td id="adcBootStrap5vEng">0.000</td>
-	<td>v</td></tr>
-<tr><td class="r">Board temp</td>
-	<td id="adcBoardTemp">0</td>
-	<td id="adcBoardTempmV">0</td>
-	<td id="adcBoardTempEng">0</td>
-	<td>&deg;C</td></tr>
-<tr><td class="r">Processor temp</td>
-	<td id="adcProcTemp1">0</td>
-	<td id="adcProcTemp1mV">0</td>
-	<td id="adcProcTemp1Eng">0</td>
-	<td>&deg;C</td></tr>
+<tr><th colspan="2">Port A</th></tr>
+<tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pA7"><img src="/warn.png" /></button></td>
+	<td>7</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pA6"><img src="/warn.png" /></button></td>
+	<td>6</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pA5"><img src="/warn.png" /></button></td>
+	<td>5</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pA4"><img src="/warn.png" /></button></td>
+	<td>4</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pA3"><img src="/warn.png" /></button></td>
+	<td>3</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pA2"><img src="/warn.png" /></button></td>
+	<td>2</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pA1"><img src="/warn.png" /></button></td>
+	<td>1</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pA0"><img src="/warn.png" /></button></td>
+	<td>0</td>
+</tr>
 </table>
-</td></tr>
+</td>
+<td valign="top">
+<table>
+<tr><th colspan="5">Port B</th></tr>
+<tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pB7"><img src="/warn.png" /></button></td>
+	<td>7</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pB6"><img src="/warn.png" /></button></td>
+	<td>6</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pB5"><img src="/warn.png" /></button></td>
+	<td>5</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pB4"><img src="/warn.png" /></button></td>
+	<td>4</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pB3"><img src="/warn.png" /></button></td>
+	<td>3</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pB2"><img src="/warn.png" /></button></td>
+	<td>2</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pB1"><img src="/warn.png" /></button></td>
+	<td>1</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pB0"><img src="/warn.png" /></button></td>
+	<td>0</td>
+</tr>
+</table>
+</td>
+<td valign="top">
+<table>
+<tr><th colspan="5">Port C</th></tr>
+<tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pC7"><img src="/warn.png" /></button></td>
+	<td>7</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pC6"><img src="/warn.png" /></button></td>
+	<td>6</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pC5"><img src="/warn.png" /></button></td>
+	<td>5</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pC4"><img src="/warn.png" /></button></td>
+	<td>4</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pC3"><img src="/warn.png" /></button></td>
+	<td>3</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pC2"><img src="/warn.png" /></button></td>
+	<td>2</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pC1"><img src="/warn.png" /></button></td>
+	<td>1</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pC0"><img src="/warn.png" /></button></td>
+	<td>0</td>
+</tr>
+</table>
+</td>
+<td valign="top">
+<table>
+<tr><th colspan="5">Port D</th></tr>
+<tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pD7"><img src="/warn.png" /></button></td>
+	<td>7</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pD6"><img src="/warn.png" /></button></td>
+	<td>6</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pD5"><img src="/warn.png" /></button></td>
+	<td>5</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pD4"><img src="/warn.png" /></button></td>
+	<td>4</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pD3"><img src="/warn.png" /></button></td>
+	<td>3</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pD2"><img src="/warn.png" /></button></td>
+	<td>2</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pD1"><img src="/warn.png" /></button></td>
+	<td>1</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pD0"><img src="/warn.png" /></button></td>
+	<td>0</td>
+</tr>
+</table>
+</td>
+<td valign="top">
+<table>
+<tr><th colspan="5">Port E</th></tr>
+<tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pE7"><img src="/warn.png" /></button></td>
+	<td>7</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pE6"><img src="/warn.png" /></button></td>
+	<td>6</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pE5"><img src="/warn.png" /></button></td>
+	<td>5</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pE4"><img src="/warn.png" /></button></td>
+	<td>4</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pE3"><img src="/warn.png" /></button></td>
+	<td>3</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pE2"><img src="/warn.png" /></button></td>
+	<td>2</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pE1"><img src="/warn.png" /></button></td>
+	<td>1</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pE0"><img src="/warn.png" /></button></td>
+	<td>0</td>
+</tr>
+</table>
+</td>
+<td valign="top">
+<table>
+<tr><th colspan="5">Port F</th></tr>
+<tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pF7"><img src="/warn.png" /></button></td>
+	<td>7</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pF6"><img src="/warn.png" /></button></td>
+	<td>6</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pF5"><img src="/warn.png" /></button></td>
+	<td>5</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pF4"><img src="/warn.png" /></button></td>
+	<td>4</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pF3"><img src="/warn.png" /></button></td>
+	<td>3</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pF2"><img src="/warn.png" /></button></td>
+	<td>2</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pF1"><img src="/warn.png" /></button></td>
+	<td>1</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pF0"><img src="/warn.png" /></button></td>
+	<td>0</td>
+</tr>
+</table>
+</td>
+<td valign="top">
+<table>
+<tr><th colspan="5">Port G</th></tr>
+<tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pG7"><img src="/warn.png" /></button></td>
+	<td>7</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pG6"><img src="/warn.png" /></button></td>
+	<td>6</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pG5"><img src="/warn.png" /></button></td>
+	<td>5</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pG4"><img src="/warn.png" /></button></td>
+	<td>4</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pG3"><img src="/warn.png" /></button></td>
+	<td>3</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pG2"><img src="/warn.png" /></button></td>
+	<td>2</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pG1"><img src="/warn.png" /></button></td>
+	<td>1</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pG0"><img src="/warn.png" /></button></td>
+	<td>0</td>
+</tr>
+</table>
+</td>
+</tr>
 </table>
 </body>
 </html>

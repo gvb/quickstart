@@ -54,10 +54,12 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <hw_types.h>
+#include <hw_memmap.h>
 #include <config.h>
 #include <partnum.h>
 #include <io.h>
-
+#include <gpio.h>
 
 HTTPD_CGI_CALL(file, "file-stats", file_stats);
 HTTPD_CGI_CALL(tcp, "tcp-connections", tcp_stats);
@@ -71,14 +73,14 @@ HTTPD_CGI_CALL(user_config_pg, "user-config", user_config);
 
 /* Page updates */
 HTTPD_CGI_CALL(ctl_upd_pg, "ctl-upd", ctl_upd);
-HTTPD_CGI_CALL(proc_upd_pg, "proc-upd", proc_upd);
+HTTPD_CGI_CALL(proc_io_upd_pg, "procio-upd", proc_io_upd);
 
 static const struct httpd_cgi_call *calls[] = {
 	&file, &tcp, &net, &rtos, &run,
 	&perm_config_pg,
 	&user_config_pg,
 	&ctl_upd_pg,
-	&proc_upd_pg,
+	&proc_io_upd_pg,
 	NULL };
 
 /*
@@ -270,72 +272,137 @@ generate_runtime_stats(void *arg)
 }
 /*---------------------------------------------------------------------------*/
 
-static unsigned short gen_proc_upd_state( void *arg )
+static unsigned short gen_proc_io_upd_state( void *arg )
 {
-	/*
-	 * The following are used to generate engineering units in integer
-	 * units plus milli-units to avoid floating point calculations.
-	 */
-	int adcProc0v, adcProc0mv;
-	int adcProc1v, adcProc1mv;
-	int adcProc2v, adcProc2mv;
-	int adcProc3v, adcProc3mv;
-
-	split_eng(adc(adcProc0, engineering), &adcProc0v, &adcProc0mv);
-	split_eng(adc(adcProc1, engineering), &adcProc1v, &adcProc1mv);
-	split_eng(adc(adcProc2, engineering), &adcProc2v, &adcProc2mv);
-	split_eng(adc(adcProc3, engineering), &adcProc3v, &adcProc3mv);
-
 	return snprintf((char *)uip_appdata, UIP_APPDATA_SIZE,
 		"{"
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\","
-		"\"%s\": \"%d\"," "\"%sEng\": \"%d\","
+		/* Port A */
+		"\"pA0\": \"%d\","
+		"\"pA1\": \"%d\","
+		"\"pA2\": \"%d\","
+		"\"pA3\": \"%d\","
+		"\"pA4\": \"%d\","
+		"\"pA5\": \"%d\","
+		"\"pA6\": \"%d\","
+		"\"pA7\": \"%d\","
+		/* Port B */
+		"\"pB0\": \"%d\","
+		"\"pB1\": \"%d\","
+		"\"pB2\": \"%d\","
+		"\"pB3\": \"%d\","
+		"\"pB4\": \"%d\","
+		"\"pB5\": \"%d\","
+		"\"pB6\": \"%d\","
+		"\"pB7\": \"%d\","
+		/* Port C */
+		"\"pC0\": \"%d\","
+		"\"pC1\": \"%d\","
+		"\"pC2\": \"%d\","
+		"\"pC3\": \"%d\","
+		"\"pC4\": \"%d\","
+		"\"pC5\": \"%d\","
+		"\"pC6\": \"%d\","
+		"\"pC7\": \"%d\","
+		/* Port D */
+		"\"pD0\": \"%d\","
+		"\"pD1\": \"%d\","
+		"\"pD2\": \"%d\","
+		"\"pD3\": \"%d\","
+		"\"pD4\": \"%d\","
+		"\"pD5\": \"%d\","
+		"\"pD6\": \"%d\","
+		"\"pD7\": \"%d\","
+		/* Port E */
+		"\"pE0\": \"%d\","
+		"\"pE1\": \"%d\","
+		"\"pE2\": \"%d\","
+		"\"pE3\": \"%d\","
+		"\"pE4\": \"%d\","
+		"\"pE5\": \"%d\","
+		"\"pE6\": \"%d\","
+		"\"pE7\": \"%d\","
+		/* Port F */
+		"\"pF0\": \"%d\","
+		"\"pF1\": \"%d\","
+		"\"pF2\": \"%d\","
+		"\"pF3\": \"%d\","
+		"\"pF4\": \"%d\","
+		"\"pF5\": \"%d\","
+		"\"pF6\": \"%d\","
+		"\"pF7\": \"%d\","
+		/* Port G */
+		"\"pG0\": \"%d\","
+		"\"pG1\": \"%d\","
+		"\"pG2\": \"%d\","
+		"\"pG3\": \"%d\","
+		"\"pG4\": \"%d\","
+		"\"pG5\": \"%d\","
+		"\"pG6\": \"%d\","
+		"\"pG7\": \"%d\","
 		"}",
 
-		dioxlate[dioUp].str, dio(dioUp) ? offball : greenball,
-		dioxlate[dioDown].str, dio(dioDown) ? offball : greenball,
-		dioxlate[dioLeft].str, dio(dioLeft) ? offball : greenball,
-		dioxlate[dioRight].str, dio(dioRight) ? offball : greenball,
-		dioxlate[dioSelect].str, dio(dioSelect) ? offball : greenball,
-		dioxlate[dioLed0].str, dio(dioLed0) ? greenball : offball,
+		GPIOPinRead(GPIO_PORTA_BASE, GPIO_PIN_0) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTA_BASE, GPIO_PIN_1) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTA_BASE, GPIO_PIN_2) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTA_BASE, GPIO_PIN_3) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTA_BASE, GPIO_PIN_4) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTA_BASE, GPIO_PIN_5) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTA_BASE, GPIO_PIN_6) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTA_BASE, GPIO_PIN_7) ? 1 : 0,
 
-		adcxlate[adcProc0].str,
-			adc(adcProc0, raw),
-			adcxlate[adcProc0].str,
-			adc(adcProc0, millivolts),
-			adcxlate[adcProc0].str,
-			adcProc0v, adcProc0mv,
-		adcxlate[adcProc1].str,
-			adc(adcProc1, raw),
-			adcxlate[adcProc1].str,
-			adc(adcProc1, millivolts),
-			adcxlate[adcProc1].str,
-			adcProc1v, adcProc1mv,
-		adcxlate[adcProc2].str,
-			adc(adcProc2, raw),
-			adcxlate[adcProc2].str,
-			adc(adcProc2, millivolts),
-			adcxlate[adcProc2].str,
-			adcProc2v, adcProc2mv,
-		adcxlate[adcProc3].str,
-			adc(adcProc3, raw),
-			adcxlate[adcProc3].str,
-			adc(adcProc3, millivolts),
-			adcxlate[adcProc3].str,
-			adcProc3v, adcProc3mv,
-		adcxlate[adcProcTemp].str,
-			adc(adcProcTemp, raw),
-			adcxlate[adcProcTemp].str,
-			adc(adcProcTemp, engineering) / 1000
+		GPIOPinRead(GPIO_PORTB_BASE, GPIO_PIN_0) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTB_BASE, GPIO_PIN_1) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTB_BASE, GPIO_PIN_2) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTB_BASE, GPIO_PIN_3) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTB_BASE, GPIO_PIN_4) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTB_BASE, GPIO_PIN_5) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTB_BASE, GPIO_PIN_6) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTB_BASE, GPIO_PIN_7) ? 1 : 0,
+
+		GPIOPinRead(GPIO_PORTC_BASE, GPIO_PIN_0) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTC_BASE, GPIO_PIN_1) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTC_BASE, GPIO_PIN_2) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTC_BASE, GPIO_PIN_3) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTC_BASE, GPIO_PIN_4) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTC_BASE, GPIO_PIN_5) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTC_BASE, GPIO_PIN_6) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTC_BASE, GPIO_PIN_7) ? 1 : 0,
+
+		GPIOPinRead(GPIO_PORTD_BASE, GPIO_PIN_0) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTD_BASE, GPIO_PIN_1) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTD_BASE, GPIO_PIN_2) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTD_BASE, GPIO_PIN_3) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTD_BASE, GPIO_PIN_4) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTD_BASE, GPIO_PIN_5) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTD_BASE, GPIO_PIN_6) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTD_BASE, GPIO_PIN_7) ? 1 : 0,
+
+		GPIOPinRead(GPIO_PORTE_BASE, GPIO_PIN_0) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTE_BASE, GPIO_PIN_1) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTE_BASE, GPIO_PIN_2) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTE_BASE, GPIO_PIN_3) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTE_BASE, GPIO_PIN_4) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTE_BASE, GPIO_PIN_5) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTE_BASE, GPIO_PIN_6) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTE_BASE, GPIO_PIN_7) ? 1 : 0,
+
+		GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_0) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_1) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_2) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_3) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_4) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_5) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_6) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_7) ? 1 : 0,
+
+		GPIOPinRead(GPIO_PORTG_BASE, GPIO_PIN_0) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTG_BASE, GPIO_PIN_1) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTG_BASE, GPIO_PIN_2) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTG_BASE, GPIO_PIN_3) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTG_BASE, GPIO_PIN_4) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTG_BASE, GPIO_PIN_5) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTG_BASE, GPIO_PIN_6) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTG_BASE, GPIO_PIN_7) ? 1 : 0
 	);
 }
 /*---------------------------------------------------------------------------*/
@@ -524,10 +591,10 @@ static PT_THREAD(ctl_upd(struct httpd_state *s, char *ptr))
 }
 /*---------------------------------------------------------------------------*/
 
-static PT_THREAD(proc_upd(struct httpd_state *s, char *ptr))
+static PT_THREAD(proc_io_upd(struct httpd_state *s, char *ptr))
 {
   PSOCK_BEGIN(&s->sout);
-  PSOCK_GENERATOR_SEND(&s->sout, gen_proc_upd_state, NULL);
+  PSOCK_GENERATOR_SEND(&s->sout, gen_proc_io_upd_state, NULL);
   PSOCK_END(&s->sout);
 }
 /*---------------------------------------------------------------------------*/

@@ -24,12 +24,14 @@
 <td valign="top">
 <!-- User Buttons -->
 <table>
-<tr><th colspan="2">User Buttons</th></tr>
-<tr><td id="dioUp"><img src="/warn.png" /></td><td>Up</td></tr>
-<tr><td id="dioDown"><img src="/warn.png" /></td><td>Down</td></tr>
-<tr><td id="dioLeft"><img src="/warn.png" /></td><td>Left</td></tr>
-<tr><td id="dioRight"><img src="/warn.png" /></td><td>Right</td></tr>
-<tr><td id="dioSelect"><img src="/warn.png" /></td><td>Select</td></tr>
+<tr><th colspan="3">User Buttons</th></tr>
+<tr><td></td><td id="dioUp"><img src="/warn.png" /></td><td></td></tr>
+<tr>
+<td id="dioLeft"><img src="/warn.png" /></td>
+<td id="dioSelect"><img src="/warn.png" /></td>
+<td id="dioRight"><img src="/warn.png" /></td>
+</tr>
+<tr><td></td><td id="dioDown"><img src="/warn.png" /></td><td></td></tr>
 </table>
 </td>
 <td valign="top">
