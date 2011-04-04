@@ -121,7 +121,7 @@ $(BUILD_DIR)$(PROG).axf : $(BUILD_DIR)startup.o \
 
 $(BUILD_DIR)startup.o : startup.c Makefile
 	@echo "  $(CC) $<"
-	$(Q)$(CC) $(CFLAGS) -O1 -o $(BUILD_DIR)$(notdir $@) $<
+	$(Q)$(CC) -O1 $(filter-out -O%, $(CFLAGS)) -o $@ $<
 
 # Phony targets to auto-generate the .c files for the webserver
 # This isn't right, causes rebuild every time.  Grrrstupid.
