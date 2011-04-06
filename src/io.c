@@ -2,6 +2,28 @@
  * \file io.c
  *
  * I/O implementation.
+
+\page iopage1 I/O Overview
+
+\addindex I/O Task
+
+The I/O support subsystem has one task, io_task(), which is used to
+periodically read the I/O points (analog and discretes).  This is done
+so that the program can read the I/O without blocking.  The problem with
+blocking until the I/O is complete is that this is a "real time" system
+and blocking will disrupt the "real time" attribute.
+- The trade-off is that the value will be "old" by up to one scan period.
+- If the io_task() poll rate is increased, it will keep the data
+    "fresher", but will result in more overhead.
+
+Processor-based discrete I/O (GPIO) can be read without any delay,
+so that is an exception and is read directly.
+
+Analog I/O requires a conversion sequence which takes time to complete,
+so that is done in the polling task.  Other I/O, e.g. I2C- or SPI-attached
+chips, also require time to perform the read/write sequence and thus are
+done in the I/O task.
+
  *
  * \addtogroup io I/O
  * \{

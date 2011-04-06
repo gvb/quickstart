@@ -12,7 +12,7 @@
  */
 
 /**
-\mainpage Evaluation
+\mainpage Stellaris + FreeRTOS (Linux host) Quickstart
 
 \section Overview Overview
 
@@ -29,7 +29,14 @@ large successful programs.
 -# Build the StellarisWare-ek-lm3s-8962 library
 -# Build the eval software
 
+\section See Also
+
+\sa \ref iopage1
+\sa \ref utilpage1
+
 \section Rights Proprietary and Confidential
+
+\todo Revise the copyright: use the BSD/MIT license: http://www.opensource.org/licenses/bsd-license
 
 THE INFORMATION CONTAINED IN THIS DRAWING IS THE SOLE PROPERTY OF
 CONSOLIDATED RESOURCE IMAGING (CRI). ANY REPRODUCTION IN PART OR AS A

@@ -3,7 +3,117 @@
  *
  * Utility functions.
  * - Watchdog timer implementation.
- *
+
+\page utilpage1 Utilities Overview
+
+\addindex Watchdog Timer
+
+\section wdt Watchdog Timer
+
+A watchdog timer (WDT) is very useful, monitoring the correct execution of
+the program and resetting the system if something goes awry.  While they
+are not a panacea, they form a useful layer in the "defense in depth"
+philosophy of making system resiliant to failure.
+
+The simplest way to handle a watchdog timer is to reset it periodically.
+If this is done in an interrupt service routine (ISR), it guarantees that
+interrupts are working, but gives no guarantee that the tasks are
+operating properly.  If this is done in a "watchdog reset" task which
+is run at a very low priority, it ensures that the system will be reset if:
+-# Interrupts are not handled correctly.  If the timer tick interrupt stops
+     happening, tasking will likely stop functioning properly, starving
+     the watchdog timer reset task and causing the timer to expire and
+     reset the system.
+-# Higher prioritiy (worker) tasks get "confused" and do not complete.
+     If this occurs, the malfunctioning higher priority task will starve
+     the watchdog timer task, again causing the timer to expire and reset
+     the system.
+
+There is also a tradeoff with watchdog timers: how long should the timer
+be?  If it is short, it will reset and recover the system quickly in the
+case of a failure, but it will cause more overhead and cause problems
+if parts of the system really \em are slow relative to the timer period.
+
+The Stellaris watchdog timer causes an interrupt when it times out.
+If the watchdog is \em not reset, the \em next watchdog interrupt will
+reset the system.  Thus the fault discovery time is twice the watchdog
+timer setting.
+
+This program takes a hybrid approach.  When the watchdog interrupt fires,
+the watchdog is normally reset in the interrupt service routine.  Thus,
+if interrupts fail, the system will be reset.  Layered on top of this
+is a task monitoring system.  Each task that is monitored has a counter
+that is held in an array, indexed by an emun.  The WDT ISR increments
+the counter array on every interrupt and verifies that it does \em not
+exceed a threshold value.  Each monitored task resets its counter to
+zero every time through its "main loop."  If a task stops running, the
+WDT ISR will see the count increment past the error detection threshold
+and reset the system.
+
+Notes:
+- Since the increment is done in the WDT ISR, the interrupt handling
+    becomes our atomic locking mechanism: the read/modify/write
+    operation is atomic because a task cannot interrupt an interrupt
+    service routine.
+- Zeroing an integer (the operation done in a monitored task) is atomic
+    because it is a single memory write operation.  There is no race
+    condition with respect to the WDT ISR because the zeroing will either
+    happen before the WDT ISR runs or after: there is no possibility that
+    the WDT ISR will "split" a zeroing operation or that the zeroing will
+    occur during the WDT ISR read/modify/write incrementing operation.
+
+The following snippets of code were extracted via objdump:
+\verbatim
+arm-none-eabi-objdump -Sd obj/util.o | less
+\endverbatim
+
+This is the main watchdog timer task loop.  It illustrates the zeroing
+of the watchdog counter array, followed by a timed delay.  Note that
+the zeroing is an atomic operation: the "str r2, [r3, #4]" is a single
+uninterruptable instruction.
+\code
+        while(1) {      /* forever loop */
+                wdt_checkin[wdt_util] = 0;
+  44:   4b06            ldr     r3, [pc, #24]   ; (60 <util_task+0x60>)
+  46:   2200            movs    r2, #0
+  48:   605a            str     r2, [r3, #4]
+
+                vTaskDelayUntil(&last_wake_time, POLL_DELAY);
+  4a:   a801            add     r0, sp, #4
+  4c:   210a            movs    r1, #10
+  4e:   f7ff fffe       bl      0 <vTaskDelayUntil>
+  52:   e7f7            b.n     44 <util_task+0x44>
+  54:   002625a0        .word   0x002625a0
+  58:   0000002d        .word   0x0000002d
+\endcode
+
+The watchdog timer interrupt service routine (ISR) loops through
+the counters, checking to see if a counter exceeds the limit, and
+incrementing the counters as it goes.  Note that the increment operation
+is a read/modify/write (three separate operations) that need to be atomic.
+Because of the nature of our system, this is atomic because it is an ISR.
+\code
+void wdt_isr(void)
+{
+        int j;
+
+        for (j = 0; j < wdt_last; j++) {
+                if (++wdt_checkin[j] > wdt_limit[j]) {
+   0:   4b0b            ldr     r3, [pc, #44]   ; (30 <wdt_isr+0x30>)
+   2:   681a            ldr     r2, [r3, #0]
+   4:   3201            adds    r2, #1
+   6:   f5b2 7f7a       cmp.w   r2, #1000       ; 0x3e8
+   a:   601a            str     r2, [r3, #0]
+   c:   dd01            ble.n   12 <wdt_isr+0x12>
+   e:   2000            movs    r0, #0
+  10:   e00a            b.n     28 <wdt_isr+0x28>
+  12:   685a            ldr     r2, [r3, #4]    ; Read current count
+  14:   3201            adds    r2, #1          ; Increment the count
+  16:   f5b2 7f7a       cmp.w   r2, #1000       ; Check for a timeout
+  1a:   605a            str     r2, [r3, #4]    ; Write the count back
+  1c:   dc03            bgt.n   26 <wdt_isr+0x26>
+\endcode
+
  * \addtogroup util Utility functions
  * \{
  *//*
