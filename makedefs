@@ -13,6 +13,8 @@
 # ARCH is the target architecture.
 
 # Quiet vs. verbose
+# Quiet   => Q = @
+# Verbose => Q = #@
 Q		= @
 
 ifndef CROSS_COMPILE
@@ -41,40 +43,6 @@ CFLAGS_GCOV	= -fprofile-arcs -ftest-coverage
 #
 PART =		LM3S8962
 
-#
-# The flags passed to the assembler.
-#
-AFLAGS =	-mthumb \
-		-mcpu=cortex-m3 \
-		-MD
-
-#
-# The flags passed to the compiler.
-#
-CFLAGS =	-mthumb \
-		-mcpu=cortex-m3 \
-		-Os \
-		-ffunction-sections \
-		-fdata-sections \
-		-MD \
-		-std=c99 \
-		-Wall \
-		-pedantic \
-		-DPART_$(PART) \
-		-c
-
-ifdef DEBUG
-CFLAGS +=	-g -D DEBUG
-endif
-
-#
-# The flags passed to the linker.
-#
-LDFLAGS =\
-		-nostartfiles \
-		-Map=$(BUILD_DIR)/$(PROG).map \
-		--no-gc-sections
-
 
 #
 # Get the location of the libraries
@@ -82,6 +50,10 @@ LDFLAGS =\
 LIBGCC=$(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 LIBC=$(shell $(CC) $(CFLAGS) -print-file-name=libc.a)
 LIBM=$(shell $(CC) $(CFLAGS) -print-file-name=libm.a)
+
+#TBD Stitt moved this to makefile
+#$(BUILD_DIR)depend: $(SOURCE)
+#	$(Q)$(CC) $(CPPFLAGS) -ODIR=$(BUILD_DIR) -MM $^ > $@ || rm -f $(BUILD_DIR)depend
 
 $(BUILD_DIR)%.o: %.c
 	@echo "  $(CC) $<"

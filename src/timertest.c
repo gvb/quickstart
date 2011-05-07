@@ -62,7 +62,7 @@
 #include "hw_types.h"
 #include "interrupt.h"
 #include "sysctl.h"
-#include "lmi_timer.h"
+#include "timer.h"
 
 /* The set frequency of the interrupt.  Deviations from this are measured as
 the jitter. */

@@ -72,7 +72,7 @@ of the watchdog counter array, followed by a timed delay.  Note that
 the zeroing is an atomic operation: the "str r2, [r3, #4]" is a single
 uninterruptable instruction.
 \code
-        while(1) {      /* forever loop */
+        while(1) {
                 wdt_checkin[wdt_util] = 0;
   44:   4b06            ldr     r3, [pc, #24]   ; (60 <util_task+0x60>)
   46:   2200            movs    r2, #0

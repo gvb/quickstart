@@ -17,7 +17,7 @@
 
 #include <FreeRTOSConfig.h>
 #include <hw_types.h>
-#include <lmi_flash.h>
+#include "../../StellarisWare/driverlib/flash.h"
 
 #include "config.h"
 #include "partnum.h"

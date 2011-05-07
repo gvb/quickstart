@@ -19,15 +19,28 @@
 The evaluation board is the small, successful program that spawns many
 large successful programs.
 
-\section Build Building from Source
+\section Building from Source
 
 -# Set up an ARM build environment (out of scope for this document).
+
+-# Create build tree
+
+     mkdir quickstart-dev
+     cd quickstart-dev
+
 -# Use git to clone the source.
-   - git clone gitosis@share.cri.us.com:/LM3S8962 # Source
-   - git clone gitosis@share.cri.us.com:/FreeRTOS # OS
-   - git clone gitosis@share.cri.us.com:/StellarisWare-ek-lm3s-8962 # Stellaris support library
--# Build the StellarisWare-ek-lm3s-8962 library
--# Build the eval software
+
+     git clone gitosis@share.cri.us.com:LM3S8962ek.git
+     git clone gitosis@share.cri.us.com:StellarisWare.git
+     git clone gitosis@share.cri.us.com:FreeRTOS.git
+     git clone gitosis@share.cri.us.com:lwip.git
+     git clone gitosis@share.cri.us.com:lwip-contrib.git
+
+-# Build
+
+     pushd StellarisWare/; make; popd;
+     pushd lwip-contrib/ports/cross; make ; popd
+     pushd LM3S8962ek/; make; popd;
 
 \section See Also
 
@@ -38,9 +51,6 @@ large successful programs.
 
 \todo Revise the copyright: use the BSD/MIT license: http://www.opensource.org/licenses/bsd-license
 
-THE INFORMATION CONTAINED IN THIS DRAWING IS THE SOLE PROPERTY OF
-CONSOLIDATED RESOURCE IMAGING (CRI). ANY REPRODUCTION IN PART OR AS A
-WHOLE WITHOUT THE WRITTEN PERMISSION OF CRI IS PROHIBITED.
 
 *****************************************************************************/
 
@@ -58,6 +68,8 @@ WHOLE WITHOUT THE WRITTEN PERMISSION OF CRI IS PROHIBITED.
 #include "gpio.h"
 #include "uart.h"
 #include "drivers/rit128x96x4.h"
+#include "LWIPStack.h"
+#include "ETHIsr.h"
 
 #include "config.h"
 #include "partnum.h"
@@ -72,23 +84,9 @@ WHOLE WITHOUT THE WRITTEN PERMISSION OF CRI IS PROHIBITED.
 
 /****************************************************************************/
 
-/*
- * The task that handles the uIP stack.  All TCP/IP processing is performed in
- * this task.
- */
-extern void vuIP_Task( void *pvParameters );
-
-/*
- * Configure the hardware.
- */
 static void prvSetupHardware(void);
-
-/*
- * Configures the high frequency timers - those used to measure the timing
- * jitter while the real time kernel is executing.
- */
 extern void vSetupHighFrequencyTimer( void );
-
+void ethernetThread(void *pvParameters);
 
 /****************************************************************************/
 
@@ -117,13 +115,11 @@ int main(void)
 	/**
 	 * \req \req_tcpip The \program \shall support TCP/IP communications.
 	 *
-	 * Create the uIP task if running on a processor that includes a MAC
+	 * Create the LWIP task if running on a processor that includes a MAC
 	 * and PHY.
 	 */
 	if( SysCtlPeripheralPresent( SYSCTL_PERIPH_ETH ) ) {
-		xTaskCreate( vuIP_Task, ( signed portCHAR * ) "uIP",
-			DEFAULT_STACK_SIZE, NULL, UIP_TASK_PRIORITY,
-			NULL );
+		xTaskCreate( ethernetThread,"ethernet", 1000, NULL, 3, NULL);
 	}
 
 	/**
@@ -274,6 +270,35 @@ static void prvSetupHardware(void)
 		( UART_CONFIG_WLEN_8
 		| UART_CONFIG_STOP_ONE
 		| UART_CONFIG_PAR_NONE ));
+}
+
+/****************************************************************************/
+
+/**
+ * Tick hook.
+ *
+ * This is called every operating system tick even if the scheduler is
+ * not running.
+ */
+
+
+void ethernetThread(void *pvParameters)
+{
+	IP_CONFIG ipconfig;
+
+	ETHServiceTaskInit(0);
+	ETHServiceTaskFlush(0,ETH_FLUSH_RX | ETH_FLUSH_TX);
+
+	ipconfig.IPMode = IPADDR_USE_STATIC;
+	ipconfig.IPAddr=0xC0A80064;
+	ipconfig.NetMask=0xFFFFFF00;
+	ipconfig.GWAddr=0xC0A80001;
+
+	LWIPServiceTaskInit((void *)&ipconfig);
+
+	for(;;)
+	{
+	}
 }
 
 /****************************************************************************/

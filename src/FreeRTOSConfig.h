@@ -83,6 +83,7 @@
 #define configUSE_RECURSIVE_MUTEXES		1
 #define configQUEUE_REGISTRY_SIZE		10
 #define configGENERATE_RUN_TIME_STATS	1
+#define configUSE_COUNTING_SEMAPHORES	1
 
 #define configMAX_PRIORITIES		( ( unsigned portBASE_TYPE ) 8 )
 #define configMAX_CO_ROUTINE_PRIORITIES ( 2 )
@@ -103,6 +104,12 @@ to exclude the API function. */
 
 #define configKERNEL_INTERRUPT_PRIORITY 		( ( unsigned char ) 7 << ( unsigned char ) 5 )	/* Priority 7, or 255 as only the top three bits are implemented.  This is the lowest priority. */
 #define configMAX_SYSCALL_INTERRUPT_PRIORITY 	( ( unsigned char ) 5 << ( unsigned char ) 5 )  /* Priority 5, or 160 as only the top three bits are implemented. */
+
+/*
+ * On the Stellaris family, three bits are available for hardware interrupt prioritization
+ *  and therefore priority grouping values of three through seven have the same effect.
+*/
+#define SET_SYSCALL_INTERRUPT_PRIORITY(X) (((X) << 5)&0xE0)
 
 extern volatile unsigned long ulHighFrequencyTimerTicks;
 /* There is already a high frequency timer running - just reset its count back
