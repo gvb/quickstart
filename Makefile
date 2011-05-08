@@ -147,7 +147,6 @@ SOURCE =\
 	$(SRC_DIR)/timertest.c \
 	$(SRC_DIR)/ETHIsr.c \
 	$(SRC_DIR)/LWIPStack.c \
-	$(SRC_DIR)/spew.c \
 	$(SRC_DIR)/fs.c \
 	$(SRC_DIR)/httpd.c \
 	$(STELLARISWARE)/utils/ustdlib.c \
