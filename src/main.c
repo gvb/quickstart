@@ -12,7 +12,7 @@
  */
 
 /**
-\mainpage Stellaris + FreeRTOS (Linux host) Quickstart
+\mainpage Stellaris + FreeRTOS + lwIP (Linux host) Quickstart
 
 \section Overview Overview
 
