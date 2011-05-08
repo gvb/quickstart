@@ -263,6 +263,7 @@ int adc(enum adc_sel which, enum adc_units scaling)
 		xSemaphoreGive(io_mutex);
 	} else {
 		lprintf("I2C semaphore timeout line %d\r\n", __LINE__);
+		return 0;
 	}
 
 	switch (scaling) {
