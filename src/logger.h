@@ -43,4 +43,10 @@ void lputchar(char c);
  */
 void lprintf(const char *fmt, ...);
 
+/**
+ * Like puts, but no trailing newline, and out the logger port.
+ * May be called from an ISR.
+ */
+void rawputs(const char *p);
+
 #endif /* LOGGER_H_ */

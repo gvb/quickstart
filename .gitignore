@@ -4,3 +4,4 @@
 *.axf
 *.map
 obj/depend
+obj/buildDate.c

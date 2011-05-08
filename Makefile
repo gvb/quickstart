@@ -143,19 +143,20 @@ SOURCE =\
 	$(SRC_DIR)/util.c \
 	$(SRC_DIR)/partnum.c \
 	$(SRC_DIR)/logger.c \
-	$(SRC_DIR)/ethernetif.c \
 	$(SRC_DIR)/timertest.c \
 	$(SRC_DIR)/ETHIsr.c \
 	$(SRC_DIR)/LWIPStack.c \
 	$(SRC_DIR)/fs.c \
 	$(SRC_DIR)/httpd.c \
+	$(SRC_DIR)/debugSupport.c \
 	$(STELLARISWARE)/utils/ustdlib.c \
 	$(STELLARISWARE)/boards/ek-lm3s8962/drivers/rit128x96x4.c \
 	$(RTOS_SOURCE_DIR)/list.c \
 	$(RTOS_SOURCE_DIR)/queue.c \
 	$(RTOS_SOURCE_DIR)/tasks.c \
 	$(RTOS_SOURCE_DIR)/portable/$(COMPILER)/$(SUBARCH)/port.c \
-	$(RTOS_SOURCE_DIR)/portable/MemMang/heap_2.c
+	$(RTOS_SOURCE_DIR)/portable/MemMang/heap_2.c \
+	$(BUILD_DIR)buildDate.c
 
 #	$(SRC_DIR)/webserver/uIP_Task.c \
 #	$(SRC_DIR)/webserver/emac.c \
@@ -175,13 +176,18 @@ OBJS = $(addprefix $(BUILD_DIR), $(notdir $(SOURCE:.c=.o)))
 
 include makedefs
 
-.PHONY: all doxygen clean distclean webfiles webstrings
+.PHONY: all doxygen clean distclean webfiles webstrings get-date
 
 all: $(BUILD_DIR)$(PROG).bin
 
 # Include the dependencies if they are available
 
 -include $(BUILD_DIR)depend
+
+get-date:
+	echo "const char buildDate[]=\"`date -R`\";" > $(BUILD_DIR)buildDate.c
+
+$(BUILD_DIR)buildDate.c : get-date
 
 $(BUILD_DIR)$(PROG).bin : $(BUILD_DIR)$(PROG).axf
 
@@ -217,13 +223,15 @@ doxygen :
 	$(DOXYGEN) doxygen.cfg
 
 clean :
-	#touch Makefile
 	$(RM) -f $(BUILD_DIR)*.[od]
 	$(RM) -f $(BUILD_DIR)*.map
+	$(RM) -f $(BUILD_DIR)*.axf	
+	$(RM) -f $(BUILD_DIR)*.bin
 	$(RM) -f $(BUILD_DIR)depend
-	rm -f $(SRC_DIR)/webserver/httpd-fsdata.c
-	rm -f $(SRC_DIR)/webserver/webserver/http-strings.[ch]
-	rm -rf doc
+	$(RM) -f $(BUILD_DIR)buildDate.c
+	$(RM) -f $(SRC_DIR)/webserver/httpd-fsdata.c
+	$(RM) -f $(SRC_DIR)/webserver/webserver/http-strings.[ch]
+	$(RM) -rf doc
 
 distclean : clean
 	$(RM) -f $(BUILD_DIR)*.axf $(BUILD_DIR)*.bin $(BUILD_DIR)*.map

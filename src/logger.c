@@ -71,22 +71,29 @@ int lgetchar(void)
 	return UARTCharGetNonBlocking(LOGGER_UART_BASE);
 }
 
+void rawputs(const char *p)
+{
+	while (*p) {
+		if (*p=='\n') {
+			UARTCharPut(LOGGER_UART_BASE, '\r');
+		}
+		UARTCharPut(LOGGER_UART_BASE, *p);
+		p++;
+	}
+}
+
 void lprintf(const char *fmt, ...)
 {
-	char *p = a;
 	va_list argptr;
+	va_start(argptr, fmt);
 
 	xSemaphoreTake(loggerMutex, portMAX_DELAY);
 
 	a[0] = '\0';
 
-	va_start(argptr, fmt);
 	vsnprintf(a, sizeof(a), fmt, argptr);
+	rawputs(a);
 
-	while (*p) {
-		UARTCharPut(LOGGER_UART_BASE, *p);
-		p++;
-	}
 	xSemaphoreGive(loggerMutex);
 }
 /** \} */

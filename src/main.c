@@ -79,6 +79,8 @@ large successful programs.
 #include "util.h"
 #include "logger.h"
 #include "io.h"
+#include "debugSupport.h"
+#include "buildDate.h"
 /*
  * The RIT display font is 5x7 in a 6x8 cell.
  */
@@ -121,10 +123,13 @@ int main(void)
 	 * Create the LWIP task if running on a processor that includes a MAC
 	 * and PHY.
 	 */
+
+/* Temporarily disable the Ethernet */
+#if 0
 	if( SysCtlPeripheralPresent( SYSCTL_PERIPH_ETH ) ) {
 		xTaskCreate( ethernetThread,(signed char *)"ethernet", 1000, NULL, 3, NULL);
 	}
-
+#endif
 	/**
 	 * \req \req_id The \program \shall identify:
 	 * - The program version.
@@ -139,11 +144,12 @@ int main(void)
 	lprintf("\r\nCRI Quickstart\r\n"
 		"LM3S8962 Eval Board\r\n"
 		"Copyright (C) 2011 Consolidated Resource Imaging\r\n");
-	lprintf("  Assembly Part Number: %s\r\n", usercfg.assy_pn);
-	lprintf("Assembly Serial Number: %s\r\n", usercfg.assy_sn);
-	lprintf("     Board Part Number: %s\r\n", permcfg.bd_pn);
-	lprintf("   Board Serial Number: %s\r\n", permcfg.bd_sn);
-	lprintf("                   MAC: %02x:%02x:%02x:%02x:%02x:%02x\r\n",
+	lprintf("   Software Build Date: %s\n", buildDate);
+	lprintf("  Assembly Part Number: %s\n", usercfg.assy_pn);
+	lprintf("Assembly Serial Number: %s\n", usercfg.assy_sn);
+	lprintf("     Board Part Number: %s\n", permcfg.bd_pn);
+	lprintf("   Board Serial Number: %s\n", permcfg.bd_sn);
+	lprintf("                   MAC: %02x:%02x:%02x:%02x:%02x:%02x\n",
 		permcfg.mac[0], permcfg.mac[1], permcfg.mac[2],
 		permcfg.mac[3], permcfg.mac[4], permcfg.mac[5]);
 	lprintf("                    IP: %d.%d.%d.%d\r\n",
@@ -158,14 +164,33 @@ int main(void)
 	RIT128x96x4StringDraw("CRI Quickstart", 0, RITLINE(0), 15);
 	RIT128x96x4StringDraw("LM3S8962", 0, RITLINE(1), 15);
 
+	/*
+	 * Split date
+	 * 0123456789012345678901234567890
+	 * Sun, 08 May 2011 19:05:42 -0400
+	 *
+	 * into:
+	 * 0123456789012345678901234567890
+	 * Sun, 08 May 2011
+	 *
+	 * and
+	 *
+	 * 0123456789012345678901234567890
+	 *                  19:05:42 -0400
+	 */
+	strcpy(s,buildDate);
+	s[16]=0;
+	RIT128x96x4StringDraw(s, 0, RITLINE(2), 15);
+	RIT128x96x4StringDraw(&s[17], 0, RITLINE(3), 15);
+
 	sprintf(s, "MAC %02x:%02x:%02x:%02x:%02x:%02x", 
 		permcfg.mac[0], permcfg.mac[1], permcfg.mac[2],
 		permcfg.mac[3], permcfg.mac[4], permcfg.mac[5]);
-	RIT128x96x4StringDraw(s, 0, RITLINE(3), 15);
+	RIT128x96x4StringDraw(s, 0, RITLINE(5), 15);
 
 	sprintf(s, "IP  %d.%d.%d.%d\r\n",
 		usercfg.ip[0], usercfg.ip[1], usercfg.ip[2], usercfg.ip[3]);
-	RIT128x96x4StringDraw(s, 0, RITLINE(4), 15);
+	RIT128x96x4StringDraw(s, 0, RITLINE(6), 15);
 
 	/**
 	 * \req \req_id The \program \shall identify:
@@ -191,6 +216,7 @@ int main(void)
 		lprintf("\r\n");
 	}
 
+	DPRINTF(0,"Here's a DPRINTF\n");
 	vSetupHighFrequencyTimer();
 	vTaskStartScheduler();
 
@@ -289,7 +315,9 @@ void ethernetThread(void *pvParameters)
 {
 	IP_CONFIG ipconfig;
 
+	lprintf("Calling ETHServiceTaskInit\n");
 	ETHServiceTaskInit(0);
+	lprintf("Calling ETHServiceTaskFlush\n");
 	ETHServiceTaskFlush(0,ETH_FLUSH_RX | ETH_FLUSH_TX);
 
 	ipconfig.IPMode = IPADDR_USE_STATIC;
@@ -297,7 +325,9 @@ void ethernetThread(void *pvParameters)
 	ipconfig.NetMask=0xFFFFFF00;
 	ipconfig.GWAddr=0xC0A80001;
 
+	lprintf("Calling LWIPServiceTaskInit\n");
 	LWIPServiceTaskInit((void *)&ipconfig);
+	lprintf("Return from LWIPServiceTaskInit\n");
 
 	for(;;)
 	{

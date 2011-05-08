@@ -560,8 +560,11 @@ void LWIPServiceTaskInit(void *pvParameters)
 	ASSERT(ipCfg->IPMode == IPADDR_USE_STATIC)
 #endif
 
+	lprintf("Calling tcpip_init\n");
+	LWIP_DEBUGF(DHCP_DEBUG, ("----- LWIP_DEBUGF calling tcpip_init -----\n"));
 	// Start the TCP/IP thread & init stuff
 	tcpip_init(NULL, NULL);
+	lprintf("Return from tcpip_init\n");
 
 	vTaskDelay(100 / portTICK_RATE_MS);
 
@@ -580,6 +583,7 @@ void LWIPServiceTaskInit(void *pvParameters)
 		gw_addr.addr = 0;
 	}
 #endif
+	lprintf("Calling netif_add\n");
 
 	// Create, configure and add the Ethernet controller interface with
 	// default settings.
@@ -588,12 +592,14 @@ void LWIPServiceTaskInit(void *pvParameters)
 	// in a post-OS initialization
 	// @SEE http://lwip.wikia.com/wiki/Initialization_using_tcpip.c
 	netif_add(&lwip_netif, &ip_addr, &net_mask, &gw_addr, NULL, ethernetif_init, tcpip_input);
+	lprintf("Calling netif_set_default\n");
 	netif_set_default(&lwip_netif);
 
 	// Start DHCP, if enabled.
 #if LWIP_DHCP
 	if (ipCfg->IPMode == IPADDR_USE_DHCP)
 	{
+		lprintf("Starting DHCP client\n");
 		LWIP_DEBUGF(DHCP_DEBUG, ("----- Starting DHCP client -----\n"));
 		dhcp_start(&lwip_netif);
 	}
@@ -606,15 +612,17 @@ void LWIPServiceTaskInit(void *pvParameters)
 		autoip_start(&lwip_netif);
 	}
 #endif
-
+	lprintf("if ipCfg\n");
 	if (ipCfg->IPMode == IPADDR_USE_STATIC)
 	{
+		lprintf("netif_set_up\n");
 		// Bring the interface up.
 		netif_set_up(&lwip_netif);
 	}
 
 	vTaskDelay(1000/portTICK_RATE_MS);
 
+	lprintf("while (0 ==\n");
 	while (0 == netif_is_up(&lwip_netif))
 	{
 		vTaskDelay(5000/portTICK_RATE_MS);
@@ -624,8 +632,11 @@ void LWIPServiceTaskInit(void *pvParameters)
 		 }*/
 	}
 
-	 /* Initialize HTTP */
-	 httpd_init();
+ 	lprintf("httpd_init\n");
+	/* Initialize HTTP */
+	httpd_init();
+
+	lprintf("LWIPServiceTaskInit - calling vTaskDelete\n");
 
 	// Nothing else to do.  No point hanging around.
 	vTaskDelete( NULL);

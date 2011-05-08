@@ -25,6 +25,8 @@
 //
 //*****************************************************************************
 
+#include "logger.h"
+
 //*****************************************************************************
 //
 // Forward declaration of the default fault handlers.
@@ -191,6 +193,7 @@ ResetISR(void)
 static void
 NmiSR(void)
 {
+	rawputs("\nIn NmiSR\n");
     //
     // Enter an infinite loop.
     //
@@ -209,7 +212,8 @@ NmiSR(void)
 static void
 FaultISR(void)
 {
-    //
+	rawputs("\nIn FaultISR\n");
+	//
     // Enter an infinite loop.
     //
     while(1)
@@ -227,6 +231,7 @@ FaultISR(void)
 static void
 IntDefaultHandler(void)
 {
+	rawputs("\nIn IntDefaultHandler\n");
     //
     // Go into an infinite loop.
     //
