@@ -38,9 +38,9 @@ large successful programs.
 
 -# Build
 
-     pushd StellarisWare/; make; popd;
-     pushd lwip-contrib/ports/cross; make ; popd
-     pushd LM3S8962ek/; make; popd;
+     pushd StellarisWare; make; popd;
+     pushd lwip-contrib/ports/cross; make; popd;
+     pushd LM3S8962ek; make; popd;
 
 \section See Also
 
@@ -55,6 +55,7 @@ large successful programs.
 *****************************************************************************/
 
 #include <stdint.h>
+#include <ustdlib.h>
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -68,6 +69,8 @@ large successful programs.
 #include "gpio.h"
 #include "uart.h"
 #include "drivers/rit128x96x4.h"
+#include "interrupt.h"
+
 #include "LWIPStack.h"
 #include "ETHIsr.h"
 
@@ -75,7 +78,7 @@ large successful programs.
 #include "partnum.h"
 #include "util.h"
 #include "logger.h"
-
+#include "io.h"
 /*
  * The RIT display font is 5x7 in a 6x8 cell.
  */
@@ -119,7 +122,7 @@ int main(void)
 	 * and PHY.
 	 */
 	if( SysCtlPeripheralPresent( SYSCTL_PERIPH_ETH ) ) {
-		xTaskCreate( ethernetThread,"ethernet", 1000, NULL, 3, NULL);
+		xTaskCreate( ethernetThread,(signed char *)"ethernet", 1000, NULL, 3, NULL);
 	}
 
 	/**

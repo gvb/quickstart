@@ -29,6 +29,7 @@
  * Author: Adam Dunkels <adam@sics.se>
  *
  */
+#include "lwip/opt.h"
 #include "lwip/def.h"
 #include "fs.h"
 #include "fsdata.h"

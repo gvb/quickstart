@@ -74,6 +74,7 @@
  * the incoming CGI request.
  *
  */
+#include "lwip/opt.h"
 #include "lwip/debug.h"
 #include "lwip/stats.h"
 #include "httpd.h"

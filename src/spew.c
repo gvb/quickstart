@@ -15,6 +15,7 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <ustdlib.h>	/* vsnprintf() */
 
 #include <FreeRTOS.h>
 //#include <task.h>

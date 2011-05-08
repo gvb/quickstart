@@ -104,11 +104,15 @@ LINKER_FLAGS +=\
 #DEBUG=-g
 OPTIM=-Os
 
+
+#TBD do we need these in CPPFLAGS?:
+#	-D PACK_STRUCT_END=__attribute\(\(packed\)\) \
+#	-I $(RTOS_INCLUDE_DIR) \
+
 CPPFLAGS +=\
 	-I $(SRC_DIR) \
 	-I $(RTOS_SOURCE_DIR)/include \
 	-I $(RTOS_SOURCE_DIR)/portable/GCC/ARM_CM3 \
-	-I $(RTOS_INCLUDE_DIR) \
 	-I $(STELLARISWARE) \
 	-I $(STELLARISWARE)/inc \
 	-I $(STELLARISWARE)/utils \
@@ -122,7 +126,6 @@ CPPFLAGS +=\
 	-I $(STELLARISWARE)/third_party \
 	-D $(COMPILER)_$(SUBARCH) \
 	-D inline= \
-	-D PACK_STRUCT_END=__attribute\(\(packed\)\) \
 	-D ALIGN_STRUCT_END=__attribute\(\(aligned\(4\)\)\) \
 	-D sprintf=usprintf -D snprintf=usnprintf \
 	-D vsnprintf=uvsnprintf -D printf=uipprintf \

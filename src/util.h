@@ -39,5 +39,7 @@ enum wdt_monitor_e {
  */
 extern int wdt_checkin[];
 
+extern int util_init(void);
+
 #endif /* UTIL_H_ */
 /** \} */

@@ -54,7 +54,7 @@
 #include "interrupt.h"
 #include "sysctl.h"
 
-//#include "Apps/httpd.h"
+#include "httpd.h"
 
 #include "ETHIsr.h"
 #include "LWIPStack.h"
@@ -104,7 +104,7 @@ static err_t low_level_init(struct netif *netif)
 	// set MAC hardware address
 	ETHServiceTaskMACAddress(0, &(netif->hwaddr[0]));
 
-	LWIP_DEBUGF(NETIF_DEBUG, ("low_level_init: MAC address is \%"X8_F"%"X8_F"%"X8_F"%"X8_F"%"X8_F"%"X8_F"\n",
+	LWIP_DEBUGF(NETIF_DEBUG, ("low_level_init: MAC address is %"X8_F"%"X8_F"%"X8_F"%"X8_F"%"X8_F"%"X8_F"\n",
 					netif->hwaddr[0],netif->hwaddr[1],netif->hwaddr[2],
 					netif->hwaddr[3],netif->hwaddr[4],netif->hwaddr[5]));
 
