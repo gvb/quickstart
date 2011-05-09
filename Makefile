@@ -46,7 +46,6 @@ LUMINARY_DRIVER_LIB=$(STELLARISWARE)/driverlib/gcc
 LWIP_INCLUDE_DIR=$(LWIP)/src/include
 
 CROSS_COMPILE = arm-none-eabi-
-SYS_INCLUDE = /opt/CodeSourcery/arm-2010q1-188-arm-none-eabi/Sourcery_G++_Lite/arm-none-eabi/include/
 
 # Misc. executables.
 RM=/bin/rm
