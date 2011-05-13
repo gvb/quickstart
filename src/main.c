@@ -220,7 +220,7 @@ int main(void)
 	 * and PHY.
 	 */
 
-#if 0
+#if 1
 	if( SysCtlPeripheralPresent( SYSCTL_PERIPH_ETH ) ) {
 		xTaskCreate( ethernetThread,(signed char *)"ethernet",
 				5000, NULL, 3, NULL);

@@ -51,6 +51,16 @@ struct fs_table {
 /* Allocate file system memory */
 struct fs_table fs_memory[LWIP_MAX_OPEN_FILES];
 
+#define FS_IDX(f) ((const struct fs_table*)(f)-fs_memory)
+
+char *fsIStr(const struct fs_file* f)
+{
+	static char s[2];
+	s[0]='0'+(char)FS_IDX(f);
+	s[1]=(char)0;
+	return s;
+}
+
 /*-----------------------------------------------------------------------------------*/
 static struct fs_file *
 fs_malloc(void)
@@ -86,10 +96,11 @@ fs_open(char *name)
   struct fs_file *file;
   const struct fsdata_file *f;
 
-  lstr("OPEN:trying to open name=<");lstr(name);lstr(">\n");
+  lstr("Ot=<");lstr(name);lstr("|");
 
   file = fs_malloc();
   if(file == NULL) {
+	lstr("X>");
     return NULL;
   }
 
@@ -99,13 +110,14 @@ fs_open(char *name)
       file->len = f->len;
       file->index = 0;  // was: f->len;  shouldbe 0
       file->pextension = NULL;
-      lstr("OPEN:name=<");lstr(name);lstr(">,name=<");lstr(f->name);
-      lstr(">,file=");lhex((int)file);lstr(",data=");lhex(file->data);
-      lstr(",len=");lhex(file->len);lstr(",index=");lhex(file->index);crlf();
+      lstr(fsIStr(file));lstr(">");
+      //lstr(name);lstr(">,name=<");lstr(f->name);
+      //lstr(">,file=");lhex((int)file);lstr(",data=");lhex(file->data);
+      //lstr(",len=");lhex(file->len);lstr(",index=");lhex(file->index);crlf();
       return file;
     }
   }
-  lstr("OPEN:could not open=<");lstr(name);lstr(">\n");
+  lstr("n>");
   fs_free(file);
   return NULL;
 }
@@ -114,7 +126,7 @@ fs_open(char *name)
 void
 fs_close(struct fs_file *file)
 {
-  lstr("closing file=");lhex((int)file);crlf();
+  lstr("c<");lstr(fsIStr(file));lstr(">");
   fs_free(file);
 }
 /*-----------------------------------------------------------------------------------*/
@@ -123,14 +135,19 @@ fs_read(struct fs_file *file, char *buffer, int count)
 {
   int read;
 
-  lstr("READ:file=");lhex((int)file);lstr(",data=");lhex(file->data);
-  lstr(",len=");lhex(file->len);lstr(",index=");lhex(file->index);
-  lstr(",count=");lhex(count);crlf();
+  lstr("r<");lstr(fsIStr(file));lstr("|");
+  lhex((int)buffer);lstr("|");lhex(count);lstr("|");
+  //lstr("READ:file=");lhex((int)file);lstr(",data=");lhex(file->data);
+  //lstr(",len=");lhex(file->len);lstr(",index=");lhex(file->index);
+  //lstr(",count=");lhex(count);crlf();
 
   if(file->index == file->len) {
-	  lstr("READ@end:file=");lhex((int)file);lstr(",data=");lhex(file->data);
-	  lstr(",len=");lhex(file->len);lstr(",index=");lhex(file->index);
-	  lstr(",read=");lhex(-1);crlf();
+	  //lstr("READ@end:file=");lhex((int)file);lstr(",data=");lhex(file->data);
+	  //lstr(",len=");lhex(file->len);lstr(",index=");lhex(file->index);
+	  //lstr(",read=");
+	  lstr("-1");
+	  //crlf();
+	  lstr(">");
     return -1;
   }
 
@@ -142,9 +159,10 @@ fs_read(struct fs_file *file, char *buffer, int count)
   memcpy(buffer, (file->data + file->index), read);
   file->index += read;
 
-  lstr("READ@end:file=");lhex((int)file);lstr(",data=");lhex(file->data);
-  lstr(",len=");lhex(file->len);lstr(",index=");lhex(file->index);
-  lstr(",read=");lhex(read);crlf();
+  lhex(read);lstr(">");
+  //lstr("READ@end:file=");lhex((int)file);lstr(",data=");lhex(file->data);
+  //lstr(",len=");lhex(file->len);lstr(",index=");lhex(file->index);
+  //lstr(",read=");lhex(read);crlf();
   return(read);
 }
 

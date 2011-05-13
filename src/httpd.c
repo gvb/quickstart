@@ -639,6 +639,8 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
   err = ERR_OK;
 #endif
 
+  lstr("{");
+
   /* Have we run out of file data to send? If so, we need to read the next
    * block from the file.
    */
@@ -666,6 +668,7 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
       /* Did we get a send buffer? If not, return immediately. */
       if(hs->buf == NULL) {
         LWIP_DEBUGF(HTTPD_DEBUG, ("No buff\n"));
+        lstr("\n:E1}");
         return;
       }
     }
@@ -677,6 +680,7 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
         // No - close the connection.
         //
         close_conn(pcb, hs);
+        lstr("\n:E2}");
         return;
     }
 
@@ -686,12 +690,12 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
     count = fs_read(hs->handle, hs->buf, count);
     lstr("send_data:count=");lhex(count);crlf();
     if(count < 0) {
-      lstr("send_data:END-OF-FILE\n");
       /* We reached the end of the file so this request is done */
       LWIP_DEBUGF(HTTPD_DEBUG, ("End of file.\n"));
       fs_close(hs->handle);/* \todo are we missing other closes -Stitt */
       hs->handle = NULL;
       close_conn(pcb, hs);
+      lstr("\n:EoF}");
       return;
     }
 
@@ -1098,6 +1102,8 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
   }
 
   LWIP_DEBUGF(HTTPD_DEBUG, ("send_data end.\n"));
+  lstr("\n:ok}");
+
 }
 
 /*-----------------------------------------------------------------------------------*/
@@ -1105,6 +1111,8 @@ static err_t
 http_poll(void *arg, struct tcp_pcb *pcb)
 {
   struct http_state *hs;
+
+  lstr("\n_poll\n");
 
   hs = arg;
 
@@ -1138,6 +1146,7 @@ http_sent(void *arg, struct tcp_pcb *pcb, u16_t len)
 {
   struct http_state *hs;
 
+  lstr("\n_sent\n");
   LWIP_DEBUGF(HTTPD_DEBUG, ("http_sent 0x%08x\n", pcb));
 
   LWIP_UNUSED_ARG(len);
@@ -1199,6 +1208,7 @@ http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
   char *params;
 #endif
 
+  lstr("\n_recv\n");
   LWIP_DEBUGF(HTTPD_DEBUG, ("http_recv 0x%08x\n", pcb));
 
   hs = arg;
@@ -1337,11 +1347,17 @@ http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
 #ifdef INCLUDE_HTTPD_SSI
           hs->tag_index = 0;
           hs->tag_state = TAG_NONE;
+          /*
+           * A read of the file without a call to read
+           */
           hs->parsed = file->data;
           hs->parse_left = file->len;
           hs->tag_end = file->data;
 #endif
           hs->handle = file;
+          /*
+           * A second read of the file without a call to read
+           */
           hs->file = file->data;
           LWIP_ASSERT("File length must be positive!", (file->len >= 0));
           hs->left = file->len;
@@ -1385,6 +1401,8 @@ static err_t
 http_accept(void *arg, struct tcp_pcb *pcb, err_t err)
 {
   struct http_state *hs;
+
+  lstr("\n_accept\n");
 
   LWIP_UNUSED_ARG(arg);
   LWIP_UNUSED_ARG(err);
