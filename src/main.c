@@ -54,6 +54,8 @@ large successful programs.
 
 *****************************************************************************/
 
+#include "quickstart-opts.h"
+
 #include <stdint.h>
 #include <ustdlib.h>
 #include <string.h>
@@ -66,6 +68,7 @@ large successful programs.
 #include "hw_memmap.h"
 #include "hw_types.h"
 #include "hw_sysctl.h"
+#include "hw_ints.h"
 #include "sysctl.h"
 #include "gpio.h"
 #include "uart.h"
@@ -83,6 +86,11 @@ large successful programs.
 #include "debugSupport.h"
 #include "buildDate.h"
 #include "inc/lm3s8962.h"
+
+#ifdef USE_PROGRAM_STARTUP
+#include "program-startup.h"
+#endif
+
 /*
  * The RIT display font is 5x7 in a 6x8 cell.
  */
@@ -91,7 +99,6 @@ large successful programs.
 
 /****************************************************************************/
 
-static void prvSetupHardware(void);
 extern void vSetupHighFrequencyTimer( void );
 void ethernetThread(void);
 
@@ -104,11 +111,13 @@ void ethernetThread(void);
  */
 int main(void)
 {
+#ifndef USE_PROGRAM_STARTUP
 	char s[64];		/* sprintf string */
 	unsigned long why;	/* Why did we get reset? Why? */
+#endif
 
-	prvSetupHardware();
 	init_logger();
+
 
 	/*
 	 * \todo maybe this needs to be earlier or later in the code.
@@ -122,6 +131,11 @@ int main(void)
 
 	config_init();
 
+#ifdef USE_PROGRAM_STARTUP
+
+	program-startup();
+
+#else
 	/**
 	 * \req \req_id The \program \shall identify:
 	 * - The program version.
@@ -212,6 +226,8 @@ int main(void)
 	io_init();
 	util_init();
 
+#endif
+
 
 	/**
 	 * \req \req_tcpip The \program \shall support TCP/IP communications.
@@ -220,12 +236,13 @@ int main(void)
 	 * and PHY.
 	 */
 
-#if 1
+#if 0
 	if( SysCtlPeripheralPresent( SYSCTL_PERIPH_ETH ) ) {
 		xTaskCreate( ethernetThread,(signed char *)"ethernet",
 				5000, NULL, 3, NULL);
 	}
 #endif
+
 	/*
 	 * Enable interrupts...
 	 */
@@ -242,78 +259,6 @@ int main(void)
 
 	for( ;; );
 	return 0;
-}
-
-/*****************************************************************************/
-
-/**
- * Initialize the processor hardware.
- *
- * \req \req_init The \program \shall initialize the hardware.
- */
-static void prvSetupHardware(void)
-{
-	/*
-	 * If running on Rev A2 silicon, turn the LDO voltage up to 2.75V.
-	 * This is a workaround to allow the PLL to operate reliably.
-	 */
-	if( REVISION_IS_A2 ) {
-		SysCtlLDOSet( SYSCTL_LDO_2_75V );
-	}
-
-	/**
-	 * Set the clocking to run from the PLL at 50 MHz
-	 */
-	SysCtlClockSet(
-		SYSCTL_SYSDIV_4
-		| SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_8MHZ );
-
-	/*
-	 * Initialize the ARM peripherals that are used.  All the GPIOs
-	 * are initialized because the processor I/O page references
-	 * all of them.
-	 */
-	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
-	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
-	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOC);
-	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);
-	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);
-	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
-	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOG);
-
-	SysCtlPeripheralEnable(SYSCTL_PERIPH_WDOG0);
-	SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);
-	SysCtlPeripheralEnable(SYSCTL_PERIPH_PWM);
-	SysCtlPeripheralEnable(SYSCTL_PERIPH_ADC0);
-
-	/*
-	 * Configure the GPIOs used to read the on-board buttons.
-	 */
-	GPIOPinTypeGPIOInput(GPIO_PORTE_BASE,
-		GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3);
-	GPIOPadConfigSet(GPIO_PORTE_BASE,
-		GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3,
-		GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
-	GPIOPinTypeGPIOInput(GPIO_PORTF_BASE, GPIO_PIN_1);
-	GPIOPadConfigSet(GPIO_PORTF_BASE, GPIO_PIN_1, GPIO_STRENGTH_2MA,
-		GPIO_PIN_TYPE_STD_WPU);
-
-	/*
-	 * Configure the LED and speaker GPIOs.
-	 */
-	GPIOPinTypePWM(GPIO_PORTG_BASE, GPIO_PIN_1);
-	GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_0);
-	GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0, 0);
-
-	/*
-	 * UART0 is our debug ("spew") I/O.  Configure it for 115200,
-	 * 8-N-1 operation.
-	 */
-	GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0 | GPIO_PIN_1);
-	UARTConfigSetExpClk(UART0_BASE, SysCtlClockGet(), 115200,
-		( UART_CONFIG_WLEN_8
-		| UART_CONFIG_STOP_ONE
-		| UART_CONFIG_PAR_NONE ));
 }
 
 /****************************************************************************/
