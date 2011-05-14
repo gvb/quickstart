@@ -87,6 +87,7 @@ large successful programs.
 #include "buildDate.h"
 #include "inc/lm3s8962.h"
 
+
 #if USE_PROGRAM_STARTUP
 #include "program-startup.h"
 #else
@@ -119,20 +120,19 @@ void ethernetThread(void *pParams);
  */
 int main(void)
 {
+
 #if USE_PROGRAM_STARTUP
 	program-startup();
 #else
 	char s[64];		/* sprintf string */
 	unsigned long why;	/* Why did we get reset? Why? */
 
-
-	/*
-	 * TBD talk to Brian about this
-	 */
 	prvSetupHardware();
+
 
 	init_logger();
 	lstr("Here I am.\n");
+
 
 
 	/*
@@ -242,6 +242,7 @@ int main(void)
 #endif
 
 	util_init();
+
 
 
 	/**
