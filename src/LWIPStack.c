@@ -527,28 +527,20 @@ err_t ethernetif_init(struct netif *netif)
 #define NUM_SSI_FUNCTIONS 5
 #define NUM_SSI_ENTRIES (NUM_SSI_FUNCTIONS+FS_NUMFILES)
 
-int fun1(char *pcInsert, int iInsertLen)
+int fun1(char **pcInsert)
 {
-	if (iInsertLen>=11) {
-		strcpy(pcInsert,"1234567890");
-		return 10;
-	} else {
-		return 0;
-	}
+	*pcInsert = "1234567890";
+	return strlen(*pcInsert);
 }
 
-int fun2(char *pcInsert, int iInsertLen)
+int fun2(char **pcInsert)
 {
-	if (iInsertLen>=13) {
-		strcpy(pcInsert,"-userconfig-");
-		return 12;
-	} else {
-		return 0;
-	}
+	*pcInsert = "-userconfig-";
+	return strlen(*pcInsert);
 }
 
 
-int (*ssiFunctions[NUM_SSI_FUNCTIONS])(char *pcInsert, int iInsertLen) = {
+int (*ssiFunctions[NUM_SSI_FUNCTIONS])(char **pcInsert) = {
 	fun1,
 	fun2,
 	fun1,
@@ -597,26 +589,28 @@ void init_ssi_handler()
 //
 //*****************************************************************************
 
-int SSIHandler(int iIndex, char *pcInsert, int iInsertLen)
+int SSIHandler(int iIndex, char **pcInsert)
 {
-	int readCount=0;
 	if (iIndex<NUM_SSI_FUNCTIONS) {
-		readCount = ssiFunctions[iIndex](pcInsert,iInsertLen);
+		return ssiFunctions[iIndex](pcInsert);
 	}
 	else if (iIndex<NUM_SSI_ENTRIES) {
 			struct fs_file *fs;
 
 			fs = fs_open((char *)ssiTags[iIndex]);
 			if (fs) {
-				readCount = fs_read(fs, pcInsert, iInsertLen);
+				/*
+				 * A read of the file without a call to read
+				 */
+				int len = fs->len;
+				*pcInsert = fs->data;
 				fs_close(fs);
+				return len;
 			}
 	}
 
-	if (readCount<0)
-		readCount=0;
-
-	return readCount;
+	*pcInsert = "";
+	return 0;
 }
 #endif
 

@@ -66,7 +66,7 @@ static struct usercfg_s default_usercfg = {
 	.ip[0] = 192,
 	.ip[1] = 168,
 	.ip[2] = 98,
-	.ip[3] = 60,
+	.ip[3] = 29,
 
 	.netmask[0] = 255,
 	.netmask[1] = 255,

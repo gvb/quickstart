@@ -1,15 +1,15 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-%!: /header.inc
+<!--# /header.inc -->
 </head>
 <body>
-%!: /nav.inc
+<!--# /nav.inc -->
 <h2>Configuration</h2>
 <form name="aForm" action="/config.shtml" method="get">
 <table>
-%! perm-config
-%! user-config
+<!--# perm-config -->
+<!--# user-config -->
 </table>
 <br>
 <input type="submit" value="Update Configuration">

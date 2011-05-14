@@ -32,17 +32,35 @@
 #ifndef __FS_H__
 #define __FS_H__
 
+#include "httpd.h"
+
+#ifndef USE_PEXTENSION
+#define USE_PEXTENSION 0
+#endif
+
+/*
+ * httpd does not use fs_read when
+ *   USER_PROVIDES_ZERO_COPY_STATIC_TAGS
+ */
+
 struct fs_file {
   char *data;
   int len;
+#if !USER_PROVIDES_ZERO_COPY_STATIC_TAGS
   int index;
+#endif
+#if USE_PEXTENSION
   void *pextension;
+#endif
 };
 
 /* file will be allocated and filled in by the fs_open function. file will
  * be freed by the fs_close function. */
 struct fs_file *fs_open(char *name);
 void fs_close(struct fs_file *file);
+
+#if !USER_PROVIDES_ZERO_COPY_STATIC_TAGS
 int fs_read(struct fs_file *file, char *buffer, int count);
+#endif
 
 #endif /* __FS_H__ */
