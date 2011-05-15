@@ -75,7 +75,7 @@ static struct usercfg_s default_usercfg = {
 
 	.gateway[0] = 192,
 	.gateway[1] = 168,
-	.gateway[2] = 8,
+	.gateway[2] = 98,
 	.gateway[3] = 1,
 
 	.notes = {0},

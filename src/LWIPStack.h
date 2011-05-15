@@ -36,7 +36,7 @@ typedef struct
 //! Prototypes for the APIs.
 //
 //*****************************************************************************
-extern void LWIPServiceTaskInit(void *pvParameters);
+extern void LWIPServiceTaskInit(IP_CONFIG *ipCfg);
 #if NETIF_DEBUG
 void stellarisif_debug_print(struct pbuf *p);
 #else

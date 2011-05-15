@@ -370,9 +370,12 @@ static void io_task(void *params)
 	last_wake_time = xTaskGetTickCount();
 
 	while(1) {	/* forever loop */
+		lstr("<");
 		wdt_checkin[wdt_io] = 0;
 
 		scan_proc_adc();
+
+		lstr(">");
 
 		vTaskDelayUntil(&last_wake_time, POLL_DELAY);
 	}

@@ -23,12 +23,19 @@
 extern xTaskHandle wdt_task_handle;	/**< Watchdog task handle */
 
 /**
+ *  Enable or disable the watchdog timer
+ */
+#ifndef WDT_ENABLE
+#define WDT_ENABLE 1
+#endif
+
+/**
  * Things we are monitoring.
  */
 enum wdt_monitor_e {
-	wdt_io,		/**< I/O task */
-	wdt_util,	/**< Utility task */
-	wdt_last	/**< last entry flag */
+	wdt_io,		/**< I/O task */       //!< wdt_io
+	wdt_util,	/**< Utility task */  //!< wdt_util
+	wdt_last	/**< last entry flag *///!< wdt_last
 };
 
 /**

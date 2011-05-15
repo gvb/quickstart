@@ -140,7 +140,7 @@ void wdt_isr(void)
 #include <io.h>
 #include <logger.h>
 
-#define DEBUG	1
+#include "debugSupport.h"
 
 #define WDT_RESET_MS	100	/* Watchdog resets us after this */
 /*
@@ -221,9 +221,7 @@ static void util_task(void *params)
 {
 	portTickType last_wake_time;
 
-#if (DEBUG > 0)
-	lprintf("util_task() running, WDT is %d.\r\n", WDT_INT_CLKS);
-#endif
+	DPRINTF(0,"util_task() running, WDT is %d.\r\n", WDT_INT_CLKS);
 
 	/*
 	 * Registers and enables the watchdog interrupt.
@@ -240,14 +238,14 @@ static void util_task(void *params)
 	 * Enable the WDT reset and then enable the WDT itself.
 	 */
 	WatchdogResetEnable(WATCHDOG0_BASE);
+#if WDT_ENABLE
 	WatchdogEnable(WATCHDOG0_BASE);
-
+#endif
 	/* Start our periodic time starting in 3. 2. 1. NOW! */
 	last_wake_time = xTaskGetTickCount();
 
 	while(1) {	/* forever loop */
 		wdt_checkin[wdt_util] = 0;
-
 		vTaskDelayUntil(&last_wake_time, POLL_DELAY);
 	}
 }
@@ -261,6 +259,8 @@ int util_init(void)
 {
 	portBASE_TYPE ret;
 
+	DPRINTF(0,"util_init()");
+
 	ret = xTaskCreate(util_task,
 		(signed portCHAR *)"util",
 		DEFAULT_STACK_SIZE,
@@ -268,7 +268,9 @@ int util_init(void)
 		UTIL_TASK_PRIORITY,
 		&util_task_handle);
 	if (ret != pdPASS)
-		lprintf("Creation of utilities task failed: %d\r\n", ret);
+		DPRINTF(0,"Creation of utilities task failed: %d\r\n", ret);
+
+	DPRINTF(0,"util_init()-return");
 
 	return 0;
 }

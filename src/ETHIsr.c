@@ -22,6 +22,8 @@
 
 #include "ETHIsr.h"
 
+#include "logger.h"
+
 //*****************************************************************************
 //
 // This structure represents status of SSI device and port(ETH0,ETH1,..).
@@ -118,6 +120,8 @@ void ETH0IntHandler(void)
 	static portBASE_TYPE xHigherPriorityTaskWoken;
 
 	unsigned long ulStatus;
+
+	lstr("+");
 
 	// Read and Clear the interrupt.
 	ulStatus = EthernetIntStatus(ETHBase[0], false);
@@ -402,6 +406,10 @@ int ETHServiceTaskEnable(unsigned long ulPort)
 
 		// Set interrupt priority to number higher than configMAX_SYSCALL_INTERRUPT_PRIORITY
 		// defined in FreeRTOSConfig.h, see www.freertos.org
+		//
+		// This sets the priority lower than (with a higher number) MAX_SYSCALL
+		// so the Ethernet ISR can call FreeRTOS.
+		//
 		IntPrioritySet(ETHInterrupt[ulPort], SET_SYSCALL_INTERRUPT_PRIORITY(6));
 
 		// Enable Ethernet RX, PHY and RXOF Packet Interrupts.

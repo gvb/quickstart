@@ -118,7 +118,12 @@ static err_t low_level_init(struct netif *netif)
 	netif->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP;
 
 	// Create the task that handles the incoming packets.
-	if (pdPASS == xTaskCreate(ethernetif_input, ( signed portCHAR * ) "ETH_INPUT", netifINTERFACE_TASK_STACK_SIZE, (void *)netif, netifINTERFACE_TASK_PRIORITY, NULL))
+	if (pdPASS == xTaskCreate(ethernetif_input,
+			( signed portCHAR * ) "ETH_INPUT",
+			netifINTERFACE_TASK_STACK_SIZE,
+			(void *)netif,
+			netifINTERFACE_TASK_PRIORITY,
+			NULL))
 	{
 		ETHServiceTaskEnable(0);LWIP_DEBUGF(NETIF_DEBUG, ("low_level_input: Waiting for Ethernet to become ready\n"));
 		ETHServiceTaskWaitReady(0);
@@ -283,13 +288,21 @@ static void ethernetif_input(void *pParams)
 
 		} while (p == NULL);
 
-		LWIP_DEBUGF(NETIF_DEBUG, ("ethernetif_input: frame received\n"));
+		//LWIP_DEBUGF(NETIF_DEBUG, ("ethernetif_input: frame received\n"));
 
 		if (ERR_OK != netif->input(p, netif))
 		{
-			LWIP_DEBUGF(NETIF_DEBUG, ("ethernetif_input: input error\n"));
+			//LWIP_DEBUGF(NETIF_DEBUG, ("ethernetif_input: input error\n"));
+			lstr("%");
+			lhex((unsigned int)netif);
+			lhex((unsigned int)netif->input);
+			stellarisif_debug_print(p);
 			pbuf_free(p);
 			p = NULL;
+		}
+		else
+		{
+			lstr("$");
 		}
 	}
 }
@@ -535,15 +548,13 @@ err_t ethernetif_init(struct netif *netif)
 //! \return None.
 //
 //*****************************************************************************
-void LWIPServiceTaskInit(void *pvParameters)
+void LWIPServiceTaskInit(IP_CONFIG *ipCfg)
 {
 	struct ip_addr ip_addr;
 	struct ip_addr net_mask;
 	struct ip_addr gw_addr;
 
-	LWIP_ASSERT("pvParameters != NULL", (pvParameters != NULL));
-
-	IP_CONFIG * ipCfg = (IP_CONFIG *)pvParameters;
+	LWIP_ASSERT("ipCfg != NULL", (ipCfg != NULL));
 
 	// Check the parameters.
 #if LWIP_DHCP && LWIP_AUTOIP
@@ -560,11 +571,9 @@ void LWIPServiceTaskInit(void *pvParameters)
 	ASSERT(ipCfg->IPMode == IPADDR_USE_STATIC)
 #endif
 
-	lprintf("Calling tcpip_init\n");
 	LWIP_DEBUGF(DHCP_DEBUG, ("----- LWIP_DEBUGF calling tcpip_init -----\n"));
 	// Start the TCP/IP thread & init stuff
 	tcpip_init(NULL, NULL);
-	lprintf("Return from tcpip_init\n");
 
 	vTaskDelay(100 / portTICK_RATE_MS);
 
@@ -583,7 +592,6 @@ void LWIPServiceTaskInit(void *pvParameters)
 		gw_addr.addr = 0;
 	}
 #endif
-	lprintf("Calling netif_add\n");
 
 	// Create, configure and add the Ethernet controller interface with
 	// default settings.
@@ -591,15 +599,14 @@ void LWIPServiceTaskInit(void *pvParameters)
 	// Typically this is the case, however, if not, you must place this
 	// in a post-OS initialization
 	// @SEE http://lwip.wikia.com/wiki/Initialization_using_tcpip.c
-	netif_add(&lwip_netif, &ip_addr, &net_mask, &gw_addr, NULL, ethernetif_init, tcpip_input);
-	lprintf("Calling netif_set_default\n");
+	netif_add(&lwip_netif, &ip_addr, &net_mask, &gw_addr,
+			NULL, ethernetif_init, tcpip_input);
 	netif_set_default(&lwip_netif);
 
 	// Start DHCP, if enabled.
 #if LWIP_DHCP
 	if (ipCfg->IPMode == IPADDR_USE_DHCP)
 	{
-		lprintf("Starting DHCP client\n");
 		LWIP_DEBUGF(DHCP_DEBUG, ("----- Starting DHCP client -----\n"));
 		dhcp_start(&lwip_netif);
 	}
@@ -612,17 +619,15 @@ void LWIPServiceTaskInit(void *pvParameters)
 		autoip_start(&lwip_netif);
 	}
 #endif
-	lprintf("if ipCfg\n");
+
 	if (ipCfg->IPMode == IPADDR_USE_STATIC)
 	{
-		lprintf("netif_set_up\n");
 		// Bring the interface up.
 		netif_set_up(&lwip_netif);
 	}
 
 	vTaskDelay(1000/portTICK_RATE_MS);
 
-	lprintf("while (0 ==\n");
 	while (0 == netif_is_up(&lwip_netif))
 	{
 		vTaskDelay(5000/portTICK_RATE_MS);
@@ -632,14 +637,12 @@ void LWIPServiceTaskInit(void *pvParameters)
 		 }*/
 	}
 
- 	lprintf("httpd_init\n");
 	/* Initialize HTTP */
 	httpd_init();
 
-	lprintf("LWIPServiceTaskInit - calling vTaskDelete\n");
-
 	// Nothing else to do.  No point hanging around.
 	vTaskDelete( NULL);
+
 }
 
 //*****************************************************************************

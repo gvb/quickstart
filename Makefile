@@ -45,6 +45,10 @@ RTOS_INCLUDE_DIR=$(FREERTOS)/Common/include
 LUMINARY_DRIVER_LIB=$(STELLARISWARE)/driverlib/gcc
 LWIP_INCLUDE_DIR=$(LWIP)/src/include
 
+ifndef WDT_ENABLE
+WDT_ENABLE=1
+endif
+
 CROSS_COMPILE = arm-none-eabi-
 
 # Misc. executables.
@@ -70,16 +74,14 @@ CFLAGS =	-mthumb \
 		-Os \
 		-ffunction-sections \
 		-fdata-sections \
-		-MD \
 		-std=c99 \
 		-Wall \
 		-pedantic \
 		-DPART_$(PART) \
 		-c
 
-ifdef DEBUG
-CFLAGS +=	-g -D DEBUG
-endif
+# Build for debug
+CFLAGS +=	-g
 
 #
 # The flags passed to the linker.
@@ -129,7 +131,8 @@ CPPFLAGS +=\
 	-D sprintf=usprintf -D snprintf=usnprintf \
 	-D vsnprintf=uvsnprintf -D printf=uipprintf \
 	-D $(BOARD) \
-	-D DEPRECATED
+	-D DEPRECATED \
+	-D WDT_ENABLE=$(WDT_ENABLE)
 
 CFLAGS +=\
 	$(CPPFLAGS) \

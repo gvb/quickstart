@@ -71,7 +71,42 @@ int lgetchar(void)
 	return UARTCharGetNonBlocking(LOGGER_UART_BASE);
 }
 
-void rawputs(const char *p)
+void lhex(unsigned long hex)
+{
+	int i;
+
+	for (i=0; i<8; i++) {
+		/*
+		 * Pull off a nibble, most significant first.
+		 */
+		unsigned int nibble = hex >>28;
+		/*
+		 * Convert the nibble from int to ASCII char
+		 * relying that ASCII defines
+		 * '0' to '9'
+		 *  and also
+		 *    'a' to 'f'
+		 *  in increasing sequential order
+		 */
+		nibble += (unsigned int)'0';
+		if (nibble > (unsigned int)'9')
+			nibble += (unsigned int)'a' - (unsigned int)'9' - 1U;
+
+		UARTCharPut(LOGGER_UART_BASE, (unsigned char)nibble);
+
+		/*
+		 * Get the next most significant nibble;
+		 */
+		hex<<=4;
+	}
+
+	/*
+	 * Append a trailing space for ease of use.
+	 */
+	UARTCharPut(LOGGER_UART_BASE, ' ');
+}
+
+void lstr(const char *p)
 {
 	while (*p) {
 		if (*p=='\n') {
@@ -80,6 +115,10 @@ void rawputs(const char *p)
 		UARTCharPut(LOGGER_UART_BASE, *p);
 		p++;
 	}
+}
+
+void crlf(void){
+	lstr("\n");
 }
 
 void lprintf(const char *fmt, ...)
@@ -92,7 +131,7 @@ void lprintf(const char *fmt, ...)
 	a[0] = '\0';
 
 	vsnprintf(a, sizeof(a), fmt, argptr);
-	rawputs(a);
+	lstr(a);
 
 	xSemaphoreGive(loggerMutex);
 }

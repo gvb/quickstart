@@ -26,6 +26,7 @@
 //*****************************************************************************
 
 #include "logger.h"
+#include "inc/lm3s8962.h"
 
 //*****************************************************************************
 //
@@ -33,8 +34,12 @@
 //
 //*****************************************************************************
 void ResetISR(void);
+static void logFaultState(void);
 static void NmiSR(void);
 static void FaultISR(void);
+static void MPUFaultISR(void);
+static void BusFaultISR(void);
+static void UsageFaultISR(void);
 static void IntDefaultHandler(void);
 
 //*****************************************************************************
@@ -55,7 +60,7 @@ extern void ETH0IntHandler(void);
 //
 //*****************************************************************************
 #ifndef STACK_SIZE
-#define STACK_SIZE                              120
+#define STACK_SIZE                              512
 #endif
 static unsigned long pulStack[STACK_SIZE];
 
@@ -74,16 +79,16 @@ void (* const g_pfnVectors[])(void) =
     ResetISR,                               // The reset handler
     NmiSR,                                  // The NMI handler
     FaultISR,                               // The hard fault handler
-    IntDefaultHandler,                      // The MPU fault handler
-    IntDefaultHandler,                      // The bus fault handler
-    IntDefaultHandler,                      // The usage fault handler
-    0,                                      // Reserved
-    0,                                      // Reserved
-    0,                                      // Reserved
-    0,                                      // Reserved
+    MPUFaultISR,                            // The MPU fault handler
+    BusFaultISR,                            // The bus fault handler
+    UsageFaultISR,                          // The usage fault handler
+    IntDefaultHandler,                      // Reserved
+    IntDefaultHandler,                      // Reserved
+    IntDefaultHandler,                      // Reserved
+    IntDefaultHandler,                      // Reserved
     vPortSVCHandler,						// SVCall handler
     IntDefaultHandler,                      // Debug monitor handler
-    0,                                      // Reserved
+    IntDefaultHandler,                      // Reserved
     xPortPendSVHandler,                     // The PendSV handler
     xPortSysTickHandler,                    // The SysTick handler
     IntDefaultHandler,                      // GPIO Port A
@@ -127,7 +132,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // Quadrature Encoder 1
     IntDefaultHandler,                      // CAN0
     IntDefaultHandler,                      // CAN1
-    0,                                      // Reserved
+    IntDefaultHandler,                      // Reserved
     ETH0IntHandler,                         // Ethernet
     IntDefaultHandler                       // Hibernate
 };
@@ -183,6 +188,36 @@ ResetISR(void)
     main();
 }
 
+static void logFaultState(void)
+{
+	lstr("NVIC_INT_CTRL:"); lhex(NVIC_INT_CTRL_R);
+	lstr("_SYS_HND_CTRL:"); lhex(NVIC_SYS_HND_CTRL_R);
+	crlf();
+
+	lstr(" NVIC_ACTIVE0:"); lhex(NVIC_ACTIVE0_R);
+	lstr(" NVIC_ACTIVE1:"); lhex(NVIC_ACTIVE1_R);
+	crlf();
+
+	lstr("NVIC_SYS_PRI1:"); lhex(NVIC_SYS_PRI1_R);
+	lstr("NVIC_SYS_PRI2:"); lhex(NVIC_SYS_PRI2_R);
+	lstr("NVIC_SYS_PRI3:"); lhex(NVIC_SYS_PRI3_R);
+	crlf();
+
+	lstr("  _FAULT_STAT:"); lhex(NVIC_FAULT_STAT_R);
+	lstr(" _HFAULT_STAT:"); lhex(NVIC_HFAULT_STAT_R);
+	lstr("  _DEBUG_STAT:"); lhex(NVIC_DEBUG_STAT_R);
+	crlf();
+
+	lstr(" NVIC_MM_ADDR:"); lhex(NVIC_MM_ADDR_R);
+	lstr("  _FAULT_ADDR:"); lhex(NVIC_FAULT_ADDR_R);
+	crlf();
+
+	lstr("NVIC_MPU_CTRL:"); lhex(NVIC_MPU_CTRL_R);
+	lstr("NVIC_DBG_CTRL:"); lhex(NVIC_DBG_CTRL_R);
+	lstr(" NVIC_SW_TRIG:"); lhex(NVIC_SW_TRIG_R);
+	crlf();
+}
+
 //*****************************************************************************
 //
 // This is the code that gets called when the processor receives a NMI.  This
@@ -193,8 +228,9 @@ ResetISR(void)
 static void
 NmiSR(void)
 {
-	rawputs("\nIn NmiSR\n");
-    //
+	lstr("\nIn NmiSR\n");
+	logFaultState();
+	//
     // Enter an infinite loop.
     //
     while(1)
@@ -212,7 +248,68 @@ NmiSR(void)
 static void
 FaultISR(void)
 {
-	rawputs("\nIn FaultISR\n");
+	lstr("\nIn FaultISR\n");
+	logFaultState();
+	//
+    // Enter an infinite loop.
+    //
+    while(1)
+    {
+    }
+}
+
+//*****************************************************************************
+//
+// This is the code that gets called when the processor receives a MPU Fault
+// interrupt.  This simply enters an infinite loop, preserving the system state
+// for examination by a debugger.
+//
+//*****************************************************************************
+static void
+MPUFaultISR(void)
+{
+	lstr("\nIn MPUFaultISR\n");
+	logFaultState();
+	//
+    // Enter an infinite loop.
+    //
+    while(1)
+    {
+    }
+}
+
+//*****************************************************************************
+//
+// This is the code that gets called when the processor receives a Bus Fault
+// interrupt.  This simply enters an infinite loop, preserving the system state
+// for examination by a debugger.
+//
+//*****************************************************************************
+static void
+BusFaultISR(void)
+{
+	lstr("\nIn BusFaultISR\n");
+	logFaultState();
+	//
+    // Enter an infinite loop.
+    //
+    while(1)
+    {
+    }
+}
+
+//*****************************************************************************
+//
+// This is the code that gets called when the processor receives a Useage Fault
+// interrupt.  This simply enters an infinite loop, preserving the system state
+// for examination by a debugger.
+//
+//*****************************************************************************
+static void
+UsageFaultISR(void)
+{
+	lstr("\nIn UsageFaultISR\n");
+	logFaultState();
 	//
     // Enter an infinite loop.
     //
@@ -231,7 +328,8 @@ FaultISR(void)
 static void
 IntDefaultHandler(void)
 {
-	rawputs("\nIn IntDefaultHandler\n");
+	lstr("\nIn IntDefaultHandler\n");
+	logFaultState();
     //
     // Go into an infinite loop.
     //

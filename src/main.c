@@ -56,6 +56,7 @@ large successful programs.
 
 #include <stdint.h>
 #include <ustdlib.h>
+#include <string.h>
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -81,6 +82,7 @@ large successful programs.
 #include "io.h"
 #include "debugSupport.h"
 #include "buildDate.h"
+#include "inc/lm3s8962.h"
 /*
  * The RIT display font is 5x7 in a 6x8 cell.
  */
@@ -91,7 +93,7 @@ large successful programs.
 
 static void prvSetupHardware(void);
 extern void vSetupHighFrequencyTimer( void );
-void ethernetThread(void *pvParameters);
+void ethernetThread(void);
 
 /****************************************************************************/
 
@@ -108,28 +110,18 @@ int main(void)
 	prvSetupHardware();
 	init_logger();
 
-	config_init();
-	io_init();
-	util_init();
-
 	/*
-	 * Enable interrupts...
-	 */
-	IntMasterEnable();
-
-	/**
-	 * \req \req_tcpip The \program \shall support TCP/IP communications.
-	 *
-	 * Create the LWIP task if running on a processor that includes a MAC
-	 * and PHY.
+	 * TBD maybe this needs to be earlier or later in the code.
+	 * Enable fault handlers in addition to FaultIsr()
 	 */
 
-/* Temporarily disable the Ethernet */
-#if 0
-	if( SysCtlPeripheralPresent( SYSCTL_PERIPH_ETH ) ) {
-		xTaskCreate( ethernetThread,(signed char *)"ethernet", 1000, NULL, 3, NULL);
-	}
-#endif
+
+	NVIC_SYS_HND_CTRL_R |= NVIC_SYS_HND_CTRL_USAGE
+			              |NVIC_SYS_HND_CTRL_BUS
+			              |NVIC_SYS_HND_CTRL_MEM;
+
+	config_init();
+
 	/**
 	 * \req \req_id The \program \shall identify:
 	 * - The program version.
@@ -154,6 +146,13 @@ int main(void)
 		permcfg.mac[3], permcfg.mac[4], permcfg.mac[5]);
 	lprintf("                    IP: %d.%d.%d.%d\r\n",
 		usercfg.ip[0], usercfg.ip[1], usercfg.ip[2], usercfg.ip[3]);
+
+#if WDT_ENABLE
+	lprintf("        Watchdog Timer: Enabled\n");
+#else
+	lprintf("        Watchdog Timer: Disabled\n");
+#endif
+
 	lprintf("Notes:\r\n %s\r\n", usercfg.notes);
 
 	/*
@@ -216,9 +215,36 @@ int main(void)
 		lprintf("\r\n");
 	}
 
-	DPRINTF(0,"Here's a DPRINTF\n");
+	io_init();
+	util_init();
+
+
+	/**
+	 * \req \req_tcpip The \program \shall support TCP/IP communications.
+	 *
+	 * Create the LWIP task if running on a processor that includes a MAC
+	 * and PHY.
+	 */
+
+/* Temporarily disable the Ethernet */
+#if 1
+	if( SysCtlPeripheralPresent( SYSCTL_PERIPH_ETH ) ) {
+		xTaskCreate( ethernetThread,(signed char *)"ethernet",
+				5000, NULL, 3, NULL);
+	}
+#endif
+
+
+	/*
+	 * Enable interrupts...
+	 */
+	IntMasterEnable();
+
+	DPRINTF(0,"SetupTimer");
 	vSetupHighFrequencyTimer();
+	DPRINTF(0,"StartScheduler");
 	vTaskStartScheduler();
+	DPRINTF(0,"Idle Task Create Failed.");
 
 	/*
 	 * Will only get here if there was insufficient memory to create the
@@ -311,27 +337,34 @@ static void prvSetupHardware(void)
  */
 
 
-void ethernetThread(void *pvParameters)
+void ethernetThread(void)
 {
 	IP_CONFIG ipconfig;
 
-	lprintf("Calling ETHServiceTaskInit\n");
 	ETHServiceTaskInit(0);
-	lprintf("Calling ETHServiceTaskFlush\n");
 	ETHServiceTaskFlush(0,ETH_FLUSH_RX | ETH_FLUSH_TX);
 
 	ipconfig.IPMode = IPADDR_USE_STATIC;
-	ipconfig.IPAddr=0xC0A80064;
-	ipconfig.NetMask=0xFFFFFF00;
-	ipconfig.GWAddr=0xC0A80001;
+	ipconfig.IPAddr =
+			IP2LONG(usercfg.ip[0],
+					usercfg.ip[1],
+					usercfg.ip[2],
+					usercfg.ip[3]);
+	ipconfig.NetMask =
+			IP2LONG(usercfg.netmask[0],
+					usercfg.netmask[1],
+					usercfg.netmask[2],
+					usercfg.netmask[3]);
+	ipconfig.GWAddr=
+			IP2LONG(usercfg.gateway[0],
+					usercfg.gateway[1],
+					usercfg.gateway[2],
+					usercfg.gateway[3]);
 
-	lprintf("Calling LWIPServiceTaskInit\n");
-	LWIPServiceTaskInit((void *)&ipconfig);
-	lprintf("Return from LWIPServiceTaskInit\n");
+	LWIPServiceTaskInit(&ipconfig);
 
-	for(;;)
-	{
-	}
+	/* We should not get here. */
+	return;
 }
 
 /****************************************************************************/
