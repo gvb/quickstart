@@ -121,8 +121,6 @@ void ETH0IntHandler(void)
 
 	unsigned long ulStatus;
 
-	lstr("+");
-
 	// Read and Clear the interrupt.
 	ulStatus = EthernetIntStatus(ETHBase[0], false);
 	EthernetIntClear(ETHBase[0], ulStatus);
@@ -233,10 +231,13 @@ int ETHServiceTaskInit(const unsigned long ulPort)
 			// non-volatile USER0 and USER1 registers.  These registers can be read
 			// using the FlashUserGet function, as illustrated below.
 			//
+			// \todo Rationalize the MAC address from here and from the
+			// the configuration record.
+			//
 			FlashUserGet(&ulUser0, &ulUser1);
 			if ((ulUser0 == 0xffffffff) || (ulUser1 == 0xffffffff))
 			{
-				// TODO: do something...
+				// \todo : do something...
 			}
 
 			hwaddr[0] = ((ulUser0 >> 0) & 0xff);

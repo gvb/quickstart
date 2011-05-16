@@ -111,7 +111,7 @@ int main(void)
 	init_logger();
 
 	/*
-	 * TBD maybe this needs to be earlier or later in the code.
+	 * \todo maybe this needs to be earlier or later in the code.
 	 * Enable fault handlers in addition to FaultIsr()
 	 */
 
@@ -226,23 +226,17 @@ int main(void)
 	 * and PHY.
 	 */
 
-/* Temporarily disable the Ethernet */
-#if 1
 	if( SysCtlPeripheralPresent( SYSCTL_PERIPH_ETH ) ) {
 		xTaskCreate( ethernetThread,(signed char *)"ethernet",
 				5000, NULL, 3, NULL);
 	}
-#endif
-
 
 	/*
 	 * Enable interrupts...
 	 */
 	IntMasterEnable();
 
-	DPRINTF(0,"SetupTimer");
 	vSetupHighFrequencyTimer();
-	DPRINTF(0,"StartScheduler");
 	vTaskStartScheduler();
 	DPRINTF(0,"Idle Task Create Failed.");
 
@@ -392,6 +386,8 @@ void vApplicationStackOverflowHook(
 	xTaskHandle *pxTask,
 	signed portCHAR *pcTaskName)
 {
+	lstr("\n\nvApplicationStackOverflowHook:");
+	lhex((unsigned int)pxTask);lstr((char*)pcTaskName);crlf();
 	for( ;; );
 }
 /** \} */

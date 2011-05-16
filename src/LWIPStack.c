@@ -288,21 +288,13 @@ static void ethernetif_input(void *pParams)
 
 		} while (p == NULL);
 
-		//LWIP_DEBUGF(NETIF_DEBUG, ("ethernetif_input: frame received\n"));
+		LWIP_DEBUGF(NETIF_DEBUG, ("ethernetif_input: frame received\n"));
 
 		if (ERR_OK != netif->input(p, netif))
 		{
-			//LWIP_DEBUGF(NETIF_DEBUG, ("ethernetif_input: input error\n"));
-			lstr("%");
-			lhex((unsigned int)netif);
-			lhex((unsigned int)netif->input);
-			stellarisif_debug_print(p);
+			LWIP_DEBUGF(NETIF_DEBUG, ("ethernetif_input: input error\n"));
 			pbuf_free(p);
 			p = NULL;
-		}
-		else
-		{
-			lstr("$");
 		}
 	}
 }

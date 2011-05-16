@@ -359,6 +359,7 @@ static void scan_proc_adc(void)
 static void io_task(void *params)
 {
 	portTickType last_wake_time;
+	int ticks=0;
 
 	adc_setup();
 
@@ -370,12 +371,18 @@ static void io_task(void *params)
 	last_wake_time = xTaskGetTickCount();
 
 	while(1) {	/* forever loop */
-		lstr("<");
 		wdt_checkin[wdt_io] = 0;
 
 		scan_proc_adc();
 
-		lstr(">");
+		/*
+		 * Send a char out the serial port every 10 sec.
+		 */
+		if (ticks>=POLL_HZ*10) {
+			lstr(".");
+			ticks=0;
+		}
+		ticks++;
 
 		vTaskDelayUntil(&last_wake_time, POLL_DELAY);
 	}

@@ -221,8 +221,6 @@ static void util_task(void *params)
 {
 	portTickType last_wake_time;
 
-	DPRINTF(0,"util_task() running, WDT is %d.\r\n", WDT_INT_CLKS);
-
 	/*
 	 * Registers and enables the watchdog interrupt.
 	 */
@@ -259,8 +257,6 @@ int util_init(void)
 {
 	portBASE_TYPE ret;
 
-	DPRINTF(0,"util_init()");
-
 	ret = xTaskCreate(util_task,
 		(signed portCHAR *)"util",
 		DEFAULT_STACK_SIZE,
@@ -269,8 +265,6 @@ int util_init(void)
 		&util_task_handle);
 	if (ret != pdPASS)
 		DPRINTF(0,"Creation of utilities task failed: %d\r\n", ret);
-
-	DPRINTF(0,"util_init()-return");
 
 	return 0;
 }
