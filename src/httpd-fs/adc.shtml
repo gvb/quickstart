@@ -1,0 +1,270 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<!--# /header.inc -->
+<script>
+<!--# /ajax.js -->
+</script>
+</head>
+<body onload="startPoll('/adc_upd.shtml', 500);">
+<!--# /nav.inc -->
+<b>Analog</b>
+<table>
+<tr><td valign="top">
+<table>
+<tr><th> Lower </th><th> Value </th><th> mVolts </th><th> Eng Units </th></tr>
+<tr>
+<td class="r">Vicor 1x Current</td>
+	<td id="adcVicor1xI">0</td>
+	<td id="adcVicor1xImV">0</td>
+	<td id="adcVicor1xIEng">0</td>
+</tr>
+<tr>
+<td class="r">Vicor 3x A Current</td>
+	<td id="adcVicor3xAI">0</td>
+	<td id="adcVicor3xAImV">0</td>
+	<td id="adcVicor3xAIEng">0</td>
+</tr>
+<tr>
+<td class="r">Vicor 3x B Current</td>
+	<td id="adcVicor3xBI">0</td>
+	<td id="adcVicor3xBImV">0</td>
+	<td id="adcVicor3xBIEng">0</td>
+</tr>
+<tr>
+<td class="r">Vicor 3x C Current</td>
+	<td id="adcVicor3xCI">0</td>
+	<td id="adcVicor3xCImV">0</td>
+	<td id="adcVicor3xCIEng">0</td>
+</tr>
+<tr>
+<td class="r">NE 28v Input Current</td>
+	<td id="adcNe28vInI">0</td>
+	<td id="adcNe28vInImV">0</td>
+	<td id="adcNe28vInIEng">0</td>
+</tr>
+<tr>
+<td class="r">Vicor 1x Voltage</td>
+	<td id="adcVicor1x">0</td>
+	<td id="adcVicor1xmV">0</td>
+	<td id="adcVicor1xEng">0</td>
+</tr>
+<tr>
+<td class="r">Vicor 3x Voltage</td>
+	<td id="adcVicor3x">0</td>
+	<td id="adcVicor3xmV">0</td>
+	<td id="adcVicor3xEng">0</td>
+</tr>
+<tr>
+<td class="r">NE 28v Input Voltage</td>
+	<td id="adcNe28vIn">0</td>
+	<td id="adcNe28vInmV">0</td>
+	<td id="adcNe28vInEng">0</td>
+</tr>
+</table>
+</td><td valign="top">
+<table>
+<tr><th> Mux 0 </th><th> Value </th><th> mVolts </th><th> Eng Units </th></tr>
+<tr>
+<td class="r">Expansion 0</td>
+	<td id="adcExpADC0">0</td>
+	<td id="adcExpADC0mV">0</td>
+	<td id="adcExpADC0Eng">0</td>
+</tr>
+<tr>
+<td class="r">2.048v vRef B</td>
+	<td id="adc2048vRefB">0</td>
+	<td id="adc2048vRefBmV">0</td>
+	<td id="adc2048vRefBEng">0</td>
+</tr>
+<tr>
+<td class="r">NE 28v Input Voltage</td>
+	<td id="adcNe28vIn1">0</td>
+	<td id="adcNe28vIn1mV">0</td>
+	<td id="adcNe28vIn1Eng">0</td>
+</tr>
+<tr>
+<td class="r">19v Aux Voltage</td>
+	<td id="adc19vAux">0</td>
+	<td id="adc19vAuxmV">0</td>
+	<td id="adc19vAuxEng">0</td>
+</tr>
+<tr>
+<td class="r">Aircraft 28v Input Voltage</td>
+	<td id="adcAircraft28v">0</td>
+	<td id="adcAircraft28vmV">0</td>
+	<td id="adcAircraft28vEng">0</td>
+</tr>
+<tr>
+<td class="r">SU Current</td>
+	<td id="adcSuI">0</td>
+	<td id="adcSuImV">0</td>
+	<td id="adcSuIEng">0</td>
+</tr>
+<tr>
+<td class="r">SU Voltage (breaker)</td>
+	<td id="adcSu">0</td>
+	<td id="adcSumV">0</td>
+	<td id="adcSuEng">0</td>
+</tr>
+<tr>
+<td class="r">12v Aux B Voltage</td>
+	<td id="adc12vAuxB">0</td>
+	<td id="adc12vAuxBmV">0</td>
+	<td id="adc12vAuxBEng">0</td>
+</tr>
+<tr><th> Mux 1</th><th> Value </th><th> mVolts </th><th> Eng Units </th></tr>
+<tr>
+<td class="r">Expansion 1</td>
+	<td id="adcExpADC1">0</td>
+	<td id="adcExpADC1mV">0</td>
+	<td id="adcExpADC1Eng">0</td>
+</tr>
+<tr>
+<td class="r">Expansion 2</td>
+	<td id="adcExpADC2">0</td>
+	<td id="adcExpADC2mV">0</td>
+	<td id="adcExpADC2Eng">0</td>
+</tr>
+<tr>
+<td class="r">28v Holdup Voltage</td>
+	<td id="adc28vHoldup">0</td>
+	<td id="adc28vHoldupmV">0</td>
+	<td id="adc28vHoldupEng">0</td>
+</tr>
+<tr>
+<td class="r">15v Aux Voltage</td>
+	<td id="adc15vAux">0</td>
+	<td id="adc15vAuxmV">0</td>
+	<td id="adc15vAuxEng">0</td>
+</tr>
+<tr>
+<td class="r">LDG Bus Cap Voltage</td>
+	<td id="adcLdgBusCap">0</td>
+	<td id="adcLdgBusCapmV">0</td>
+	<td id="adcLdgBusCapEng">0</td>
+</tr>
+<tr>
+<td class="r">RCCB Current</td>
+	<td id="adcRccbI">0</td>
+	<td id="adcRccbImV">0</td>
+	<td id="adcRccbIEng">0</td>
+</tr>
+<tr>
+<td class="r">28v Aux D Current</td>
+	<td id="adc28vAuxDI">0</td>
+	<td id="adc28vAuxDImV">0</td>
+	<td id="adc28vAuxDIEng">0</td>
+</tr>
+<tr>
+<td class="r">12v Aux A Current</td>
+	<td id="adc12vAuxAI">0</td>
+	<td id="adc12vAuxAImV">0</td>
+	<td id="adc12vAuxAIEng">0</td>
+</tr>
+</table>
+</td><td valign="top">
+<table>
+<tr><th> Mux 2 </th><th> Value </th><th> mVolts </th><th> Eng Units </th></tr>
+<tr>
+<td class="r">Board Temp 1</td>
+	<td id="adcBoardTemp1">0</td>
+	<td id="adcBoardTemp1mV">0</td>
+	<td id="adcBoardTemp1Eng">0</td>
+</tr>
+<tr>
+<td class="r">Open/Gnd 1 Current</td>
+	<td id="adcOpenGnd1I">0</td>
+	<td id="adcOpenGnd1ImV">0</td>
+	<td id="adcOpenGnd1IEng">0</td>
+</tr>
+<tr>
+<td class="r">Cap FET Gate</td>
+	<td id="adcCapFetGate">0</td>
+	<td id="adcCapFetGatemV">0</td>
+	<td id="adcCapFetGateEng">0</td>
+</tr>
+<tr>
+<td class="r">2.048v vRef A</td>
+	<td id="adc2048vRefA">0</td>
+	<td id="adc2048vRefAmV">0</td>
+	<td id="adc2048vRefAEng">0</td>
+</tr>
+<tr>
+<td class="r">5v Aux A+B+C+D Current</td>
+	<td id="adc5vAuxAbcdI">0</td>
+	<td id="adc5vAuxAbcdImV">0</td>
+	<td id="adc5vAuxAbcdIEng">0</td>
+</tr>
+<tr>
+<td class="r">28v Aux C Current</td>
+	<td id="adc28vAuxCI">0</td>
+	<td id="adc28vAuxCImV">0</td>
+	<td id="adc28vAuxCIEng">0</td>
+</tr>
+<tr>
+<td class="r">Chassis Fans</td>
+	<td id="adcChassisFans">0</td>
+	<td id="adcChassisFansmV">0</td>
+	<td id="adcChassisFansEng">0</td>
+</tr>
+<tr>
+<td class="r">12v Aux A Voltage</td>
+	<td id="adc12vAuxA">0</td>
+	<td id="adc12vAuxAmV">0</td>
+	<td id="adc12vAuxAEng">0</td>
+</tr>
+<tr><th> Mux 3 </th><th> Value </th><th> mVolts </th><th> Eng Units </th></tr>
+<tr>
+<td class="r">28v Aux C Voltage</td>
+	<td id="adc28vAuxC">0</td>
+	<td id="adc28vAuxCmV">0</td>
+	<td id="adc28vAuxCEng">0</td>
+</tr>
+<tr>
+<td class="r">Open/Gnd 2 Current</td>
+	<td id="adcOpenGnd2I">0</td>
+	<td id="adcOpenGnd2ImV">0</td>
+	<td id="adcOpenGnd2IEng">0</td>
+</tr>
+<tr>
+<td class="r">19v Aux Current</td>
+	<td id="adc19vAuxI">0</td>
+	<td id="adc19vAuxImV">0</td>
+	<td id="adc19vAuxIEng">0</td>
+</tr>
+<tr>
+<td class="r">15v Aux Current</td>
+	<td id="adc15vAuxI">0</td>
+	<td id="adc15vAuxImV">0</td>
+	<td id="adc15vAuxIEng">0</td>
+</tr>
+<tr>
+<td class="r">Board Temp 2</td>
+	<td id="adcBoardTemp2">0</td>
+	<td id="adcBoardTemp2mV">0</td>
+	<td id="adcBoardTemp2Eng">0</td>
+</tr>
+<tr>
+<td class="r">5v Aux E+F+G Current</td>
+	<td id="adc5vAuxEfgI">0</td>
+	<td id="adc5vAuxEfgImV">0</td>
+	<td id="adc5vAuxEfgIEng">0</td>
+</tr>
+<tr>
+<td class="r">12v Aux C Current</td>
+	<td id="adc12vAuxCI">0</td>
+	<td id="adc12vAuxCImV">0</td>
+	<td id="adc12vAuxCIEng">0</td>
+</tr>
+<tr>
+<td class="r">12v Aux B Current</td>
+	<td id="adc12vAuxBI">0</td>
+	<td id="adc12vAuxBImV">0</td>
+	<td id="adc12vAuxBIEng">0</td>
+</tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>

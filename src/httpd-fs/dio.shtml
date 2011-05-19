@@ -1,0 +1,230 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+%!: /header.inc
+<script>
+%!: /ajax.js
+</script>
+</head>
+<body onload="startPoll('/dio_upd.shtml', 500);">
+%!: /nav.inc
+<b>Input / Output</b><br>
+<table>
+<td>
+<table>
+<tr><th colspan="2"> ARM Exp 0..15 </th>
+	<th colspan="2"> ARM Exp 15..31 </th>
+	<th colspan="2"> Lower Exp 32..47 </th>
+	<th colspan="2"> Lower Exp 48..63 </th></tr>
+<tr> <!-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dioGpsReset_"><img src="/warn.png" /></button></td>
+	<td>GPS Reset*</td>
+<!-- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dioFan"><img src="/warn.png" /></button></td>
+	<td>Fan</td>
+<!-- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dioNe28vConnect"><img src="/warn.png" /></button></td>
+	<td>NE28v Connect</td>
+<!-- -->
+	<td class="c" id="dio5vAuxAIsOn_"><img src="/warn.png" /></td>
+	<td>5v Aux A On*</td>
+<!-- -->
+</tr><tr> <!-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dioCpuLed1"><img src="/warn.png" /></button></td>
+	<td>CPU LED1</td>
+<!-- -->
+	<td class="c" id="dioFanStatus"><img src="/warn.png" /></td>
+	<td>Fan On</td>
+<!-- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dioNe28vCapConnect"><img src="/warn.png" /></button></td>
+	<td>NE28v Cap Connect</td>
+<!-- -->
+	<td class="c" id="dio5vAuxBIsOn_"><img src="/warn.png" /></td>
+	<td>5v Aux B On*</td>
+<!-- -->
+</tr><tr> <!-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dioCpuLed2"><img src="/warn.png" /></button></td>
+	<td>CPU LED2</td>
+<!-- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dioPayloadReset"><img src="/warn.png" /></button></td>
+	<td>Payload Reset</td>
+<!-- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dio5vAuxA"><img src="/warn.png" /></button></td>
+	<td>5v Aux A On</td>
+<!-- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dioLdgBusPrecharge_"><img src="/warn.png" /></button></td>
+	<td>LDG Bus Cap Precharge*</td>
+<!-- -->
+</tr><tr> <!-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -->
+	<td class="c" id="dioArmPc4"><img src="/warn.png" /></td>
+	<td>ARM PC4</td>
+<!-- -->
+	<td class="c" id="dioUnused2"><img src="/warn.png" /></td>
+	<td>Unused 2</td>
+<!-- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dio5vAuxB"><img src="/warn.png" /></button></td>
+	<td>5v Aux B On</td>
+<!-- -->
+	<td class="c" id="dioSuPowerIsOn"><img src="/warn.png" /></td>
+	<td>SU Power On</td>
+<!-- -->
+</tr><tr> <!-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -->
+	<td class="c" id="dioArmPc6"> <img src="/warn.png" /></td>
+	<td>ARM PC6</td>
+<!-- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dioPc104Power"><img src="/warn.png" /></button></td>
+	<td>PC104 Power</td>
+<!-- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dio12vAuxAOn_"><img src="/warn.png" /></button></td>
+	<td>12v Aux A (GPS) On*</td>
+<!-- -->
+	<td class="c" id="dioServoPowerIsOn"><img src="/warn.png" /></td>
+	<td>Servo Power On</td>
+<!-- -->
+</tr><tr> <!-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -->
+	<td class="c" id="dioArmProc"><img src="/warn.png" /></td>
+	<td>ARM PROC</td>
+<!-- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dioGpsPower"><img src="/warn.png" /></button></td>
+	<td>GPS Power</td>
+<!-- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dio12vAuxBOn_"><img src="/warn.png" /></button></td>
+	<td>12v Aux B (panel) On*</td>
+<!-- -->
+	<td class="c" id="dio28vAuxCIsOn"><img src="/warn.png" /></td>
+	<td>28v Aux C On</td>
+<!-- -->
+</tr><tr> <!-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -->
+	<td class="c" id="dioGpsPosValid"><img src="/warn.png" /></td>
+	<td>GPS Position Valid</td>
+<!-- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dioVicor3xEnable"><img src="/warn.png" /></button></td>
+	<td>Vicor 3x Enable</td>
+<!-- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dio12vAuxCOn_"><img src="/warn.png" /></button></td>
+	<td>12v Aux C (fan) On*</td>
+<!-- -->
+	<td class="c" id="dio28vAuxDIsOn"><img src="/warn.png" /></td>
+	<td>28v Aux D On</td>
+<!-- -->
+</tr><tr> <!-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -->
+	<td class="c" id="dioOpenGnd2IsOn"><img src="/warn.png" /></td>
+	<td>Open/Ground 2 Active</td>
+<!-- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dioVicor1xEnable"><img src="/warn.png" /></button></td>
+	<td>Vicor 1x Enable</td>
+<!-- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dio41v_"><img src="/warn.png" /></button></td>
+	<td>41v Master On*</td>
+<!-- -->
+	<td class="c" id="dioOpenGnd1IsOn"><img src="/warn.png" /></td>
+	<td>Open/Ground 1 Active</td>
+<!-- -->
+</tr><tr> <!-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -->
+	<td class="c" id="dioVicor3xBInputPower"><img src="/warn.png" /></td>
+	<td>Vicor 3x B Input Power OK</td>
+<!-- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dioLedPowerOK"><img src="/warn.png" /></button></td>
+	<td>Power OK</td>
+<!-- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dio15vAux_"><img src="/warn.png" /></button></td>
+	<td>15v Aux On*</td>
+<!-- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dioSuPowerOff_"><img src="/warn.png" /></button></td>
+	<td>SU Power Off (CLR*)</td>
+<!-- -->
+</tr><tr> <!-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -->
+	<td class="c" id="dioVicor3xCInputPower"><img src="/warn.png" /></td>
+	<td>Vicor 3x C Input Power OK</td>
+<!-- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dioLedGpsOK"><img src="/warn.png" /></button></td>
+	<td>GPS OK</td>
+<!-- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dio19vAux_"><img src="/warn.png" /></button></td>
+	<td>19v Aux On*</td>
+<!-- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dioServoPowerOff_"><img src="/warn.png" /></button></td>
+	<td>Servo Power Off (CLR*)</td>
+<!-- -->
+</tr><tr> <!-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -->
+	<td class="c" id="dioUnused1"><img src="/warn.png" /></td>
+	<td>Unused1</td>
+<!-- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dioLedGimbalLockOK"><img src="/warn.png" /></button></td>
+	<td>Gimbal Lock OK</td>
+<!-- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dioLdgBusCapConnect"><img src="/warn.png" /></button></td>
+	<td>LDG Bus Cap Connect</td>
+<!-- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dio28vAuxCOff_"><img src="/warn.png" /></button></td>
+	<td>28v Aux C Power Off (CLR*)</td>
+<!-- -->
+</tr><tr> <!-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -->
+	<td class="c" id="dioVicor1xStatus"><img src="/warn.png" /></td>
+	<td>Vicor 1x status</td>
+<!-- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dioLedGimbalLockFault"><img src="/warn.png" /></button></td>
+	<td>Gimbal Lock Fault</td>
+<!-- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dioSuPowerOn_"><img src="/warn.png" /></button></td>
+	<td>SU Power On (PRE*)</td>
+<!-- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dio28vAuxDOff_"><img src="/warn.png" /></button></td>
+	<td>28v Aux D Power Off (CLR*)</td>
+<!-- -->
+</tr><tr> <!-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -->
+	<td class="c" id="dioVicorSpareEnable"><img src="/warn.png" /></td>
+	<td>Vicor Spare Enable</td>
+<!-- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dioLedInputPowerFault"><img src="/warn.png" /></button></td>
+	<td>Input Power Fault</td>
+<!-- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dioServoPowerOn_"><img src="/warn.png" /></button></td>
+	<td>Servo Power On (PRE*)</td>
+<!-- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dioOpenGnd1Off_"><img src="/warn.png" /></button></td>
+	<td>Open/Ground 1 Off (CLR*)</td>
+<!-- -->
+</tr><tr> <!-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -->
+	<td class="c" id="dioVicorSpareStatus"><img src="/warn.png" /></td>
+	<td>Vicor Spare On</td>
+<!-- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dioLedOutputPowerFault"><img src="/warn.png" /></button></td>
+	<td>Output Power Fault</td>
+<!-- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dio28vAuxCOn_"><img src="/warn.png" /></button></td>
+	<td>28v Aux C On (PRE*)</td>
+<!-- -->
+	<td class="c" id="dioRccbTripped"><img src="/warn.png" /></td>
+	<td>RCCB Tripped</td>
+<!-- -->
+</tr><tr> <!-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -->
+	<td class="c" id="dioVicor1xInputPower"><img src="/warn.png" /></td>
+	<td>Vicor 1x Input Power OK</td>
+<!-- -->
+	<td class="c" id="dioSwPowerOn"><img src="/warn.png" /></td>
+	<td>Power On Switch</td>
+<!-- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dio28vAuxDOn_"><img src="/warn.png" /></button></td>
+	<td>28v Aux D On (PRE*)</td>
+<!-- -->
+	<td class="c" id="dioSpare2"><img src="/warn.png" /></td>
+	<td>Spare 2</td>
+<!-- -->
+</tr><tr> <!-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -->
+	<td class="c" id="dioVicor3xAInputPower"><img src="/warn.png" /></td>
+	<td>Vicor 3x A Input Power OK</td>
+<!-- -->
+	<td class="c" id="dioSwLdgOn"><img src="/warn.png" /></td>
+	<td>LDG On Switch</td>
+<!-- -->
+	<td class="c"><button type="button" OnClick="btnReport(this.id);" id="dioOpenGnd1On_"><img src="/warn.png" /></button></td>
+	<td>Open/Ground 1 On (PRE*)</td>
+<!-- -->
+	<td class="c" id="dioSpare3"><img src="/warn.png" /></td>
+	<td>Spare 3</td>
+<!-- -->
+</tr> <!-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -->
+</table>
+</body>
+</html>
