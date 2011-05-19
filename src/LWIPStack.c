@@ -599,7 +599,7 @@ void init_ssi_handler()
 
 int SSIHandler(int iIndex, char *pcInsert, int iInsertLen)
 {
-	int readCount;
+	int readCount=0;
 	if (iIndex<NUM_SSI_FUNCTIONS) {
 		readCount = ssiFunctions[iIndex](pcInsert,iInsertLen);
 	}
@@ -609,9 +609,8 @@ int SSIHandler(int iIndex, char *pcInsert, int iInsertLen)
 			fs = fs_open((char *)ssiTags[iIndex]);
 			if (fs) {
 				readCount = fs_read(fs, pcInsert, iInsertLen);
+				fs_close(fs);
 			}
-			else
-				readCount = 0;
 	}
 
 	if (readCount<0)
