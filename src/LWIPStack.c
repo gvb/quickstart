@@ -58,6 +58,9 @@
 
 #include "ETHIsr.h"
 #include "LWIPStack.h"
+#include "fs.h"
+#include "fsdata.h"
+#include "fsdata-stats.h"
 
 // Sanity Check:  This interface driver will NOT work if the following defines are incorrect.
 #if (PBUF_LINK_HLEN != 16)
@@ -519,6 +522,105 @@ err_t ethernetif_init(struct netif *netif)
 	return low_level_init(netif);
 }
 
+#ifdef INCLUDE_HTTPD_SSI
+
+#define NUM_SSI_FUNCTIONS 5
+#define NUM_SSI_ENTRIES (NUM_SSI_FUNCTIONS+FS_NUMFILES)
+
+int fun1(char *pcInsert, int iInsertLen)
+{
+	if (iInsertLen>=11) {
+		strcpy(pcInsert,"1234567890");
+		return 10;
+	} else {
+		return 0;
+	}
+}
+
+int fun2(char *pcInsert, int iInsertLen)
+{
+	if (iInsertLen>=13) {
+		strcpy(pcInsert,"-userconfig-");
+		return 12;
+	} else {
+		return 0;
+	}
+}
+
+
+int (*ssiFunctions[NUM_SSI_FUNCTIONS])(char *pcInsert, int iInsertLen) = {
+	fun1,
+	fun2,
+	fun1,
+	fun1,
+	fun1
+};
+
+const char *ssiTags[NUM_SSI_ENTRIES] = {
+		"perm-config",
+		"user-config",
+		"3",
+		"4",
+		"5"
+};
+
+void init_ssi_handler()
+{
+	int i;
+	const struct fsdata_file *f = FS_ROOT;
+
+	/*
+	 * Append the SSI File names to the ssiTags list.
+	 */
+
+	for(i=NUM_SSI_FUNCTIONS;i<NUM_SSI_ENTRIES;i++){
+		LWIP_ASSERT("(f)", (f));
+		if (f) {
+			ssiTags[i] = (char *)f->name;
+			f = f->next;
+		}
+		else {
+			ssiTags[i] = "";
+		}
+	}
+}
+
+
+//*****************************************************************************
+//
+//! Handle a server side include.
+//! \param TBD
+//!
+//! This function
+//!
+//! \return Number of characters copied to pcInsert.
+//
+//*****************************************************************************
+
+int SSIHandler(int iIndex, char *pcInsert, int iInsertLen)
+{
+	int readCount;
+	if (iIndex<NUM_SSI_FUNCTIONS) {
+		readCount = ssiFunctions[iIndex](pcInsert,iInsertLen);
+	}
+	else if (iIndex<NUM_SSI_ENTRIES) {
+			struct fs_file *fs;
+
+			fs = fs_open((char *)ssiTags[iIndex]);
+			if (fs) {
+				readCount = fs_read(fs, pcInsert, iInsertLen);
+			}
+			else
+				readCount = 0;
+	}
+
+	if (readCount<0)
+		readCount=0;
+
+	return readCount;
+}
+#endif
+
 //*****************************************************************************
 //
 //! Initializes the lwIP TCP/IP stack.
@@ -630,6 +732,12 @@ void LWIPServiceTaskInit(IP_CONFIG *ipCfg)
 	}
 
 	/* Initialize HTTP */
+
+#ifdef INCLUDE_HTTPD_SSI
+	init_ssi_handler();
+	http_set_ssi_handler(SSIHandler, ssiTags, NUM_SSI_ENTRIES);
+#endif
+
 	httpd_init();
 
 	// Nothing else to do.  No point hanging around.

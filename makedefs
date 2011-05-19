@@ -85,3 +85,12 @@ $(BUILD_DIR)%.axf:
 %.bin: %.axf
 	@echo "  $(OBJCOPY) -O binary $< $@"
 	$(Q)$(OBJCOPY) -O binary $< $@
+
+#
+# The rule for turning text files into c includes;
+#
+TEXTTOC=sed -f src/httpd-fs/text-to-c-strings.sed
+
+src/httpd-fs/%_html.h: src/httpd-fs/html/%.html
+	@echo "convert $< to .h"
+	$(Q)$(TEXTTOC) $< > $@

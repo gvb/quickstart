@@ -10,6 +10,7 @@ if(-d "/tmp") {
 
 my $rootdir = $ARGV[0];
 my $outfile = $ARGV[1];
+my $statsfile = $ARGV[2];
 if($rootdir eq '')
 {
     $rootdir = 'fs';
@@ -24,11 +25,21 @@ open(OUTPUT, "> fsdata.c");
 } else {
 open(OUTPUT, "> " . $outfile);
 }
+if($statsfile eq '') {
+open(STATSOUTPUT, "> fsdata-stats.c");
+
+} else {
+open(STATSOUTPUT, "> " . $statsfile);
+}
 if($rootdir eq '') {
 chdir("fs");
 } else {
 chdir($rootdir);
 }
+
+print(OUTPUT "/* Generated automatically by ./makefsdata $ARGV[0] $ARGV[1] $ARGV[2] */\n\n");
+print(OUTPUT "#include \"../".$statsfile."\"\n\n");
+
 open(FILES, "find . -type f |");
 
 while($file = <FILES>) {
@@ -74,7 +85,7 @@ while($file = <FILES>) {
     print(HEADER "\r\n");
     close(HEADER);
 
-    unless($file =~ /\.plain$/ || $file =~ /cgi/) {
+    unless($file =~ /\.plain$/ || $file =~ /cgi/ || $file =~ /\.inc$/ || $file =~ /\.js$/) {
     system("cat /tmp/header $file > /tmp/file");
     } else {
     system("cp $file /tmp/file");
@@ -129,8 +140,14 @@ for($i = 0; $i < @fvars; $i++) {
     print(OUTPUT "sizeof(data$fvar) - ". (length($file) + 1) ."}};\n\n");
 }
 
-print(OUTPUT "#define FS_ROOT file$fvars[$i - 1]\n\n");
-print(OUTPUT "#define FS_NUMFILES $i\n");
+print(STATSOUTPUT "/* Generated automatically by ./makefsdata $ARGV[0] $ARGV[1] $ARGV[2] */\n\n");
+print(STATSOUTPUT "#ifndef _FSDATA_STATS_H_\n");
+print(STATSOUTPUT "#define _FSDATA_STATS_H_\n\n");
+print(STATSOUTPUT "#define FS_ROOT file$fvars[$i - 1]\n");
+print(STATSOUTPUT "extern const struct fsdata_file FS_ROOT[];\n\n");
+print(STATSOUTPUT "#define FS_NUMFILES $i\n\n");
+print(STATSOUTPUT "#endif\n");
+
 if($bTempDir eq 1) {
     unlink("/tmp/file");
     rmdir("/tmp");

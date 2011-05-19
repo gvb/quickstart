@@ -236,9 +236,8 @@ static void util_task(void *params)
 	 * Enable the WDT reset and then enable the WDT itself.
 	 */
 	WatchdogResetEnable(WATCHDOG0_BASE);
-#if WDT_ENABLE
 	WatchdogEnable(WATCHDOG0_BASE);
-#endif
+
 	/* Start our periodic time starting in 3. 2. 1. NOW! */
 	last_wake_time = xTaskGetTickCount();
 

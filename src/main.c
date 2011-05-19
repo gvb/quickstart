@@ -147,12 +147,6 @@ int main(void)
 	lprintf("                    IP: %d.%d.%d.%d\r\n",
 		usercfg.ip[0], usercfg.ip[1], usercfg.ip[2], usercfg.ip[3]);
 
-#if WDT_ENABLE
-	lprintf("        Watchdog Timer: Enabled\n");
-#else
-	lprintf("        Watchdog Timer: Disabled\n");
-#endif
-
 	lprintf("Notes:\r\n %s\r\n", usercfg.notes);
 
 	/*
@@ -226,11 +220,12 @@ int main(void)
 	 * and PHY.
 	 */
 
+#if 0
 	if( SysCtlPeripheralPresent( SYSCTL_PERIPH_ETH ) ) {
 		xTaskCreate( ethernetThread,(signed char *)"ethernet",
 				5000, NULL, 3, NULL);
 	}
-
+#endif
 	/*
 	 * Enable interrupts...
 	 */

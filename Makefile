@@ -139,6 +139,8 @@ CFLAGS +=\
 	$(DEBUG) $(OPTIM) \
 	-Wall
 
+WEBSOURCE=$(wildcard $(SRC_DIR)/httpd-fs)
+
 SOURCE =\
 	$(SRC_DIR)/main.c \
 	$(SRC_DIR)/io.c \
@@ -160,17 +162,9 @@ SOURCE =\
 	$(RTOS_SOURCE_DIR)/portable/MemMang/heap_2.c \
 	$(BUILD_DIR)buildDate.c
 
-#	$(SRC_DIR)/webserver/uIP_Task.c \
-#	$(SRC_DIR)/webserver/emac.c \
-#	$(SRC_DIR)/webserver/httpd.c \
-#	$(SRC_DIR)/webserver/httpd-cgi.c \
-#	$(SRC_DIR)/webserver/httpd-fs.c \
-#	$(SRC_DIR)/webserver/http-strings.c \
-
 VPATH	= $(sort $(dir $(SOURCE)))
 
 LIBS= $(LUMINARY_DRIVER_LIB)/libdriver.a $(LWIP_CONTRIB)/liblwip.a
-#LIBS= $(LUMINARY_DRIVER_LIB)/libdriver.a 
 
 OBJS = $(addprefix $(BUILD_DIR), $(notdir $(SOURCE:.c=.o)))
 
@@ -178,7 +172,7 @@ OBJS = $(addprefix $(BUILD_DIR), $(notdir $(SOURCE:.c=.o)))
 
 include makedefs
 
-.PHONY: all doxygen clean distclean webfiles webstrings get-date
+.PHONY: all doxygen clean distclean get-date
 
 all: $(BUILD_DIR)$(PROG).bin
 
@@ -194,29 +188,17 @@ $(BUILD_DIR)buildDate.c : get-date
 $(BUILD_DIR)$(PROG).bin : $(BUILD_DIR)$(PROG).axf
 
 $(BUILD_DIR)$(PROG).axf : $(BUILD_DIR)startup.o $(OBJS) $(LIBS)
-#	webfiles webstrings  \
 
 $(BUILD_DIR)startup.o : startup.c Makefile
 	@echo "  $(CC) $<"
 	$(Q)$(CC) -O1 $(filter-out -O%, $(CFLAGS)) -o $@ $<
 
-# Phony targets to auto-generate the .c files for the webserver
-# This isn't right, causes rebuild every time.  Grrrstupid.
-#webfiles:
-#	(cd $(SRC_DIR)/webserver && ./makefsdata)
+$(SRC_DIR)/fs.c : $(BUILD_DIR)fsdata.c $(BUILD_DIR)fsdata-stats.c
 
-#webstrings:
-#	(cd $(SRC_DIR)/webserver && ./makestrings)
+$(BUILD_DIR)fsdata.c $(BUILD_DIR)fsdata-stats.c : $(WEBSOURCE)
+	@echo "./makefsdata"
+	$(Q)./makefsdata $(SRC_DIR)/httpd-fs $(BUILD_DIR)fsdata.c $(BUILD_DIR)fsdata-stats.c
 
-#$(SRC_DIR)/webserver/httpd-fsdata.c : \
-#		$(wildcard ($SRC_DIR)/webserver/httpd-fs/*)
-#	(cd $(SRC_DIR)/webserver && ./makefsdata)
-#
-#$(SRC_DIR)/webserver/http-strings.c : $(SRC_DIR)/webserver/http-strings
-#	(cd $(SRC_DIR)/webserver && ./makestrings)
-
-#TBD Stitt talk to Jerry about this...
-#
 $(BUILD_DIR)depend: $(SOURCE)
 	@echo "  generate $(BUILD_DIR)depend -> $(CC) $<"
 	$(Q)$(CC) $(CPPFLAGS) -MM $(addprefix -MT, $(OBJS)) -E $^ > $@ || rm -f $(BUILD_DIR)depend
@@ -230,10 +212,7 @@ clean :
 	$(RM) -f $(BUILD_DIR)*.axf	
 	$(RM) -f $(BUILD_DIR)*.bin
 	$(RM) -f $(BUILD_DIR)depend
-	$(RM) -f $(BUILD_DIR)buildDate.c
-	$(RM) -f $(SRC_DIR)/webserver/httpd-fsdata.c
-	$(RM) -f $(SRC_DIR)/webserver/webserver/http-strings.[ch]
-	$(RM) -rf doc
+	$(RM) -f $(BUILD_DIR)*.c
 
 distclean : clean
 	$(RM) -f $(BUILD_DIR)*.axf $(BUILD_DIR)*.bin $(BUILD_DIR)*.map

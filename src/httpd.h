@@ -130,7 +130,7 @@ void http_set_ssi_handler(tSSIHandler pfnSSIHandler,
 
 /* The maximum length of the string comprising the tag name */
 #ifndef MAX_TAG_NAME_LEN
-#define MAX_TAG_NAME_LEN 8
+#define MAX_TAG_NAME_LEN 32
 #endif
 
 /* The maximum length of string that can be returned to replace any given tag */

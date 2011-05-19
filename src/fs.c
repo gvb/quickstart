@@ -33,9 +33,9 @@
 #include "lwip/def.h"
 #include "fs.h"
 #include "fsdata.h"
-#include "fsdata.c"
+#include "../obj/fsdata.c"
 #include <string.h>
-
+#include "logger.h"
 /*-----------------------------------------------------------------------------------*/
 /* Define the number of open files that we can support. */
 #ifndef LWIP_MAX_OPEN_FILES
@@ -86,6 +86,8 @@ fs_open(char *name)
   struct fs_file *file;
   const struct fsdata_file *f;
 
+  lstr("OPEN:trying to open name=<");lstr(name);lstr(">\n");
+
   file = fs_malloc();
   if(file == NULL) {
     return NULL;
@@ -95,11 +97,15 @@ fs_open(char *name)
     if (!strcmp(name, (char *)f->name)) {
       file->data = (char *)f->data;
       file->len = f->len;
-      file->index = f->len;
+      file->index = 0;  // was: f->len;  shouldbe 0
       file->pextension = NULL;
+      lstr("OPEN:name=<");lstr(name);lstr(">,name=<");lstr(f->name);
+      lstr(">,file=");lhex((int)file);lstr(",data=");lhex(file->data);
+      lstr(",len=");lhex(file->len);lstr(",index=");lhex(file->index);crlf();
       return file;
     }
   }
+  lstr("OPEN:could not open=<");lstr(name);lstr(">\n");
   fs_free(file);
   return NULL;
 }
@@ -108,6 +114,7 @@ fs_open(char *name)
 void
 fs_close(struct fs_file *file)
 {
+  lstr("closing file=");lhex((int)file);crlf();
   fs_free(file);
 }
 /*-----------------------------------------------------------------------------------*/
@@ -116,7 +123,14 @@ fs_read(struct fs_file *file, char *buffer, int count)
 {
   int read;
 
+  lstr("READ:file=");lhex((int)file);lstr(",data=");lhex(file->data);
+  lstr(",len=");lhex(file->len);lstr(",index=");lhex(file->index);
+  lstr(",count=");lhex(count);crlf();
+
   if(file->index == file->len) {
+	  lstr("READ@end:file=");lhex((int)file);lstr(",data=");lhex(file->data);
+	  lstr(",len=");lhex(file->len);lstr(",index=");lhex(file->index);
+	  lstr(",read=");lhex(-1);crlf();
     return -1;
   }
 
@@ -128,6 +142,9 @@ fs_read(struct fs_file *file, char *buffer, int count)
   memcpy(buffer, (file->data + file->index), read);
   file->index += read;
 
+  lstr("READ@end:file=");lhex((int)file);lstr(",data=");lhex(file->data);
+  lstr(",len=");lhex(file->len);lstr(",index=");lhex(file->index);
+  lstr(",read=");lhex(read);crlf();
   return(read);
 }
 

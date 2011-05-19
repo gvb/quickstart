@@ -684,10 +684,12 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
     LWIP_DEBUGF(HTTPD_DEBUG, ("Trying to read %d bytes.\n", count));
 
     count = fs_read(hs->handle, hs->buf, count);
+    lstr("send_data:count=");lhex(count);crlf();
     if(count < 0) {
+      lstr("send_data:END-OF-FILE\n");
       /* We reached the end of the file so this request is done */
       LWIP_DEBUGF(HTTPD_DEBUG, ("End of file.\n"));
-      fs_close(hs->handle);
+      fs_close(hs->handle);/* \todo are we missing other closes -Stitt */
       hs->handle = NULL;
       close_conn(pcb, hs);
       return;
