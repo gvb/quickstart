@@ -74,6 +74,10 @@
  * the incoming CGI request.
  *
  */
+
+/*
+ * \todo merge with httpd.c.save
+ */
 #include "lwip/opt.h"
 #include "lwip/debug.h"
 #include "lwip/stats.h"
@@ -141,6 +145,7 @@ enum tag_check_state {
     TAG_LEADIN,     /* Tag lead in "<!--#" being processed */
     TAG_FOUND,      /* Tag name being read, looking for lead-out start */
     TAG_LEADOUT,    /* Tag lead out "-->" being processed */
+    TAG_REMAINING, /* Send the initial tag string "<--# tag -->" */
     TAG_SENDING     /* Sending tag replacement string */
 };
 #endif /* INCLUDE_HTTPD_SSI */
@@ -159,11 +164,20 @@ struct http_state {
   u8_t retries;
 #ifdef INCLUDE_HTTPD_SSI
   u8_t tag_check;   /* true if we are processing a .shtml file else false */
-  u8_t tag_index;   /* Counter used by tag parsing state machine */
+#if USER_PROVIDES_ZERO_COPY_STATIC_TAGS
+  u32_t tag_index;   /* Counter used by tag parsing state machine */
+  u32_t tag_insert_len;
+#else
+  u8_t tag_insert_len;
   u8_t tag_insert_len; /* Length of insert in string tag_insert */
+#endif
   u8_t tag_name_len; /* Length of the tag name in string tag_name */
   char tag_name[MAX_TAG_NAME_LEN + 1]; /* Last tag name extracted */
+#if USER_PROVIDES_ZERO_COPY_STATIC_TAGS
+  char *tag_insert;
+#else
   char tag_insert[MAX_TAG_INSERT_LEN + 1]; /* Insert string for tag_name */
+#endif
   enum tag_check_state tag_state; /* State of the tag processor */
 #endif
 #ifdef INCLUDE_HTTPD_CGI
@@ -404,8 +418,13 @@ get_tag_insert(struct http_state *hs)
     for(loop = 0; loop < g_iNumTags; loop++)
     {
       if(strcmp(hs->tag_name, g_ppcTags[loop]) == 0) {
+#if USER_PROVIDES_ZERO_COPY_STATIC_TAGS
+          hs->tag_insert_len = g_pfnSSIHandler(loop, &(hs->tag_insert));
+          //lstr("<get.");lstr(hs->tag_name);lstr(".");lhex(hs->tag_insert_len);lstr(">");
+#else
         hs->tag_insert_len = g_pfnSSIHandler(loop, hs->tag_insert,
                                              MAX_TAG_INSERT_LEN);
+#endif
         return;
       }
     }
@@ -415,8 +434,12 @@ get_tag_insert(struct http_state *hs)
    * we don't have a handler for. Merely echo back the tags with an error
    * marker.
    */
+#if USER_PROVIDES_ZERO_COPY_STATIC_TAGS
+  hs->tag_insert = "<b>***UNKNOWN TAG***</b>";
+#else
   usnprintf(hs->tag_insert, (MAX_TAG_INSERT_LEN + 1),
            "<b>***UNKNOWN TAG %s***</b>", hs->tag_name);
+#endif
   hs->tag_insert_len = strlen(hs->tag_insert);
 }
 #endif /* INCLUDE_HTTPD_SSI */
@@ -639,7 +662,7 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
   err = ERR_OK;
 #endif
 
-  lstr("{");
+  //lstr("{");
 
   /* Have we run out of file data to send? If so, we need to read the next
    * block from the file.
@@ -668,7 +691,7 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
       /* Did we get a send buffer? If not, return immediately. */
       if(hs->buf == NULL) {
         LWIP_DEBUGF(HTTPD_DEBUG, ("No buff\n"));
-        lstr("\n:E1}");
+        //lstr("\n:E1}");
         return;
       }
     }
@@ -680,7 +703,7 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
         // No - close the connection.
         //
         close_conn(pcb, hs);
-        lstr("\n:E2}");
+        //lstr("\n:E2}");
         return;
     }
 
@@ -689,7 +712,7 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
     fs_close(hs->handle);
     hs->handle = NULL;
     close_conn(pcb, hs);
-    lstr("\n:EoF}");
+    //lstr("\n:EoF}");
     return;
   }
 
@@ -935,7 +958,7 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
                * sending here or the insert string.
                */
               hs->tag_index = 0;
-              hs->tag_state = TAG_SENDING;
+              hs->tag_state = TAG_REMAINING;
               hs->tag_end = hs->parsed;
 
               /* If there is any unsent data in the buffer prior to the
@@ -977,10 +1000,10 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
 
         /*
          * We have found a valid tag and are in the process of sending
-         * data as a result of that discovery. We send either remaining data
-         * from the file prior to the insert point or the insert string itself.
+         * data as a result of that discovery. We send remaining data
+         * from the file prior to the insert point.
          */
-        case TAG_SENDING:
+        case TAG_REMAINING:
           /* Do we have any remaining file data to send from the buffer prior
            * to the tag?
            */
@@ -1005,8 +1028,23 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
               hs->left -= len;
             }
           } else {
-            /* Do we still have insert data left to send? */
-            if(hs->tag_index < hs->tag_insert_len) {
+            hs->tag_state = TAG_SENDING;
+          }
+          break;
+
+          /*
+           * We have found a valid tag and are in the process of sending
+           * data as a result of that discovery.
+           *
+           * We send the insert string itself.
+           */
+
+        case TAG_SENDING:
+          /* Do we still have insert data left to send? */
+            //lstr("<sending.");lstr(hs->tag_name);lstr(".");
+            //lhex(hs->tag_insert_len);lstr(".");
+            //lhex(hs->tag_index);lstr(">");
+          if(hs->tag_index < hs->tag_insert_len) {
               /* We are sending the insert string itself. How much of the
                * insert can we send? */
               if(len > (hs->tag_insert_len - hs->tag_index)) {
@@ -1021,8 +1059,12 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
                  * this, insert corruption can occur if more than one insert
                  * is processed before we call tcp_output.
                  */
+                //lstr("<tcp_write.");lstr(hs->tag_name);lstr(".");
+                //lhex(len);lstr(".");
+                //lhex(hs->tag_index);lstr(">");
                 err = tcp_write(pcb, &(hs->tag_insert[hs->tag_index]), len, 1);
                 if (err == ERR_MEM) {
+                  //lstr("<em>");
                   len /= 2;
                 }
               } while (err == ERR_MEM && (len > 1));
@@ -1031,15 +1073,15 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
                 data_to_send = true;
                 hs->tag_index += len;
               }
-            } else {
+          } else {
               /* We have sent all the insert data so go back to looking for
                * a new tag.
                */
+              //lstr("<none.");lstr(hs->tag_name);lstr(">");
               LWIP_DEBUGF(HTTPD_DEBUG, ("Everything sent.\n"));
               hs->tag_index = 0;
               hs->tag_state = TAG_NONE;
           }
-        }
       }
     }
 
@@ -1086,7 +1128,7 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
   }
 
   LWIP_DEBUGF(HTTPD_DEBUG, ("send_data end.\n"));
-  lstr("\n:ok}");
+  //lstr("\n:ok}");
 
 }
 
@@ -1096,7 +1138,7 @@ http_poll(void *arg, struct tcp_pcb *pcb)
 {
   struct http_state *hs;
 
-  lstr("\n_poll\n");
+  //lstr("\n_poll\n");
 
   hs = arg;
 
@@ -1130,7 +1172,7 @@ http_sent(void *arg, struct tcp_pcb *pcb, u16_t len)
 {
   struct http_state *hs;
 
-  lstr("\n_sent\n");
+  //lstr("\n_sent\n");
   LWIP_DEBUGF(HTTPD_DEBUG, ("http_sent 0x%08x\n", pcb));
 
   LWIP_UNUSED_ARG(len);
@@ -1192,7 +1234,7 @@ http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
   char *params;
 #endif
 
-  lstr("\n_recv\n");
+  //lstr("\n_recv\n");
   LWIP_DEBUGF(HTTPD_DEBUG, ("http_recv 0x%08x\n", pcb));
 
   hs = arg;
@@ -1386,7 +1428,7 @@ http_accept(void *arg, struct tcp_pcb *pcb, err_t err)
 {
   struct http_state *hs;
 
-  lstr("\n_accept\n");
+  //lstr("\n_accept\n");
 
   LWIP_UNUSED_ARG(arg);
   LWIP_UNUSED_ARG(err);

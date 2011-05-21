@@ -53,6 +53,7 @@ struct fs_table fs_memory[LWIP_MAX_OPEN_FILES];
 
 #define FS_IDX(f) ((const struct fs_table*)(f)-fs_memory)
 
+#if 0
 char *fsIStr(const struct fs_file* f)
 {
 	static char s[2];
@@ -60,6 +61,7 @@ char *fsIStr(const struct fs_file* f)
 	s[1]=(char)0;
 	return s;
 }
+#endif
 
 /*-----------------------------------------------------------------------------------*/
 static struct fs_file *
@@ -90,17 +92,32 @@ fs_free(struct fs_file *file)
 }
 
 /*-----------------------------------------------------------------------------------*/
+/**
+ * open a file.
+ *
+ * Because this is a read only file system for a small efficient
+ * webserver, callers expect that they may peruse the returned
+ * fs_file structure and
+ * have:
+ *  f = fs_open("filename");
+ *  f->name
+ *  f->data
+ *  *(f->data)
+ *  f->len
+ * remain valid until fs_close(f);.
+ *  f->index will change based upon calls fs_read.
+ */
 struct fs_file *
 fs_open(char *name)
 {
   struct fs_file *file;
   const struct fsdata_file *f;
 
-  lstr("Ot=<");lstr(name);lstr("|");
+  //lstr("<Ot.");lstr(name);lstr("|");
 
   file = fs_malloc();
   if(file == NULL) {
-	lstr("X>");
+	//lstr("X>");
     return NULL;
   }
 
@@ -108,16 +125,22 @@ fs_open(char *name)
     if (!strcmp(name, (char *)f->name)) {
       file->data = (char *)f->data;
       file->len = f->len;
+#if !USER_PROVIDES_ZERO_COPY_STATIC_TAGS
       file->index = 0;  // was: f->len;  shouldbe 0
+#endif
+#if USE_PEXTENSION
       file->pextension = NULL;
-      lstr(fsIStr(file));lstr(">");
+#endif
+      //lstr(fsIStr(file));
       //lstr(name);lstr(">,name=<");lstr(f->name);
       //lstr(">,file=");lhex((int)file);lstr(",data=");lhex(file->data);
-      //lstr(",len=");lhex(file->len);lstr(",index=");lhex(file->index);crlf();
+      //lstr("|len=");lhex(file->len);
+      //lstr(",index=");lhex(file->index);
+      //lstr(">");
       return file;
     }
   }
-  lstr("n>");
+  //lstr("n>");
   fs_free(file);
   return NULL;
 }
@@ -126,17 +149,18 @@ fs_open(char *name)
 void
 fs_close(struct fs_file *file)
 {
-  lstr("c<");lstr(fsIStr(file));lstr(">");
+  //lstr("c<");lstr(fsIStr(file));lstr(">");
   fs_free(file);
 }
 /*-----------------------------------------------------------------------------------*/
+#if !USER_PROVIDES_ZERO_COPY_STATIC_TAGS
 int
 fs_read(struct fs_file *file, char *buffer, int count)
 {
   int read;
 
-  lstr("r<");lstr(fsIStr(file));lstr("|");
-  lhex((int)buffer);lstr("|");lhex(count);lstr("|");
+  //lstr("r<");lstr(fsIStr(file));lstr("|");
+  //lhex((int)buffer);lstr("|");lhex(count);lstr("|");
   //lstr("READ:file=");lhex((int)file);lstr(",data=");lhex(file->data);
   //lstr(",len=");lhex(file->len);lstr(",index=");lhex(file->index);
   //lstr(",count=");lhex(count);crlf();
@@ -145,9 +169,9 @@ fs_read(struct fs_file *file, char *buffer, int count)
 	  //lstr("READ@end:file=");lhex((int)file);lstr(",data=");lhex(file->data);
 	  //lstr(",len=");lhex(file->len);lstr(",index=");lhex(file->index);
 	  //lstr(",read=");
-	  lstr("-1");
+	  //lstr("-1");
 	  //crlf();
-	  lstr(">");
+	  //lstr(">");
     return -1;
   }
 
@@ -159,10 +183,10 @@ fs_read(struct fs_file *file, char *buffer, int count)
   memcpy(buffer, (file->data + file->index), read);
   file->index += read;
 
-  lhex(read);lstr(">");
+  //lhex(read);lstr(">");
   //lstr("READ@end:file=");lhex((int)file);lstr(",data=");lhex(file->data);
   //lstr(",len=");lhex(file->len);lstr(",index=");lhex(file->index);
   //lstr(",read=");lhex(read);crlf();
   return(read);
 }
-
+#endif

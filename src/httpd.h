@@ -123,7 +123,16 @@ void http_set_cgi_handlers(const tCGI *pCGIs, int iNumHandlers);
  * output JavaScript code must do so in an encapsulated way, sending the whole
  * HTML <script>...</script> section as a single include.
  */
+
+#ifndef USER_PROVIDES_ZERO_COPY_STATIC_TAGS
+#define USER_PROVIDES_ZERO_COPY_STATIC_TAGS 0
+#endif
+
+#if USER_PROVIDES_ZERO_COPY_STATIC_TAGS
+typedef int (*tSSIHandler)(int iIndex, char **pcInsert);
+#else
 typedef int (*tSSIHandler)(int iIndex, char *pcInsert, int iInsertLen);
+#endif
 
 void http_set_ssi_handler(tSSIHandler pfnSSIHandler,
                           const char **ppcTags, int iNumTags);
@@ -134,8 +143,12 @@ void http_set_ssi_handler(tSSIHandler pfnSSIHandler,
 #endif
 
 /* The maximum length of string that can be returned to replace any given tag */
+#if !USER_PROVIDES_ZERO_COPY_STATIC_TAGS
+
 #ifndef MAX_TAG_INSERT_LEN
 #define MAX_TAG_INSERT_LEN 192
+#endif
+
 #endif
 
 #endif
