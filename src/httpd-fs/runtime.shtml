@@ -1,14 +1,14 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-%!: /header.inc
+<!--# /header.inc -->
 </head>
 <body onLoad="window.setTimeout(&quot;location.href='runtime.shtml'&quot;,2000)">
-%!: /nav.inc
+<!--# /nav.inc -->
 <h2>Run-time statistics</h2>
 Page will refresh every 2 seconds.<p>
 <font face="courier"><pre>Task            Abs Time      % Time<br>****************************************<br>
-%! run-time
+<!--# run-time -->
 </pre></font>
 </body>
 </html>
