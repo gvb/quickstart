@@ -684,29 +684,13 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
         return;
     }
 
-    /* Read a block of data from the file. */
-    LWIP_DEBUGF(HTTPD_DEBUG, ("Trying to read %d bytes.\n", count));
-
-    count = fs_read(hs->handle, hs->buf, count);
-    lstr("send_data:count=");lhex(count);crlf();
-    if(count < 0) {
-      /* We reached the end of the file so this request is done */
-      LWIP_DEBUGF(HTTPD_DEBUG, ("End of file.\n"));
-      fs_close(hs->handle);/* \todo are we missing other closes -Stitt */
-      hs->handle = NULL;
-      close_conn(pcb, hs);
-      lstr("\n:EoF}");
-      return;
-    }
-
-    /* Set up to send the block of data we just read */
-    LWIP_DEBUGF(HTTPD_DEBUG, ("Read %d bytes.\n", count));
-    hs->left = count;
-    hs->file = hs->buf;
-#ifdef INCLUDE_HTTPD_SSI
-    hs->parse_left = count;
-    hs->parsed = hs->buf;
-#endif
+    /* We reached the end of the file so this request is done */
+    LWIP_DEBUGF(HTTPD_DEBUG, ("End of file.\n"));
+    fs_close(hs->handle);
+    hs->handle = NULL;
+    close_conn(pcb, hs);
+    lstr("\n:EoF}");
+    return;
   }
 
 #ifdef INCLUDE_HTTPD_SSI
