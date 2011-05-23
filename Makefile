@@ -152,6 +152,8 @@ SOURCE =\
 	$(SRC_DIR)/LWIPStack.c \
 	$(SRC_DIR)/fs.c \
 	$(SRC_DIR)/httpd.c \
+	$(SRC_DIR)/httpd-cgi.c \
+	$(SRC_DIR)/httpd-ssi.c \
 	$(SRC_DIR)/debugSupport.c \
 	$(STELLARISWARE)/utils/ustdlib.c \
 	$(STELLARISWARE)/boards/ek-lm3s8962/drivers/rit128x96x4.c \
