@@ -13,7 +13,7 @@
 #ifndef __HTTPD_CGI_H__
 #define __HTTPD_CGI_H__
 
-extern void init_cgi_handlers(void);
+extern void init_ssi_cgi_handlers(void);
 
 #endif /* __HTTPD_CGI_H__ */
 

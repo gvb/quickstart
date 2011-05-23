@@ -196,7 +196,16 @@ struct http_state {
 /* SSI insert handler function pointer. */
 tSSIHandler g_pfnSSIHandler = NULL;
 int g_iNumTags = 0;
+
+
+/*
+ * \todo work towards making g_ppcTags and g_pCGITags common
+ */
+#if USER_PROVIDES_ZERO_COPY_STATIC_TAGS
+const tCGI *g_ppcTags = NULL;
+#else
 const char **g_ppcTags = NULL;
+#endif
 
 #define LEN_TAG_LEAD_IN 5
 const char * const g_pcTagLeadIn = "<!--#";
@@ -417,16 +426,20 @@ get_tag_insert(struct http_state *hs)
     /* Find this tag in the list we have been provided. */
     for(loop = 0; loop < g_iNumTags; loop++)
     {
-      if(strcmp(hs->tag_name, g_ppcTags[loop]) == 0) {
 #if USER_PROVIDES_ZERO_COPY_STATIC_TAGS
-          hs->tag_insert_len = g_pfnSSIHandler(loop, &(hs->tag_insert));
+        if(strcmp(hs->tag_name, g_ppcTags[loop].pcCGIName) == 0) {
+          hs->tag_insert_len = g_pfnSSIHandler(loop, 0, NULL, NULL,
+        		  &(hs->tag_insert));
           //lstr("<get.");lstr(hs->tag_name);lstr(".");lhex(hs->tag_insert_len);lstr(">");
+          return;
+        }
 #else
-        hs->tag_insert_len = g_pfnSSIHandler(loop, hs->tag_insert,
+        if(strcmp(hs->tag_name, g_ppcTags[loop]) == 0) {
+          hs->tag_insert_len = g_pfnSSIHandler(loop, hs->tag_insert,
                                              MAX_TAG_INSERT_LEN);
+          return;
+        }
 #endif
-        return;
-      }
     }
   }
 
@@ -1524,14 +1537,21 @@ httpd_init(void)
 
 #ifdef INCLUDE_HTTPD_SSI
 /*-----------------------------------------------------------------------------------*/
+
+#if USER_PROVIDES_ZERO_COPY_STATIC_TAGS
 void
-http_set_ssi_handler(tSSIHandler pfnSSIHandler, const char **ppcTags,
+http_set_ssi_handler(tSSIHandler pfnSSIHandler,
+							const tCGI *Tags, int iNumTags)
+#else
+void
+http_set_ssi_handler(tSSIHandler pfnSSIHandler, const char **Tags,
                      int iNumTags)
+#endif
 {
     LWIP_DEBUGF(HTTPD_DEBUG, ("http_set_ssi_handler\n"));
 
     g_pfnSSIHandler = pfnSSIHandler;
-    g_ppcTags = ppcTags;
+    g_ppcTags = Tags;
     g_iNumTags = iNumTags;
 }
 #endif

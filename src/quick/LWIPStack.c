@@ -640,10 +640,11 @@ void LWIPServiceTaskInit(IP_CONFIG *ipCfg)
 	/* Initialize HTTP */
 
 #ifdef INCLUDE_HTTPD_SSI
-	init_ssi_handlers();
-#endif
+	init_ssi_cgi_handlers();
+#else
 #ifdef INCLUDE_HTTPD_CGI
-	init_cgi_handlers();
+	init_ssi_cgi_handlers();
+#endif
 #endif
 	httpd_init();
 

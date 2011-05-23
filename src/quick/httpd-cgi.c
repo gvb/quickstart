@@ -60,6 +60,9 @@
 #include <io.h>
 #include <partnum.h>
 
+#include <fs.h>
+#include <fsdata.h>
+#include <fsdata-stats.h>
 
 #define UIP_APPDATA_SIZE 2048
 
@@ -1159,7 +1162,7 @@ static int adc2_upd(int index, int iNumParams,
 }
 /*---------------------------------------------------------------------------*/
 
-static int adc3_upd(int index, int iNumParams,
+int adc3_upd(int index, int iNumParams,
 		char *pcParam[], char *pcValue[], char **resultBuffer)
 {
 	/*
@@ -1194,45 +1197,109 @@ static int adc3_upd(int index, int iNumParams,
 }
 #endif
 /*---------------------------------------------------------------------------*/
-static const tCGI calls[] = {
-		{ "/file-stats", file_stats },
-		{ "/tcp-connections", tcp_stats },
-		{ "/net-stats", net_stats },
-		{ "/rtosstats", rtos_stats },
-		{ "/runtime", run_time },
+
+
+static const tCGI ssi_cgi_funcs[] = {
+		{ "/file_stats", file_stats },
+		{ "/tcp_connections", tcp_stats },
+		{ "/net_stats", net_stats },
+		{ "/rtos_stats", rtos_stats },
+		{ "/run_time", run_time },
 
 		/* Configuration */
-		{ "/permconfig", perm_config },
-		{ "/userconfig", user_config }
+		{ "/perm_config", perm_config },
+		{ "/user_config", user_config },
+		{ "/config_form", process_form_config },
 #if LRU_IS_GCU
 								,
 		/* Page updates */
-		{ "ctl-upd", ctl_upd },
-		{ "exp1-upd", exp1_upd },
-		{ "exp2-upd", exp2_upd },
-		{ "exp3-upd", exp3_upd },
-		{ "exp4-upd", exp4_upd },
-		{ "adc-spi-upd", adc_spi_upd },
-		{ "adc0-upd", adc0_upd },
-		{ "adc1-upd", adc1_upd },
-		{ "adc2-upd", adc2_upd },
-		{ "adc3-upd", adc3_upd },
-		{ "proc-upd", proc_upd }
+		{ "/ctl_upd", ctl_upd },
+		{ "/exp1_upd", exp1_upd },
+		{ "/exp2_upd", exp2_upd },
+		{ "/exp3_upd", exp3_upd },
+		{ "/exp4_upd", exp4_upd },
+		{ "/adc_spi_upd", adc_spi_upd },
+		{ "/adc0_upd", adc0_upd },
+		{ "/adc1_upd", adc1_upd },
+		{ "/adc2_upd", adc2_upd },
+		{ "/adc3_upd", adc3_upd },
+		{ "/proc_upd", proc_upd }
 #endif
 };
+#define NUM_SSI_CGI_FUNCTIONS (sizeof(ssi_cgi_funcs) / sizeof(ssi_cgi_funcs[0]))
+#define NUM_SSI_CGI_ENTRIES (NUM_SSI_CGI_FUNCTIONS+FS_NUMFILES)
+
+static tCGI calls[NUM_SSI_CGI_ENTRIES];
+
 
 //*****************************************************************************
 //
-// Initializes the cgi handlers
+//! Handle a server side include.
+//! \param TBD
 //!
+//! This function
 //!
-//! \return None.
+//! \return Number of characters copied to pcInsert.
 //
 //*****************************************************************************
 
-void init_cgi_handlers(void)
+int SSIHandler(int iIndex, int iNumParams,
+		char *pcParam[], char *pcValue[], char **resultBuffer)
 {
-	http_set_cgi_handlers(calls, sizeof(calls) / sizeof(calls[0]));
+	if (iIndex<NUM_SSI_CGI_FUNCTIONS) {
+		return calls[iIndex].pfnCGIHandler(iIndex, iNumParams,
+				pcParam, pcValue, resultBuffer);
+	}
+	else if (iIndex<NUM_SSI_CGI_ENTRIES) {
+			struct fs_file *fs;
+
+			fs = fs_open((char *)calls[iIndex].pcCGIName);
+			if (fs) {
+				/*
+				 * A read of the file without a call to read
+				 */
+				int len = fs->len;
+				*resultBuffer = fs->data;
+				fs_close(fs);
+				return len;
+			}
+	}
+
+	*resultBuffer = "";
+	return 0;
+}
+
+void init_ssi_cgi_handlers(void)
+{
+	int i;
+	const struct fsdata_file *f;
+
+	for(i=0;i<NUM_SSI_CGI_FUNCTIONS;i++){
+		calls[i].pcCGIName     = ssi_cgi_funcs[i].pcCGIName;
+		calls[i].pfnCGIHandler = ssi_cgi_funcs[i].pfnCGIHandler;
+	}
+
+	/*
+	 * Append the SSI File names to the calls list.
+	 */
+	f = FS_ROOT;
+	for(i=NUM_SSI_CGI_FUNCTIONS;i<NUM_SSI_CGI_ENTRIES;i++){
+		LWIP_ASSERT("(f)", (f));
+		if (f) {
+			calls[i].pcCGIName     = (char *)f->name;
+			calls[i].pfnCGIHandler = SSIHandler;
+			f = f->next;
+		}
+		else {
+			calls[i].pcCGIName = "";
+			calls[i].pfnCGIHandler = SSIHandler;
+		}
+	}
+
+	// \to combine ssi_handlers and cgi_handlers
+	http_set_ssi_handler(SSIHandler, calls, NUM_SSI_CGI_ENTRIES);
+	http_set_cgi_handlers(calls, NUM_SSI_CGI_ENTRIES);
+
 }
 
 /** @} */

@@ -137,14 +137,18 @@ void http_set_cgi_handlers(const tCGI *pCGIs, int iNumHandlers);
 #define HTTPD_CGI_USE_STATIC_BUFFER 0
 #endif
 
+
+// \todo make tSSIHandler and tCGIHandler common
 #if USER_PROVIDES_ZERO_COPY_STATIC_TAGS
-typedef int (*tSSIHandler)(int iIndex, char **pcInsert);
+typedef int (*tSSIHandler)(int iIndex, int iNumParams, char *pcParam[],
+                             char *pcValue[], char **resultBuffer);
+void http_set_ssi_handler(tSSIHandler pfnSSIHandler,
+							const tCGI *pCGIs, int iNumTags);
 #else
 typedef int (*tSSIHandler)(int iIndex, char *pcInsert, int iInsertLen);
-#endif
-
 void http_set_ssi_handler(tSSIHandler pfnSSIHandler,
                           const char **ppcTags, int iNumTags);
+#endif
 
 /* The maximum length of the string comprising the tag name */
 #ifndef MAX_TAG_NAME_LEN
