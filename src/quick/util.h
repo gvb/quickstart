@@ -23,15 +23,6 @@
 extern xTaskHandle wdt_task_handle;	/**< Watchdog task handle */
 
 /**
- * Things we are monitoring.
- */
-enum wdt_monitor_e {
-	wdt_io,		/**< I/O task */       //!< wdt_io
-	wdt_util,	/**< Utility task */  //!< wdt_util
-	wdt_last	/**< last entry flag *///!< wdt_last
-};
-
-/**
  * Things we are monitoring need to reset their counter to zero
  * periodically, or we reset the system.  The WDT ISR increments
  * the counters atomically, since it is in an ISR, and the tasks

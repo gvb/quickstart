@@ -140,6 +140,7 @@ void wdt_isr(void)
 #include <io.h>
 #include <logger.h>
 
+#include <utilwdtcfg.h>
 #include "debugSupport.h"
 
 #define WDT_RESET_MS	100	/* Watchdog resets us after this */
@@ -153,6 +154,8 @@ void wdt_isr(void)
  */
 xTaskHandle util_task_handle;	/**< Utility task handle */
 
+#include <utilwdtcfg.c>
+
 /*
  * Things we are monitoring need to reset their counter to zero
  * periodically, or we reset the system.  The WDT ISR increments
@@ -160,15 +163,6 @@ xTaskHandle util_task_handle;	/**< Utility task handle */
  * reset them to zero atomically since it is a simple store instruction.
  */
 int wdt_checkin[wdt_last] = {0};
-
-/**
- * If we rack up more than this count, something has gone awry with the task.
- */
-static int wdt_limit[wdt_last] = {
-	1000,		/**< io_task: 10 Hz */
-	1000,		/**< util_task: 100 Hz */
-};
-
 
 /****************************************************************************/
 

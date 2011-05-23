@@ -52,6 +52,7 @@ done in the I/O task.
 #include <io.h>
 #include <util.h>
 #include <logger.h>
+#include <utilwdtcfg.h>
 
 #define DEBUG	1
 
