@@ -68,10 +68,15 @@ void httpd_init(void);
  * later in the request). Attempts to use the POST method will result in the
  * request being ignored.
  *
+ *\todo write text that explains HTTPD_CGI_USE_STATIC_BUFFER
  */
+#if HTTPD_CGI_USE_STATIC_BUFFER
+typedef int (*tCGIHandler)(int iIndex, int iNumParams, char *pcParam[],
+                             char *pcValue[], char **resultBuffer);
+#else
 typedef char *(*tCGIHandler)(int iIndex, int iNumParams, char *pcParam[],
                              char *pcValue[]);
-
+#endif
 /*
  * Structure defining the base filename (URL) of a CGI and the associated
  * function which is to be called when that URL is requested.
@@ -128,6 +133,10 @@ void http_set_cgi_handlers(const tCGI *pCGIs, int iNumHandlers);
 #define USER_PROVIDES_ZERO_COPY_STATIC_TAGS 0
 #endif
 
+#ifndef HTTPD_CGI_USE_STATIC_BUFFER
+#define HTTPD_CGI_USE_STATIC_BUFFER 0
+#endif
+
 #if USER_PROVIDES_ZERO_COPY_STATIC_TAGS
 typedef int (*tSSIHandler)(int iIndex, char **pcInsert);
 #else
@@ -144,7 +153,6 @@ void http_set_ssi_handler(tSSIHandler pfnSSIHandler,
 
 /* The maximum length of string that can be returned to replace any given tag */
 #if !USER_PROVIDES_ZERO_COPY_STATIC_TAGS
-
 #ifndef MAX_TAG_INSERT_LEN
 #define MAX_TAG_INSERT_LEN 192
 #endif

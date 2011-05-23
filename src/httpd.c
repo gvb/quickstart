@@ -1232,9 +1232,13 @@ http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
 #ifdef INCLUDE_HTTPD_CGI
   int count;
   char *params;
+#if HTTPD_CGI_USE_STATIC_BUFFER
+  char *cgi_buffer = NULL;
+  int cgi_len = 0;
+#endif
 #endif
 
-  //lstr("\n_recv\n");
+  lstr("\n_recv\n");
   LWIP_DEBUGF(HTTPD_DEBUG, ("http_recv 0x%08x\n", pcb));
 
   hs = arg;
@@ -1319,6 +1323,8 @@ http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
           }
 
           /* Does the base URI we have isolated correspond to a CGI handler? */
+          lstr("<cs.");lhex(g_iNumCGIs);lhex(g_pCGIs);
+          lstr(uri);lstr(">");
           if(g_iNumCGIs && g_pCGIs) {
             for(i = 0; i < g_iNumCGIs; i++) {
               if(strcmp(uri, g_pCGIs[i].pcCGIName) == 0) {
@@ -1327,8 +1333,18 @@ http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
                  * parameters and call the handler.
                  */
                  count = extract_uri_parameters(hs, params);
+#if HTTPD_CGI_USE_STATIC_BUFFER
+                 lstr("<cf.");lstr(g_pCGIs[i].pcCGIName);
+                 cgi_len = g_pCGIs[i].pfnCGIHandler(i, count, hs->params,
+                         hs->param_vals, &cgi_buffer);
+                 lhex(cgi_len);
+                 lstr(".");
+                 lstr(cgi_buffer);
+                 lstr(">");
+#else
                  uri = g_pCGIs[i].pfnCGIHandler(i, count, hs->params,
                                                 hs->param_vals);
+#endif
                  break;
               }
             }
@@ -1348,27 +1364,50 @@ http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
 
           LWIP_DEBUGF(HTTPD_DEBUG, ("Opening %s\n", uri));
 
-          file = fs_open(uri);
-          if(file == NULL) {
-            file = get_404_file(&uri);
-          }
+#if HTTPD_CGI_USE_STATIC_BUFFER
+          if (cgi_buffer) {
+
+          } else
+#endif
+          {
+            file = fs_open(uri);
+            if(file == NULL) {
+              file = get_404_file(&uri);
+            }
 #ifdef INCLUDE_HTTPD_SSI
-          else {
-            /*
-             * See if we have been asked for an shtml file and, if so,
-             * enable tag checking.
-             */
-            hs->tag_check = false;
-            for(loop = 0; loop < NUM_SHTML_EXTENSIONS; loop++) {
-              if(strstr(uri, g_pcSSIExtensions[loop])) {
-                hs->tag_check = true;
-                break;
+            else {
+              /*
+               * See if we have been asked for an shtml file and, if so,
+               * enable tag checking.
+               */
+              hs->tag_check = false;
+              for(loop = 0; loop < NUM_SHTML_EXTENSIONS; loop++) {
+                if(strstr(uri, g_pcSSIExtensions[loop])) {
+                  hs->tag_check = true;
+                  break;
+                }
               }
             }
           }
 #endif /* INCLUDE_HTTP_SSI */
         }
 
+#if HTTPD_CGI_USE_STATIC_BUFFER
+        if (cgi_buffer) {
+#ifdef INCLUDE_HTTPD_SSI
+          hs->tag_index = 0;
+          hs->tag_state = TAG_NONE;
+          hs->parsed = cgi_buffer;
+          hs->parse_left = cgi_len;
+          hs->tag_end = cgi_buffer;
+#endif
+          hs->handle = NULL;
+          hs->file = cgi_buffer;
+          hs->left = cgi_len;
+          hs->retries = 0;
+          pbuf_free(p);
+        } else
+#endif
         if(file) {
 #ifdef INCLUDE_HTTPD_SSI
           hs->tag_index = 0;

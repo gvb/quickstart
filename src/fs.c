@@ -33,6 +33,7 @@
 #include "lwip/def.h"
 #include "fs.h"
 #include "fsdata.h"
+#include "fsdata-stats.h"
 #include "../obj/fsdata.c"
 #include <string.h>
 #include "logger.h"

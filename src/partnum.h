@@ -16,6 +16,8 @@
 #ifndef PARTNUM_H_
 #define PARTNUM_H_
 
+#include <stdint.h>
+
 /*
  * Where to store our configuration data.  Store in the last and
  * second-to-last pages in flash.  Pages are 1K in this processor.

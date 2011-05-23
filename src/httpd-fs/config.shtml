@@ -8,8 +8,8 @@
 <h2>Configuration</h2>
 <form name="aForm" action="/config.shtml" method="get">
 <table>
-<!--# perm-config -->
-<!--# user-config -->
+<!--# permconfig -->
+<!--# userconfig -->
 </table>
 <br>
 <input type="submit" value="Update Configuration">
