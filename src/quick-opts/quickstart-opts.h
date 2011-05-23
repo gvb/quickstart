@@ -8,8 +8,8 @@
 #ifndef QUICKSTARTOPTS_H_
 #define QUICKSTARTOPTS_H_
 
-#define USE_PROGRAM_STARTUP 1
+#define USE_PROGRAM_STARTUP 0
 
-
+#define QUICK_ETHERNET 1
 
 #endif /* QUICKSTARTOPTS_H_ */

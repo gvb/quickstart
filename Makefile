@@ -111,7 +111,10 @@ OPTIM=-Os
 #	-I $(RTOS_INCLUDE_DIR) \
 
 CPPFLAGS +=\
-	-I $(SRC_DIR) \
+	-I $(SRC_DIR)/app-opts \
+	-I $(SRC_DIR)/quick-opts \
+	-I $(SRC_DIR)/app \
+	-I $(SRC_DIR)/quick \
 	-I $(RTOS_SOURCE_DIR)/include \
 	-I $(RTOS_SOURCE_DIR)/portable/GCC/ARM_CM3 \
 	-I $(STELLARISWARE) \
@@ -141,20 +144,25 @@ CFLAGS +=\
 
 WEBSOURCE=$(wildcard $(SRC_DIR)/httpd-fs)
 
+APPSOURCE=
+
+-include $(SRC_DIR)/app/makeapp
+
 SOURCE =\
-	$(SRC_DIR)/main.c \
-	$(SRC_DIR)/io.c \
-	$(SRC_DIR)/util.c \
-	$(SRC_DIR)/partnum.c \
-	$(SRC_DIR)/logger.c \
-	$(SRC_DIR)/timertest.c \
-	$(SRC_DIR)/ETHIsr.c \
-	$(SRC_DIR)/LWIPStack.c \
-	$(SRC_DIR)/fs.c \
-	$(SRC_DIR)/httpd.c \
-	$(SRC_DIR)/httpd-cgi.c \
-	$(SRC_DIR)/httpd-ssi.c \
-	$(SRC_DIR)/debugSupport.c \
+	$(APPSOURCE) \
+	$(SRC_DIR)/quick/main.c \
+	$(SRC_DIR)/quick/io.c \
+	$(SRC_DIR)/quick/util.c \
+	$(SRC_DIR)/quick/partnum.c \
+	$(SRC_DIR)/quick/logger.c \
+	$(SRC_DIR)/quick/timertest.c \
+	$(SRC_DIR)/quick/ETHIsr.c \
+	$(SRC_DIR)/quick/LWIPStack.c \
+	$(SRC_DIR)/quick/fs.c \
+	$(SRC_DIR)/quick/httpd.c \
+	$(SRC_DIR)/quick/httpd-cgi.c \
+	$(SRC_DIR)/quick/httpd-ssi.c \
+	$(SRC_DIR)/quick/debugSupport.c \
 	$(STELLARISWARE)/utils/ustdlib.c \
 	$(STELLARISWARE)/boards/ek-lm3s8962/drivers/rit128x96x4.c \
 	$(RTOS_SOURCE_DIR)/list.c \
@@ -195,7 +203,7 @@ $(BUILD_DIR)startup.o : startup.c Makefile
 	@echo "  $(CC) $<"
 	$(Q)$(CC) -O1 $(filter-out -O%, $(CFLAGS)) -o $@ $<
 
-$(SRC_DIR)/fs.c : $(BUILD_DIR)fsdata.c $(BUILD_DIR)fsdata-stats.c
+$(SRC_DIR)/quick/fs.c : $(BUILD_DIR)fsdata.c $(BUILD_DIR)fsdata-stats.c
 
 $(BUILD_DIR)fsdata.c $(BUILD_DIR)fsdata-stats.c : $(WEBSOURCE)
 	@echo "./makefsdata"

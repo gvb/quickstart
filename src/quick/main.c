@@ -87,9 +87,10 @@ large successful programs.
 #include "buildDate.h"
 #include "inc/lm3s8962.h"
 
-#ifdef USE_PROGRAM_STARTUP
+#if USE_PROGRAM_STARTUP
 #include "program-startup.h"
-#endif
+#else
+void prvSetupHardware(void);
 
 /*
  * The RIT display font is 5x7 in a 6x8 cell.
@@ -97,10 +98,17 @@ large successful programs.
 #define RITCOL(col)	(col * 6)
 #define RITLINE(ln)	(ln * 8)
 
+#endif
+
+
+
 /****************************************************************************/
 
 extern void vSetupHighFrequencyTimer( void );
-void ethernetThread(void);
+
+#if QUICK_ETHERNET
+void ethernetThread(void *pParams);
+#endif
 
 /****************************************************************************/
 
@@ -111,12 +119,20 @@ void ethernetThread(void);
  */
 int main(void)
 {
-#ifndef USE_PROGRAM_STARTUP
+#if USE_PROGRAM_STARTUP
+	program-startup();
+#else
 	char s[64];		/* sprintf string */
 	unsigned long why;	/* Why did we get reset? Why? */
-#endif
+
+
+	/*
+	 * TBD talk to Brian about this
+	 */
+	prvSetupHardware();
 
 	init_logger();
+	lstr("Here I am.\n");
 
 
 	/*
@@ -124,18 +140,16 @@ int main(void)
 	 * Enable fault handlers in addition to FaultIsr()
 	 */
 
+	lstr("a");
 
 	NVIC_SYS_HND_CTRL_R |= NVIC_SYS_HND_CTRL_USAGE
 			              |NVIC_SYS_HND_CTRL_BUS
 			              |NVIC_SYS_HND_CTRL_MEM;
 
+	lstr("b");
 	config_init();
 
-#ifdef USE_PROGRAM_STARTUP
-
-	program-startup();
-
-#else
+	lstr("d");
 	/**
 	 * \req \req_id The \program \shall identify:
 	 * - The program version.
@@ -224,9 +238,10 @@ int main(void)
 	}
 
 	io_init();
-	util_init();
 
 #endif
+
+	util_init();
 
 
 	/**
@@ -236,7 +251,7 @@ int main(void)
 	 * and PHY.
 	 */
 
-#if 0
+#if QUICK_ETHERNET
 	if( SysCtlPeripheralPresent( SYSCTL_PERIPH_ETH ) ) {
 		xTaskCreate( ethernetThread,(signed char *)"ethernet",
 				5000, NULL, 3, NULL);
@@ -261,17 +276,91 @@ int main(void)
 	return 0;
 }
 
-/****************************************************************************/
+#if !USE_PROGRAM_STARTUP
+/*****************************************************************************/
 
 /**
- * Tick hook.
+ * Initialize the processor hardware.
  *
- * This is called every operating system tick even if the scheduler is
- * not running.
+ * \req \req_init The \program \shall initialize the hardware.
+ */
+void prvSetupHardware(void)
+{
+	/*
+	 * If running on Rev A2 silicon, turn the LDO voltage up to 2.75V.
+	 * This is a workaround to allow the PLL to operate reliably.
+	 */
+	if( REVISION_IS_A2 ) {
+		SysCtlLDOSet( SYSCTL_LDO_2_75V );
+	}
+
+	/**
+	 * Set the clocking to run from the PLL at 50 MHz
+	 */
+	SysCtlClockSet(
+		SYSCTL_SYSDIV_4
+		| SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_8MHZ );
+
+	/*
+	 * Initialize the ARM peripherals that are used.  All the GPIOs
+	 * are initialized because the processor I/O page references
+	 * all of them.
+	 */
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOC);
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOG);
+
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_WDOG0);
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_PWM);
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_ADC0);
+
+	/*
+	 * Configure the GPIOs used to read the on-board buttons.
+	 */
+	GPIOPinTypeGPIOInput(GPIO_PORTE_BASE,
+		GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3);
+	GPIOPadConfigSet(GPIO_PORTE_BASE,
+		GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3,
+		GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
+	GPIOPinTypeGPIOInput(GPIO_PORTF_BASE, GPIO_PIN_1);
+	GPIOPadConfigSet(GPIO_PORTF_BASE, GPIO_PIN_1, GPIO_STRENGTH_2MA,
+		GPIO_PIN_TYPE_STD_WPU);
+
+	/*
+	 * Configure the LED and speaker GPIOs.
+	 */
+	GPIOPinTypePWM(GPIO_PORTG_BASE, GPIO_PIN_1);
+	GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_0);
+	GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0, 0);
+
+	/*
+	 * UART0 is our debug ("spew") I/O.  Configure it for 115200,
+	 * 8-N-1 operation.
+	 */
+	GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0 | GPIO_PIN_1);
+	UARTConfigSetExpClk(UART0_BASE, SysCtlClockGet(), 115200,
+		( UART_CONFIG_WLEN_8
+		| UART_CONFIG_STOP_ONE
+		| UART_CONFIG_PAR_NONE ));
+}
+#endif
+
+/****************************************************************************/
+
+#if QUICK_ETHERNET
+
+/**
+ * Start the ethernet
+ *
  */
 
 
-void ethernetThread(void)
+void ethernetThread(void *pParams)
 {
 	IP_CONFIG ipconfig;
 
@@ -300,6 +389,7 @@ void ethernetThread(void)
 	/* We should not get here. */
 	return;
 }
+#endif
 
 /****************************************************************************/
 
