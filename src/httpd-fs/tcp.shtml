@@ -8,7 +8,7 @@
 <h2>Network connections</h2>
 <table>
 <tr><th>Local</th><th>Remote</th><th>State</th><th>Retransmissions</th><th>Timer</th><th>Flags</th></tr>
-<!--# tcp-connections -->
+<!--# tcp_connections -->
 </pre></font>
 </body>
 </html>

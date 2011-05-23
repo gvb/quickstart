@@ -6,10 +6,10 @@
 <body>
 <!--# /nav.inc -->
 <h2>Configuration</h2>
-<form name="aForm" action="/config.shtml" method="get">
+<form name="aForm" action="/config_form" method="get">
 <table>
-<!--# permconfig -->
-<!--# userconfig -->
+<!--# perm_config -->
+<!--# user_config -->
 </table>
 <br>
 <input type="submit" value="Update Configuration">
