@@ -1,4 +1,4 @@
-<center><b> CRI Power Control Computer </b></center>
+<center><b>Quickstart - FreeRTOS - lwIP - StellarisWare</b></center>
 <hr>
 <a href="control.shtml">Control</a>
 <b> | </b><a href="tasks.shtml">Task Stats</a>
@@ -9,4 +9,5 @@
 <b> | </b><a href="adc.shtml">ADC</a>
 <b> | </b><a href="dio.shtml">I2C DIO</a>
 <b> | </b><a href="proc_io.shtml">Proc I/O</a>
+<b> | </b><a href="adc_test.shtml">adc_test</a>
 <hr>

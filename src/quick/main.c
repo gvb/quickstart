@@ -128,28 +128,17 @@ int main(void)
 	unsigned long why;	/* Why did we get reset? Why? */
 
 	prvSetupHardware();
-
-
 	init_logger();
-	lstr("Here I am.\n");
-
-
 
 	/*
 	 * \todo maybe this needs to be earlier or later in the code.
 	 * Enable fault handlers in addition to FaultIsr()
 	 */
-
-	lstr("a");
-
 	NVIC_SYS_HND_CTRL_R |= NVIC_SYS_HND_CTRL_USAGE
 			              |NVIC_SYS_HND_CTRL_BUS
 			              |NVIC_SYS_HND_CTRL_MEM;
 
-	lstr("b");
 	config_init();
-
-	lstr("d");
 	/**
 	 * \req \req_id The \program \shall identify:
 	 * - The program version.

@@ -6,7 +6,7 @@
 <!--# /ajax.js -->
 </script>
 </head>
-<body onload="startPoll('/adc_upd.shtml', 500);">
+<body onload="startPoll('/adc_cpu_upd', 500);">
 <!--# /nav.inc -->
 <b>Analog</b>
 <table>

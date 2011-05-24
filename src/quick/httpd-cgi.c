@@ -48,7 +48,9 @@
 
 #include <ustdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include <lwip/opt.h>
 #include <lwip/debug.h>
@@ -358,146 +360,172 @@ int user_config(int index, int iNumParams,
  */
 // static void process_form_config(portCHAR *pcInputString, portBASE_TYPE xInputLength)
 
+#define STRNCMP(a, b)	strncmp(a, b, strlen(b))
+
+/*
+ * Copies the string while unescaping HTML encodings.  Returns the length,
+ * limited to the max.
+ */
+static int strncpy_html(char *dp, char *cp, int max)
+{
+	int  len;
+
+	len = 0;
+
+	while (*cp && (*cp != '&') && len < max) {
+		if (*cp == '+') {		/* spaces are encoded as '+' */
+			*dp++ = ' ';
+			cp++;
+		} else if (*cp == '%') {	/* %xx encoding */
+			cp++;
+			if (isxdigit(cp[0]) && isxdigit(cp[1])) {
+				char tmp[4];
+				tmp[0] = *cp++;
+				tmp[1] = *cp++;
+				tmp[2] = '\0';
+				*dp++ = strtol(tmp, NULL, 16);
+			} else {
+				/*
+				 * Don't recognize the encoding, just
+				 * copy it verbatim.
+				 */
+				*dp++ = '%';
+				len++;
+				*dp++ = *cp++;
+			}
+		} else
+			*dp++ = *cp++;
+		len++;
+	}
+	return len;
+}
+
+
 static int process_form_config(int index, int iNumParams,
 		char *pcParam[], char *pcValue[], char **resultBuffer)
 {
 	char *c;
 	int  len;
 	int  idx;
+	int  i;
+
+	uip_appdata[0]=0;
+	*resultBuffer = uip_appdata;
+
+	for(i=0;i<iNumParams;i++){
+		lstr("<");lhex(i);
+		lstr(".");lstr(pcParam[i]);
+		lstr(".");lstr(pcValue[i]);lstr(">\n");
+	}
 
 	/*
 	 * Parse the board part number string, copy it into the
 	 * config variable, truncating it and terminating it with
 	 * a null in case the user entered string is too long.
 	 */
-/*	for (idx=0; idx<iNumParams;i++) {
-		if (strcmp(pcParam[idx], "BDPN=") == 0) {
-			c += 5;
-			len = strncpy_html(permcfg.bd_pn, c,
+	for (idx=0; idx<iNumParams;i++) {
+		if (strcmp(pcParam[i], "BDPN") == 0) {
+			len = strncpy_html(permcfg.bd_pn, pcValue[i],
 				sizeof(permcfg.bd_pn) - 1);
 			permcfg.bd_pn[len] = '\0';
-			goto next_param;
-		} */
+			break;
+		}
 		/*
 		 * Ditto for the board serial number
 		 */
-/*		if (STRNCMP(c, "BDSN=") == 0) {
-			c += 5;
-			len = strncpy_html(permcfg.bd_sn, c,
+		if (STRNCMP(pcParam[i], "BDSN") == 0) {
+			len = strncpy_html(permcfg.bd_sn, pcValue[i],
 				sizeof(permcfg.bd_sn) - 1);
 			permcfg.bd_sn[len] = '\0';
-			goto next_param;
-		} */
+			break;
+		}
 		/*
 		 * Ditto for the assembly part number
 		 */
-/*		if (STRNCMP(c, "AYPN=") == 0) {
+		if (STRNCMP(pcParam[i], "AYPN=") == 0) {
 			c += 5;
-			len = strncpy_html(usercfg.assy_pn, c,
+			len = strncpy_html(usercfg.assy_pn, pcValue[i],
 				sizeof(usercfg.assy_pn) - 1);
 			usercfg.assy_pn[len] = '\0';
-			goto next_param;
-		} */
+			break;
+		}
 		/*
 		 * Ditto for the assembly serial number
 		 */
-/*		if (STRNCMP(c, "AYSN=") == 0) {
+		if (STRNCMP(pcParam[i], "AYSN=") == 0) {
 			c += 5;
-			len = strncpy_html(usercfg.assy_sn, c,
+			len = strncpy_html(usercfg.assy_sn, pcValue[i],
 				sizeof(usercfg.assy_sn) - 1);
 			usercfg.assy_sn[len] = '\0';
-			goto next_param;
-		}*/
+			break;
+		}
 		/*
 		 * Parse the MAC addresses.
 		 */
-/*		if (STRNCMP(c, "MAC") == 0) {
-			c += 3;
+		if (STRNCMP(pcParam[i], "MAC") == 0) {
+			c = pcParam[i]+ 3;
 			if (isdigit(*c))
-				idx = *c++ - '0';
+				idx = *c - '0';
 			if (idx > 5)
-				return;
-			if (*c++ != '=')
-				return;
+				return 0;
 
-			if (isxdigit(*c))
-				permcfg.mac[idx] = strtol(c, &c, 16) & 0xFF;
-			goto next_param;
-		}*/
+			if (isxdigit(pcValue[i]))
+				permcfg.mac[idx] = strtol(pcValue[i], NULL, 16) & 0xFF;
+			break;
+		}
 		/*
 		 * Parse the IP addresses.
 		 */
-/*		if (STRNCMP(c, "IP") == 0) {
-			c += 2;
+		if (STRNCMP(pcParam[i], "IP") == 0) {
+			c = pcParam[i] + 2;
 			if (isdigit(*c))
-				idx = *c++ - '0';
+				idx = *c - '0';
 			if (idx > 3)
-				return;
-			if (*c++ != '=')
-				return;
-			if (isdigit(*c))
-				usercfg.ip[idx] = strtol(c, &c, 10) & 0xFF;
-			goto next_param;
-		} */
+				return 0;
+			if (isdigit(pcValue[i]))
+				usercfg.ip[idx] = strtol(pcValue[i], NULL, 10) & 0xFF;
+			break;
+		}
 		/*
 		 * Parse the netmask.
 		 */
-/*		if (STRNCMP(c, "NM") == 0) {
-			c += 2;
+		if (STRNCMP(pcParam[i], "NM") == 0) {
+			c = pcParam[i] + 2;
 			if (isdigit(*c))
-				idx = *c++ - '0';
+				idx = *c - '0';
 			if (idx > 3)
-				return;
-			if (*c++ != '=')
-				return;
-			if (isdigit(*c))
-				usercfg.netmask[idx] = strtol(c, &c, 10) & 0xFF;
-			goto next_param;
-		} */
+				return 0;
+			if (isdigit(pcValue[i]))
+				usercfg.netmask[idx] = strtol(pcValue[i], NULL, 10) & 0xFF;
+			break;
+		}
 		/*
 		 * Parse the gateway.
 		 */
-/*		if (STRNCMP(c, "GW") == 0) {
-			c += 2;
+		if (STRNCMP(pcParam[i], "GW") == 0) {
+			c = pcParam[i] + 2;
 			if (isdigit(*c))
-				idx = *c++ - '0';
+				idx = *c - '0';
 			if (idx > 3)
-				return;
-			if (*c++ != '=')
-				return;
-			if (isdigit(*c))
-				usercfg.gateway[idx] = strtol(c, &c, 10) & 0xFF;
-			goto next_param;
-		} */
+				return 0;
+			if (isdigit(pcValue[i]))
+				usercfg.gateway[idx] = strtol(pcValue[i], NULL, 10) & 0xFF;
+			break;
+		}
 		/*
 		 * Save the notes field.
 		 */
-/*		if (STRNCMP(c, "NOTES=") == 0) {
-			c += 6;
-			len = strncpy_html(usercfg.notes, c,
+		if (STRNCMP(pcParam[i], "NOTES") == 0) {
+			len = strncpy_html(usercfg.notes, pcValue[i],
 				sizeof(usercfg.notes) - 1);
 			usercfg.notes[len] = '\0';
-			goto next_param;
-		}*/
-
-		/*
-		 * Advance to the next setting, if present.
-		 */
-/*next_param:
-		c = strstr(c, "&");
-
-	}
-	c = strstr(pcInputString, "?");
-
-	while (c)
-	{
-		c++;	*//* move past the "?" or "&" */
-/*
+			break;
+		}
 	}
 
 	if (permcfg_virgin())
 		permcfg_save();
-	usercfg_save(); */
+	usercfg_save();
 	return 0;
 }
 
@@ -1199,6 +1227,32 @@ int adc3_upd(int index, int iNumParams,
 #endif
 /*---------------------------------------------------------------------------*/
 
+static int adc_cpu_upd(int index, int iNumParams,
+		char *pcParam[], char *pcValue[], char **resultBuffer)
+{
+	/*
+	 * Unboard ADC
+	 */
+	uip_appdata[0]=0;
+	*resultBuffer = uip_appdata;
+
+	return snprintf((char *)uip_appdata, UIP_APPDATA_SIZE,
+		"{\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\""
+		",\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\""
+		",\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\""
+		",\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\""
+		",\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\""
+		"}",
+		ADCEXPAND(adcProc0),		/**< Processor ADC */
+		ADCEXPAND(adcProc1),		/**< Processor ADC */
+		ADCEXPAND(adcProc2),		/**< Processor ADC */
+		ADCEXPAND(adcProc3),		/**< Processor ADC */
+		ADCEXPAND(adcProcTemp)
+
+	);
+}
+/*---------------------------------------------------------------------------*/
+
 
 static const tCGI ssi_cgi_funcs[] = {
 		{ "/file_stats", file_stats },
@@ -1211,6 +1265,7 @@ static const tCGI ssi_cgi_funcs[] = {
 		{ "/perm_config", perm_config },
 		{ "/user_config", user_config },
 		{ "/config_form", process_form_config },
+		{ "/adc_cpu_upd", adc_cpu_upd }
 #if LRU_IS_GCU
 								,
 		/* Page updates */

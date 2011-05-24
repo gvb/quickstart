@@ -1251,7 +1251,7 @@ http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
   int loop;
   char *data;
   char *uri;
-  struct fs_file *file;
+  struct fs_file *file=NULL;
   struct http_state *hs;
 #ifdef INCLUDE_HTTPD_CGI
   int count;
@@ -1347,7 +1347,7 @@ http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
           }
 
           /* Does the base URI we have isolated correspond to a CGI handler? */
-          lstr("<cs.");lhex(g_iNumCGIs);lhex(g_pCGIs);
+          lstr("<cs.");lhex((int)g_iNumCGIs);lstr(".");lhex((int)g_pCGIs);
           lstr(uri);lstr(">");
           if(g_iNumCGIs && g_pCGIs) {
             for(i = 0; i < g_iNumCGIs; i++) {
@@ -1361,7 +1361,7 @@ http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
                  lstr("<cf.");lstr(g_pCGIs[i].pcCGIName);
                  cgi_len = g_pCGIs[i].pfnCGIHandler(i, count, hs->params,
                          hs->param_vals, &cgi_buffer);
-                 lhex(cgi_len);
+                 lstr(".");lhex(cgi_len);
                  //lstr(".");
                  //lstr(cgi_buffer);
                  lstr(">");

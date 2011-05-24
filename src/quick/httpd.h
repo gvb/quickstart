@@ -137,7 +137,6 @@ void http_set_cgi_handlers(const tCGI *pCGIs, int iNumHandlers);
 #define HTTPD_CGI_USE_STATIC_BUFFER 0
 #endif
 
-
 // \todo make tSSIHandler and tCGIHandler common
 #if USER_PROVIDES_ZERO_COPY_STATIC_TAGS
 typedef int (*tSSIHandler)(int iIndex, int iNumParams, char *pcParam[],
