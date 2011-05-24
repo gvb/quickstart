@@ -235,9 +235,11 @@ int user_config(int index, int iNumParams,
 "	<input type=\"text\" name=\"GW3\" value=\"%d\" size=\"3\"> </td>"
 "</td></tr><tr>"
 "</tr><tr>"
+"<td> DHCP is not working, Must Select StaticIP. </td>"
+"</tr><tr>"
 "<td> StaticIP=0, DHCP=1, AUTOIP=2</td><td>"
 "	<input type=\"text\" name=\"IPMD\" value=\"%d\" size=\"1\">"
-"</tr><tr>"
+"</td></tr><tr>"
 "<td> Notes: </td><td>"
 "	<textarea name=\"NOTES\" rows=\"4\" cols=\"63\">%s</textarea></td>"
 "</tr>",
@@ -383,9 +385,31 @@ static int process_form_config(int index, int iNumParams,
 			goto next_param;
 		}
 		/*
+		 * Parse the IP Mode (Static, DHCP, AUTOIP).
+		 *
+		 * "IPMD" must be in front of "IP" so STRNCMP
+		 * finds "IPMD" instead of the substring "IP".
+		 */
+		if (STRNCMP(pcParam[i], "IPMD") == 0) {
+			lstr("<IPMD.");lstr(pcValue[i]);
+			lstr(".");lhex(*pcValue[i]);
+			if (isdigit(*pcValue[i])) {
+				unsigned long IPMode = strtol(pcValue[i], NULL, 10) & 0x3;
+				lstr(".");lhex(IPMode);
+				if ( IPMode > IPADDR_USE_AUTOIP ) {
+					lstr(".err>");
+					return 0;
+				}
+				usercfg.IPMode = IPMode;
+			}
+			lstr(">");
+			goto next_param;
+		}
+		/*
 		 * Parse the IP addresses.
 		 */
 		if (STRNCMP(pcParam[i], "IP") == 0) {
+			lstr("IP:");lstr(pcValue[i]);
 			c = pcParam[i] + 2;
 			if (isdigit(*c))
 				idx = *c - '0';
@@ -425,19 +449,6 @@ static int process_form_config(int index, int iNumParams,
 				return 0;
 			if (isdigit(*pcValue[i]))
 				usercfg.gateway[idx] = strtol(pcValue[i], NULL, 10) & 0xFF;
-			goto next_param;
-		}
-		/*
-		 * Parse the IP Mode (Static, DHCP, AUTOIP).
-		 */
-		if (STRNCMP(pcParam[i], "IPMD") == 0) {
-			if (isdigit(*pcValue[i])) {
-				unsigned long IPMode = strtol(pcValue[i], NULL, 10) & 0x3;
-				if ( IPMode > IPADDR_USE_AUTOIP ) {
-					return 0;
-				}
-				usercfg.IPMode = IPMode;
-			}
 			goto next_param;
 		}
 		/*

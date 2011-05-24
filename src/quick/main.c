@@ -376,7 +376,7 @@ void ethernetThread(void *pParams)
 #endif
 		ipconfig.GWAddr    = SET_GW_ADR;
 	} else {
-		ipconfig.IPMode = IPADDR_USE_STATIC;
+		ipconfig.IPMode = usercfg.IPMode;
 		ipconfig.IPAddr =
 			IP2LONG(usercfg.ip[0],
 					usercfg.ip[1],

@@ -584,14 +584,12 @@ if (ipCfg->IPMode == IPADDR_USE_STATIC)
 		net_mask.addr = htonl(ipCfg->NetMask);
 		gw_addr.addr = htonl(ipCfg->GWAddr);
 	}
-#if LWIP_DHCP || LWIP_AUTOIP
 	else
 	{
 		ip_addr.addr = 0;
 		net_mask.addr = 0;
 		gw_addr.addr = 0;
 	}
-#endif
 
 	// Create, configure and add the Ethernet controller interface with
 	// default settings.
@@ -630,11 +628,16 @@ if (ipCfg->IPMode == IPADDR_USE_STATIC)
 
 	while (0 == netif_is_up(&lwip_netif))
 	{
+		lstr("<delay 5s>");
 		vTaskDelay(5000/portTICK_RATE_MS);
-		/*if(0 == netif_is_up(&lwip_netif))
-		 {
-		 dhcp_renew(&lwip_netif);
-		 }*/
+#if LWIP_DHCP
+		if (ipCfg->IPMode == IPADDR_USE_DHCP) {
+			if (0 == netif_is_up(&lwip_netif)) {
+				lstr("<dhcp_renew>");
+				dhcp_renew(&lwip_netif);
+			}
+		}
+#endif
 	}
 	/*
 	 * Report Our IP Setup
