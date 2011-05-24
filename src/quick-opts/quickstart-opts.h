@@ -12,4 +12,8 @@
 
 #define QUICK_ETHERNET 1
 
+#ifndef PROTECT_PERMCFG
+#define PROTECT_PERMCFG 1
+#endif
+
 #endif /* QUICKSTARTOPTS_H_ */

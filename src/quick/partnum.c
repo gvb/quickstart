@@ -19,9 +19,10 @@
 #include <hw_types.h>
 #include "../../StellarisWare/driverlib/flash.h"
 
+#include "quickstart-opts.h"
 #include "config.h"
 #include "partnum.h"
-
+#include "LWIPStack.h"
 /**
  * Default permanent configuration data.
  *
@@ -137,8 +138,10 @@ int permcfg_save(void)
 	/*
 	 * Verify that the permanent area is erased (unprogrammed).
 	 */
+#if PROTECT_PERMCFG
 	if (!permcfg_virgin())
 		return FALSE;
+#endif
 	/*
 	 * Make sure the constants are correct.  The checksum sums to -1.
 	 */

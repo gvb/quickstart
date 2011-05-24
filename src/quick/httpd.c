@@ -1062,8 +1062,8 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
         case TAG_SENDING:
           /* Do we still have insert data left to send? */
           //lstr("<sending.");lstr(hs->tag_name);lstr(".");
-          lhex(hs->tag_insert_len);lstr(".");
-          lhex(hs->tag_index);lstr(">");
+          //lhex(hs->tag_insert_len);lstr(".");
+          //lhex(hs->tag_index);lstr(">");
           if(hs->tag_index < hs->tag_insert_len) {
               /* We are sending the insert string itself. How much of the
                * insert can we send? */
@@ -1084,8 +1084,8 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
                  * is processed before we call tcp_output.
                  */
                 //lstr("<tcp_write.");lstr(hs->tag_name);lstr(".");
-                lhex(len);lstr(".");
-                lhex(hs->tag_index);lstr(">");
+                //lhex(len);lstr(".");
+                //lhex(hs->tag_index);lstr(">");
                 err = tcp_write(pcb, &(hs->tag_insert[hs->tag_index]), len, 1);
                 if (err == ERR_MEM) {
                   //lstr("<em>");

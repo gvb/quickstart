@@ -264,7 +264,7 @@
 /**
  * LWIP_DHCP==1: Enable DHCP module.
  */
-#define LWIP_DHCP                       0
+#define LWIP_DHCP                       1
 
 
 #define LWIP_PROVIDE_ERRNO				0

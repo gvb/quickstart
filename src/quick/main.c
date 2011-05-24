@@ -357,22 +357,42 @@ void ethernetThread(void *pParams)
 	ETHServiceTaskInit(0);
 	ETHServiceTaskFlush(0,ETH_FLUSH_RX | ETH_FLUSH_TX);
 
-	ipconfig.IPMode = IPADDR_USE_STATIC;
-	ipconfig.IPAddr =
+/*
+ * Allow make SET_IP_ADR="-D SET_IP_ADR=\"(192<<24|168<<16|98<<8|29)\""
+ * to build application with a recovery IP address.
+ */
+#ifndef SET_IP_ADR
+#define SET_IP_ADR 0
+#endif
+	if (SET_IP_ADR) {
+		ipconfig.IPMode = IPADDR_USE_STATIC;
+		ipconfig.IPAddr    = SET_IP_ADR;
+#ifndef SET_NET_MASK
+#define SET_NET_MASK 0xffffff00
+#endif
+		ipconfig.NetMask   = SET_NET_MASK;
+#ifndef SET_GW_ADR
+#define SET_GW_ADR (((SET_IP_ADR)&(SET_NET_MASK))|0x00000001)
+#endif
+		ipconfig.GWAddr    = SET_GW_ADR;
+	} else {
+		ipconfig.IPMode = IPADDR_USE_STATIC;
+		ipconfig.IPAddr =
 			IP2LONG(usercfg.ip[0],
 					usercfg.ip[1],
 					usercfg.ip[2],
 					usercfg.ip[3]);
-	ipconfig.NetMask =
+		ipconfig.NetMask =
 			IP2LONG(usercfg.netmask[0],
 					usercfg.netmask[1],
 					usercfg.netmask[2],
 					usercfg.netmask[3]);
-	ipconfig.GWAddr=
+		ipconfig.GWAddr=
 			IP2LONG(usercfg.gateway[0],
 					usercfg.gateway[1],
 					usercfg.gateway[2],
 					usercfg.gateway[3]);
+	}
 
 	LWIPServiceTaskInit(&ipconfig);
 

@@ -135,7 +135,8 @@ CPPFLAGS +=\
 	-D vsnprintf=uvsnprintf -D printf=uipprintf \
 	-D $(BOARD) \
 	-D DEPRECATED \
-	-D WDT_ENABLE=$(WDT_ENABLE)
+	-D WDT_ENABLE=$(WDT_ENABLE)\
+	$(SET_IP_ADR) $(PROTECT_PERMCFG)
 
 CFLAGS +=\
 	$(CPPFLAGS) \

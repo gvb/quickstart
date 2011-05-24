@@ -55,6 +55,7 @@
 #include <lwip/opt.h>
 #include <lwip/debug.h>
 #include <lwip/stats.h>
+#include <LWIPStack.h>
 #include <httpd.h>
 #include <httpd-cgi.h>
 
@@ -66,6 +67,7 @@
 #include <fsdata.h>
 #include <fsdata-stats.h>
 #include <logger.h>
+#include <quickstart-opts.h>
 
 #define UIP_APPDATA_SIZE 2048
 
@@ -148,8 +150,14 @@ static int rtos_stats(int index, int iNumParams,
 int perm_config(int index, int iNumParams,
 		char *pcParam[], char *pcValue[], char **resultBuffer)
 {
+	/*
+	 * Allow make PROTECT_PERMCFG="-D PROTECT_PERMCFG=0"
+	 * to build application which will overwrite a valid
+	 * permanent configuration.
+	 */
 
 	int pcvalid = permcfg_valid();
+    int pcprot  = PROTECT_PERMCFG && pcvalid;
 
 	uip_appdata[0]=0;
 	*resultBuffer = uip_appdata;
@@ -177,15 +185,15 @@ int perm_config(int index, int iNumParams,
 		permcfg_virgin() ? "Unprogrammed" : "Programmed",
 		pcvalid ? "valid" : "invalid",
 
-		permcfg.bd_pn, pcvalid ? "disabled=\"disabled\"" : "",
-		permcfg.bd_sn, pcvalid ? "disabled=\"disabled\"" : "",
+		permcfg.bd_pn, pcprot ? "disabled=\"disabled\"" : "",
+		permcfg.bd_sn, pcprot ? "disabled=\"disabled\"" : "",
 
-		permcfg.mac[0], pcvalid ? "disabled=\"disabled\"" : "",
-		permcfg.mac[1], pcvalid ? "disabled=\"disabled\"" : "",
-		permcfg.mac[2], pcvalid ? "disabled=\"disabled\"" : "",
-		permcfg.mac[3], pcvalid ? "disabled=\"disabled\"" : "",
-		permcfg.mac[4], pcvalid ? "disabled=\"disabled\"" : "",
-		permcfg.mac[5], pcvalid ? "disabled=\"disabled\"" : ""
+		permcfg.mac[0], pcprot ? "disabled=\"disabled\"" : "",
+		permcfg.mac[1], pcprot ? "disabled=\"disabled\"" : "",
+		permcfg.mac[2], pcprot ? "disabled=\"disabled\"" : "",
+		permcfg.mac[3], pcprot ? "disabled=\"disabled\"" : "",
+		permcfg.mac[4], pcprot ? "disabled=\"disabled\"" : "",
+		permcfg.mac[5], pcprot ? "disabled=\"disabled\"" : ""
 	);
 }
 /*---------------------------------------------------------------------------*/
@@ -193,11 +201,15 @@ int perm_config(int index, int iNumParams,
 int user_config(int index, int iNumParams,
 		char *pcParam[], char *pcValue[], char **resultBuffer)
 {
+	int ucvalid = usercfg_valid();
+
 	uip_appdata[0]=0;
 	*resultBuffer = uip_appdata;
 
 	return snprintf((char *)uip_appdata, UIP_APPDATA_SIZE,
 "<tr>"
+"<td>User Config Status:</td><td>%s</td>"
+"</tr><tr>"
 "<td> Assembly Part Number: </td><td>"
 "	<input type=\"text\" name=\"AYPN\" value=\"%s\" size=\"63\">"
 "</tr><tr>"
@@ -222,9 +234,14 @@ int user_config(int index, int iNumParams,
 "	<input type=\"text\" name=\"GW2\" value=\"%d\" size=\"3\">"
 "	<input type=\"text\" name=\"GW3\" value=\"%d\" size=\"3\"> </td>"
 "</td></tr><tr>"
+"</tr><tr>"
+"<td> StaticIP=0, DHCP=1, AUTOIP=2</td><td>"
+"	<input type=\"text\" name=\"IPMD\" value=\"%d\" size=\"1\">"
+"</tr><tr>"
 "<td> Notes: </td><td>"
 "	<textarea name=\"NOTES\" rows=\"4\" cols=\"63\">%s</textarea></td>"
 "</tr>",
+        ucvalid ? "valid" : "invalid",
 		usercfg.assy_pn,
 		usercfg.assy_sn,
 
@@ -242,6 +259,8 @@ int user_config(int index, int iNumParams,
 		usercfg.gateway[1],
 		usercfg.gateway[2],
 		usercfg.gateway[3],
+
+		usercfg.IPMode,
 
 		usercfg.notes
 	);
@@ -304,23 +323,21 @@ static int process_form_config(int index, int iNumParams,
 	uip_appdata[0]=0;
 	*resultBuffer = uip_appdata;
 
-	for(i=0;i<iNumParams;i++){
-		lstr("<");lhex(i);
-		lstr(".");lstr(pcParam[i]);
-		lstr(".");lstr(pcValue[i]);lstr(">\n");
-	}
-
 	/*
 	 * Parse the board part number string, copy it into the
 	 * config variable, truncating it and terminating it with
 	 * a null in case the user entered string is too long.
 	 */
-	for (idx=0; idx<iNumParams;i++) {
+	for (i=0; i<iNumParams;i++) {
+		lstr("<");lhex(i);
+		lstr(".");lstr(pcParam[i]);
+		lstr(".");lstr(pcValue[i]);lstr(">\n");
 		if (strcmp(pcParam[i], "BDPN") == 0) {
 			len = strncpy_html(permcfg.bd_pn, pcValue[i],
 				sizeof(permcfg.bd_pn) - 1);
 			permcfg.bd_pn[len] = '\0';
-			break;
+			lstr("bd_pn=");lstr(permcfg.bd_pn);
+			goto next_param;
 		}
 		/*
 		 * Ditto for the board serial number
@@ -329,27 +346,25 @@ static int process_form_config(int index, int iNumParams,
 			len = strncpy_html(permcfg.bd_sn, pcValue[i],
 				sizeof(permcfg.bd_sn) - 1);
 			permcfg.bd_sn[len] = '\0';
-			break;
+			goto next_param;
 		}
 		/*
 		 * Ditto for the assembly part number
 		 */
 		if (STRNCMP(pcParam[i], "AYPN=") == 0) {
-			c += 5;
 			len = strncpy_html(usercfg.assy_pn, pcValue[i],
 				sizeof(usercfg.assy_pn) - 1);
 			usercfg.assy_pn[len] = '\0';
-			break;
+			goto next_param;
 		}
 		/*
 		 * Ditto for the assembly serial number
 		 */
 		if (STRNCMP(pcParam[i], "AYSN=") == 0) {
-			c += 5;
 			len = strncpy_html(usercfg.assy_sn, pcValue[i],
 				sizeof(usercfg.assy_sn) - 1);
 			usercfg.assy_sn[len] = '\0';
-			break;
+			goto next_param;
 		}
 		/*
 		 * Parse the MAC addresses.
@@ -358,12 +373,14 @@ static int process_form_config(int index, int iNumParams,
 			c = pcParam[i]+ 3;
 			if (isdigit(*c))
 				idx = *c - '0';
+			else
+				return 0;
 			if (idx > 5)
 				return 0;
 
-			if (isxdigit(pcValue[i]))
+			if (isxdigit(*pcValue[i]))
 				permcfg.mac[idx] = strtol(pcValue[i], NULL, 16) & 0xFF;
-			break;
+			goto next_param;
 		}
 		/*
 		 * Parse the IP addresses.
@@ -372,11 +389,13 @@ static int process_form_config(int index, int iNumParams,
 			c = pcParam[i] + 2;
 			if (isdigit(*c))
 				idx = *c - '0';
+			else
+				return 0;
 			if (idx > 3)
 				return 0;
-			if (isdigit(pcValue[i]))
+			if (isdigit(*pcValue[i]))
 				usercfg.ip[idx] = strtol(pcValue[i], NULL, 10) & 0xFF;
-			break;
+			goto next_param;
 		}
 		/*
 		 * Parse the netmask.
@@ -385,11 +404,13 @@ static int process_form_config(int index, int iNumParams,
 			c = pcParam[i] + 2;
 			if (isdigit(*c))
 				idx = *c - '0';
+			else
+				return 0;
 			if (idx > 3)
 				return 0;
-			if (isdigit(pcValue[i]))
+			if (isdigit(*pcValue[i]))
 				usercfg.netmask[idx] = strtol(pcValue[i], NULL, 10) & 0xFF;
-			break;
+			goto next_param;
 		}
 		/*
 		 * Parse the gateway.
@@ -398,11 +419,26 @@ static int process_form_config(int index, int iNumParams,
 			c = pcParam[i] + 2;
 			if (isdigit(*c))
 				idx = *c - '0';
+			else
+				return 0;
 			if (idx > 3)
 				return 0;
-			if (isdigit(pcValue[i]))
+			if (isdigit(*pcValue[i]))
 				usercfg.gateway[idx] = strtol(pcValue[i], NULL, 10) & 0xFF;
-			break;
+			goto next_param;
+		}
+		/*
+		 * Parse the IP Mode (Static, DHCP, AUTOIP).
+		 */
+		if (STRNCMP(pcParam[i], "IPMD") == 0) {
+			if (isdigit(*pcValue[i])) {
+				unsigned long IPMode = strtol(pcValue[i], NULL, 10) & 0x3;
+				if ( IPMode > IPADDR_USE_AUTOIP ) {
+					return 0;
+				}
+				usercfg.IPMode = IPMode;
+			}
+			goto next_param;
 		}
 		/*
 		 * Save the notes field.
@@ -411,17 +447,22 @@ static int process_form_config(int index, int iNumParams,
 			len = strncpy_html(usercfg.notes, pcValue[i],
 				sizeof(usercfg.notes) - 1);
 			usercfg.notes[len] = '\0';
-			break;
+			goto next_param;
 		}
+next_param:;
 	}
-    lstr("<pv>");
-	if (permcfg_virgin()) {
+/*
+ * #define PROTECT_PERMCFG 0
+ * to make a build that will overwrite permcfg.
+ */
+#if PROTECT_PERMCFG
+	if (permcfg_virgin())
+#endif
+	{
 	    lstr("<ps>");
 		permcfg_save();
 	}
-    lstr("<us>");
 	usercfg_save();
-    lstr("<done>");
 	return 0;
 }
 
@@ -1196,7 +1237,7 @@ static tCGI calls[NUM_SSI_CGI_ENTRIES];
 int SSIHandler(int iIndex, int iNumParams,
 		char *pcParam[], char *pcValue[], char **resultBuffer)
 {
-	lstr("<SSI.");lhex(iIndex);lstr(">");
+	//lstr("<SSI.");lhex(iIndex);lstr(">");
 	if (iIndex<NUM_SSI_CGI_FUNCTIONS) {
 		return calls[iIndex].pfnCGIHandler(iIndex, iNumParams,
 				pcParam, pcValue, resultBuffer);

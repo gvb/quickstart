@@ -77,6 +77,7 @@ static void ethernetif_input(void *pParams);
 static struct pbuf * low_level_input(struct netif *netif);
 static err_t low_level_output(struct netif *netif, struct pbuf *p);
 static err_t low_level_transmit(struct netif *netif, struct pbuf *p);
+err_t LWIPServiceTaskIPConfigGet(struct netif *netif, IP_CONFIG * ipCfg);
 
 //*****************************************************************************
 //
@@ -577,7 +578,7 @@ void LWIPServiceTaskInit(IP_CONFIG *ipCfg)
 	vTaskDelay(100 / portTICK_RATE_MS);
 
 	// Setup the network address values.
-	if (ipCfg->IPMode == IPADDR_USE_STATIC)
+if (ipCfg->IPMode == IPADDR_USE_STATIC)
 	{
 		ip_addr.addr = htonl(ipCfg->IPAddr);
 		net_mask.addr = htonl(ipCfg->NetMask);
@@ -634,6 +635,18 @@ void LWIPServiceTaskInit(IP_CONFIG *ipCfg)
 		 {
 		 dhcp_renew(&lwip_netif);
 		 }*/
+	}
+	/*
+	 * Report Our IP Setup
+	 */
+	{
+		IP_CONFIG reportIP;
+
+		LWIPServiceTaskIPConfigGet(&lwip_netif, &reportIP);
+		lstr("IPMode:");lhex(reportIP.IPMode);crlf();
+		lstr("IPAddr:");lhex(reportIP.IPAddr);crlf();
+		lstr("GWAddr:");lhex(reportIP.GWAddr);crlf();
+		lstr("NtMask:");lhex(reportIP.NetMask);crlf();
 	}
 
 	/* Initialize HTTP */

@@ -36,6 +36,8 @@ static struct usercfg_s default_usercfg = {
 	.gateway[2] = 8,
 	.gateway[3] = 1,
 
+	.IPMode = IPADDR_USE_DHCP,
+
 	.notes = {0},
 
 	.checksum = 0,

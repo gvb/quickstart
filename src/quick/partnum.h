@@ -41,15 +41,16 @@ struct permcfg_s {
  * User modifiable configuration data structure.
  */
 struct usercfg_s {
-	int32_t length;		/**< sizeof(struct usercfg_s) */
-	int32_t version;	/**< structure version */
+	int32_t length;			/**< sizeof(struct usercfg_s) */
+	int32_t version;		/**< structure version */
 	char    assy_pn[64];	/**< string: assembly part number */
 	char    assy_sn[64];	/**< string: assembly serial number */
-	uint8_t ip[4];		/**< IP address */
-	uint8_t netmask[4];	/**< IP netmask */
-	uint8_t gateway[4];	/**< IP gateway */
-	char    notes[256];	/**< free form notes */
-	int32_t checksum;	/**< signed 32 bit sum of the data, totals -1 */
+	uint8_t ip[4];			/**< IP address */
+	uint8_t netmask[4];		/**< IP netmask */
+	uint8_t gateway[4];		/**< IP gateway */
+	unsigned long IPMode; 	/**< IP Address Mode: STATIC DHCP or AUTO */
+	char    notes[256];		/**< free form notes */
+	int32_t checksum;		/**< signed 32 bit sum of the data, totals -1 */
 };
 
 /*
