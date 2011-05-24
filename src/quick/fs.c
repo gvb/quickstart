@@ -100,16 +100,22 @@ fs_free(struct fs_file *file)
  * webserver, callers expect that they may peruse the returned
  * fs_file structure and
  * have:
- *  f = fs_open("filename");
+ *  f = fs_open_get_access("filename");
  *  f->name
  *  f->data
  *  *(f->data)
  *  f->len
  * remain valid until fs_close(f);.
  *  f->index will change based upon calls fs_read.
+ *
+ *  This fs_open_get_access operates a the
+ *  f=open(),"user may peruse *(f->data)",close(f)
+ *  paradigm.  Rather than just the
+ *  f=open(),read(f),close(f) paradigm.
+ *
  */
 struct fs_file *
-fs_open(char *name)
+fs_open_get_access(char *name)
 {
   struct fs_file *file;
   const struct fsdata_file *f;

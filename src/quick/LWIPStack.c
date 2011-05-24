@@ -124,7 +124,7 @@ static err_t low_level_init(struct netif *netif)
 
 	// Create the task that handles the incoming packets.
 	if (pdPASS == xTaskCreate(ethernetif_input,
-			( signed portCHAR * ) "ETH_INPUT",
+			( signed portCHAR * ) "eth-in",
 			netifINTERFACE_TASK_STACK_SIZE,
 			(void *)netif,
 			netifINTERFACE_TASK_PRIORITY,

@@ -92,125 +92,17 @@ static inline void split_eng(int a, int *integer, int *fract)
 	*fract = *fract - (*integer * 1000);
 }
 
-/*---------------------------------------------------------------------------*/
-static int file_stats(int index, int iNumParams,
-		char *pcParam[], char *pcValue[], char **resultBuffer)
-{
-#ifdef NEED_TO_CONVERT_FROM_UIP_TO_LWIP
-	uip_appdata[0]=0;
-	*resultBuffer = uip_appdata;
-	if (iNumParams>1) {
-		return snprintf((char *)uip_appdata, UIP_APPDATA_SIZE, "%5u", httpd_fs_count(pcValue[0]));
-	} else {
-		return 0;
-	}
-#else
-	*resultBuffer = "Need to port tcp_stats over to lwIP." ;
-	return strlen(*resultBuffer);
-#endif
-}
-/*---------------------------------------------------------------------------*/
-static const char closed[] =   /*  "CLOSED",*/
-{0x43, 0x4c, 0x4f, 0x53, 0x45, 0x44, 0};
-static const char syn_rcvd[] = /*  "SYN-RCVD",*/
-{0x53, 0x59, 0x4e, 0x2d, 0x52, 0x43, 0x56,
- 0x44,  0};
-static const char syn_sent[] = /*  "SYN-SENT",*/
-{0x53, 0x59, 0x4e, 0x2d, 0x53, 0x45, 0x4e,
- 0x54,  0};
-static const char established[] = /*  "ESTABLISHED",*/
-{0x45, 0x53, 0x54, 0x41, 0x42, 0x4c, 0x49, 0x53, 0x48,
- 0x45, 0x44, 0};
-static const char fin_wait_1[] = /*  "FIN-WAIT-1",*/
-{0x46, 0x49, 0x4e, 0x2d, 0x57, 0x41, 0x49,
- 0x54, 0x2d, 0x31, 0};
-static const char fin_wait_2[] = /*  "FIN-WAIT-2",*/
-{0x46, 0x49, 0x4e, 0x2d, 0x57, 0x41, 0x49,
- 0x54, 0x2d, 0x32, 0};
-static const char closing[] = /*  "CLOSING",*/
-{0x43, 0x4c, 0x4f, 0x53, 0x49,
- 0x4e, 0x47, 0};
-static const char time_wait[] = /*  "TIME-WAIT,"*/
-{0x54, 0x49, 0x4d, 0x45, 0x2d, 0x57, 0x41,
- 0x49, 0x54, 0};
-static const char last_ack[] = /*  "LAST-ACK"*/
-{0x4c, 0x41, 0x53, 0x54, 0x2d, 0x41, 0x43,
- 0x4b, 0};
 
-static const char *states[] = {
-  closed,
-  syn_rcvd,
-  syn_sent,
-  established,
-  fin_wait_1,
-  fin_wait_2,
-  closing,
-  time_wait,
-  last_ack};
-
-
-static int
-generate_tcp_stats(void *arg)
-{
-  struct uip_conn *conn;
-  struct httpd_state *s = (struct httpd_state *)arg;
-
-  return snprintf((char *)uip_appdata, UIP_APPDATA_SIZE, "Need to fix up.");
-
-#ifdef NEED_TO_CONVERT_FROM_UIP_TO_LWIP
-
-  conn = &uip_conns[s->count];
-  return snprintf((char *)uip_appdata, UIP_APPDATA_SIZE,
-		 "<tr><td>%d</td><td>%u.%u.%u.%u:%u</td><td>%s</td><td>%u</td><td>%u</td><td>%c %c</td></tr>\r\n",
-		 htons(conn->lport),
-		 htons(conn->ripaddr[0]) >> 8,
-		 htons(conn->ripaddr[0]) & 0xff,
-		 htons(conn->ripaddr[1]) >> 8,
-		 htons(conn->ripaddr[1]) & 0xff,
-		 htons(conn->rport),
-		 states[conn->tcpstateflags & UIP_TS_MASK],
-		 conn->nrtx,
-		 conn->timer,
-		 (uip_outstanding(conn))? '*':' ',
-		 (uip_stopped(conn))? '!':' ');
-#endif
-}
-/*---------------------------------------------------------------------------*/
-static int tcp_stats(int index, int iNumParams,
-		char *pcParam[], char *pcValue[], char **resultBuffer)
-{
-	*resultBuffer = "Need to port tcp_stats over to lwIP." ;
-	return strlen(*resultBuffer);
-}
-/*---------------------------------------------------------------------------*/
-#ifdef NEED_TO_CONVERT_FROM_UIP_TO_LWIP
-static unsigned short
-generate_net_stats(void *arg)
-{
-  struct httpd_state *s = (struct httpd_state *)arg;
-  return snprintf((char *)uip_appdata, UIP_APPDATA_SIZE,
-		  "%5u\n", ((uip_stats_t *)&uip_stat)[s->count]);
-}
-#endif
-
-static int net_stats(int index, int iNumParams,
-		char *pcParam[], char *pcValue[], char **resultBuffer)
-{
-	*resultBuffer = "Need to port net_stats over to lwIP." ;
-	return strlen(*resultBuffer);
-
-}
-/*---------------------------------------------------------------------------*/
 
 extern void vTaskList( signed char *pcWriteBuffer );
 static char cCountBuf[ 32 ];
-long lRefreshCount = 0;
+unsigned int refreshCount = 0;
 static int
 generate_rtos_stats(void)
 {
 	//\todo checkfor buffer overrun;
-	lRefreshCount++;
-	sprintf( cCountBuf, "<p><br>Refresh count = %ld", lRefreshCount );
+	refreshCount++;
+	sprintf( cCountBuf, "<p><br>Refresh count = %u", refreshCount );
 	vTaskList( (signed char *)uip_appdata );
 	strcat( uip_appdata, cCountBuf );
 
@@ -223,8 +115,8 @@ static int
 generate_runtime_stats(void)
 {
 	//\todo checkfor buffer overrun;
-	lRefreshCount++;
-	sprintf( cCountBuf, "<p><br>Refresh count = %ld", lRefreshCount );
+	refreshCount++;
+	sprintf( cCountBuf, "<p><br>Refresh count = %u", refreshCount );
 	vTaskGetRunTimeStats( (signed char*)uip_appdata );
 	strcat( uip_appdata, cCountBuf );
 
@@ -522,10 +414,14 @@ static int process_form_config(int index, int iNumParams,
 			break;
 		}
 	}
-
-	if (permcfg_virgin())
+    lstr("<pv>");
+	if (permcfg_virgin()) {
+	    lstr("<ps>");
 		permcfg_save();
+	}
+    lstr("<us>");
 	usercfg_save();
+    lstr("<done>");
 	return 0;
 }
 
@@ -1255,9 +1151,7 @@ static int adc_cpu_upd(int index, int iNumParams,
 
 
 static const tCGI ssi_cgi_funcs[] = {
-		{ "/file_stats", file_stats },
-		{ "/tcp_connections", tcp_stats },
-		{ "/net_stats", net_stats },
+
 		{ "/rtos_stats", rtos_stats },
 		{ "/run_time", run_time },
 
@@ -1310,7 +1204,7 @@ int SSIHandler(int iIndex, int iNumParams,
 	else if (iIndex<NUM_SSI_CGI_ENTRIES) {
 			struct fs_file *fs;
 
-			fs = fs_open((char *)calls[iIndex].pcCGIName);
+			fs = fs_open_get_access((char *)calls[iIndex].pcCGIName);
 			if (fs) {
 				/*
 				 * A read of the file without a call to read

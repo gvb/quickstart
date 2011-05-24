@@ -56,7 +56,7 @@ struct fs_file {
 
 /* file will be allocated and filled in by the fs_open function. file will
  * be freed by the fs_close function. */
-struct fs_file *fs_open(char *name);
+struct fs_file *fs_open_get_access(char *name);
 void fs_close(struct fs_file *file);
 
 #if !USER_PROVIDES_ZERO_COPY_STATIC_TAGS
