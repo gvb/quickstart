@@ -63,6 +63,7 @@
 #include <fs.h>
 #include <fsdata.h>
 #include <fsdata-stats.h>
+#include <logger.h>
 
 #define UIP_APPDATA_SIZE 2048
 
@@ -1246,6 +1247,7 @@ static tCGI calls[NUM_SSI_CGI_ENTRIES];
 int SSIHandler(int iIndex, int iNumParams,
 		char *pcParam[], char *pcValue[], char **resultBuffer)
 {
+	lstr("<SSI.");lhex(iIndex);lstr(">");
 	if (iIndex<NUM_SSI_CGI_FUNCTIONS) {
 		return calls[iIndex].pfnCGIHandler(iIndex, iNumParams,
 				pcParam, pcValue, resultBuffer);
@@ -1287,18 +1289,18 @@ void init_ssi_cgi_handlers(void)
 		LWIP_ASSERT("(f)", (f));
 		if (f) {
 			calls[i].pcCGIName     = (char *)f->name;
-			calls[i].pfnCGIHandler = SSIHandler;
+			calls[i].pfnCGIHandler = NULL;
 			f = f->next;
 		}
 		else {
 			calls[i].pcCGIName = "";
-			calls[i].pfnCGIHandler = SSIHandler;
+			calls[i].pfnCGIHandler = NULL;
 		}
 	}
 
 	// \to combine ssi_handlers and cgi_handlers
 	http_set_ssi_handler(SSIHandler, calls, NUM_SSI_CGI_ENTRIES);
-	http_set_cgi_handlers(calls, NUM_SSI_CGI_ENTRIES);
+	http_set_cgi_handlers(calls, NUM_SSI_CGI_FUNCTIONS);
 
 }
 

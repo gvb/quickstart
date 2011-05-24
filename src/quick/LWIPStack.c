@@ -62,7 +62,6 @@
 #include "fsdata.h"
 #include "fsdata-stats.h"
 
-#include <httpd-ssi.h>
 #include <httpd-cgi.h>
 
 // Sanity Check:  This interface driver will NOT work if the following defines are incorrect.

@@ -430,7 +430,7 @@ get_tag_insert(struct http_state *hs)
         if(strcmp(hs->tag_name, g_ppcTags[loop].pcCGIName) == 0) {
           hs->tag_insert_len = g_pfnSSIHandler(loop, 0, NULL, NULL,
         		  &(hs->tag_insert));
-          //lstr("<get.");lstr(hs->tag_name);lstr(".");lhex(hs->tag_insert_len);lstr(">");
+          lstr("<get.");lstr(hs->tag_name);lstr(".");lhex(hs->tag_insert_len);lstr(">");
           return;
         }
 #else
@@ -675,7 +675,7 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
   err = ERR_OK;
 #endif
 
-  //lstr("{");
+  lstr("{");
 
   /* Have we run out of file data to send? If so, we need to read the next
    * block from the file.
@@ -704,7 +704,7 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
       /* Did we get a send buffer? If not, return immediately. */
       if(hs->buf == NULL) {
         LWIP_DEBUGF(HTTPD_DEBUG, ("No buff\n"));
-        //lstr("\n:E1}");
+        lstr("\n:E1}");
         return;
       }
     }
@@ -716,7 +716,7 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
         // No - close the connection.
         //
         close_conn(pcb, hs);
-        //lstr("\n:E2}");
+        lstr("\n:E2}");
         return;
     }
 
@@ -725,7 +725,7 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
     fs_close(hs->handle);
     hs->handle = NULL;
     close_conn(pcb, hs);
-    //lstr("\n:EoF}");
+    lstr("\n:EoF}");
     return;
   }
 
@@ -977,13 +977,17 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
               /* If there is any unsent data in the buffer prior to the
                * tag, we need to send it now.
                */
+              /* fix bug where len  get's  small and stays  small */
               if(hs->tag_end > hs->file)
               {
-                /* How much of the data can we send? */
-                if(len > hs->tag_end - hs->file) {
-                    len = hs->tag_end - hs->file;
+                if (tcp_sndbuf(pcb) < hs->tag_end - hs->file) {
+                  len = tcp_sndbuf(pcb);
+                } else {
+                  len = (hs->tag_end - hs->file);
                 }
-
+                if(len > (2*pcb->mss)) {
+                  len = 2*pcb->mss;
+                }
                 do {
                   LWIP_DEBUGF(HTTPD_DEBUG, ("Sending %d bytes\n", len));
                   err = tcp_write(pcb, hs->file, len, 0);
@@ -1022,11 +1026,14 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
            */
           if(hs->tag_end > hs->file)
           {
-            /* How much of the data can we send? */
-            if(len > hs->tag_end - hs->file) {
-              len = hs->tag_end - hs->file;
+            if (tcp_sndbuf(pcb) < hs->tag_end - hs->file) {
+               len = tcp_sndbuf(pcb);
+            } else {
+               len = (hs->tag_end - hs->file);
             }
-
+            if(len > (2*pcb->mss)) {
+               len = 2*pcb->mss;
+            }
             do {
               LWIP_DEBUGF(HTTPD_DEBUG, ("Sending %d bytes\n", len));
               err = tcp_write(pcb, hs->file, len, 0);
@@ -1054,16 +1061,20 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
 
         case TAG_SENDING:
           /* Do we still have insert data left to send? */
-            //lstr("<sending.");lstr(hs->tag_name);lstr(".");
-            //lhex(hs->tag_insert_len);lstr(".");
-            //lhex(hs->tag_index);lstr(">");
+          lstr("<sending.");lstr(hs->tag_name);lstr(".");
+          lhex(hs->tag_insert_len);lstr(".");
+          lhex(hs->tag_index);lstr(">");
           if(hs->tag_index < hs->tag_insert_len) {
               /* We are sending the insert string itself. How much of the
                * insert can we send? */
-              if(len > (hs->tag_insert_len - hs->tag_index)) {
-                len = (hs->tag_insert_len - hs->tag_index);
+              if (tcp_sndbuf(pcb) < hs->tag_insert_len - hs->tag_index) {
+                 len = tcp_sndbuf(pcb);
+              } else {
+                 len = (hs->tag_insert_len - hs->tag_index);
               }
-
+              if(len > (2*pcb->mss)) {
+                 len = 2*pcb->mss;
+              }
               do {
                 LWIP_DEBUGF(HTTPD_DEBUG, ("Sending %d bytes\n", len));
                 /*
@@ -1072,12 +1083,12 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
                  * this, insert corruption can occur if more than one insert
                  * is processed before we call tcp_output.
                  */
-                //lstr("<tcp_write.");lstr(hs->tag_name);lstr(".");
-                //lhex(len);lstr(".");
-                //lhex(hs->tag_index);lstr(">");
+                lstr("<tcp_write.");lstr(hs->tag_name);lstr(".");
+                lhex(len);lstr(".");
+                lhex(hs->tag_index);lstr(">");
                 err = tcp_write(pcb, &(hs->tag_insert[hs->tag_index]), len, 1);
                 if (err == ERR_MEM) {
-                  //lstr("<em>");
+                  lstr("<em>");
                   len /= 2;
                 }
               } while (err == ERR_MEM && (len > 1));
@@ -1090,7 +1101,7 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
               /* We have sent all the insert data so go back to looking for
                * a new tag.
                */
-              //lstr("<none.");lstr(hs->tag_name);lstr(">");
+              lstr("<none.");lstr(hs->tag_name);lstr(">");
               LWIP_DEBUGF(HTTPD_DEBUG, ("Everything sent.\n"));
               hs->tag_index = 0;
               hs->tag_state = TAG_NONE;
@@ -1141,7 +1152,7 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
   }
 
   LWIP_DEBUGF(HTTPD_DEBUG, ("send_data end.\n"));
-  //lstr("\n:ok}");
+  lstr("\n:ok}");
 
 }
 
@@ -1151,7 +1162,7 @@ http_poll(void *arg, struct tcp_pcb *pcb)
 {
   struct http_state *hs;
 
-  //lstr("\n_poll\n");
+  lstr("\n_poll\n");
 
   hs = arg;
 
@@ -1185,7 +1196,7 @@ http_sent(void *arg, struct tcp_pcb *pcb, u16_t len)
 {
   struct http_state *hs;
 
-  //lstr("\n_sent\n");
+  lstr("\n_sent\n");
   LWIP_DEBUGF(HTTPD_DEBUG, ("http_sent 0x%08x\n", pcb));
 
   LWIP_UNUSED_ARG(len);
@@ -1351,8 +1362,8 @@ http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
                  cgi_len = g_pCGIs[i].pfnCGIHandler(i, count, hs->params,
                          hs->param_vals, &cgi_buffer);
                  lhex(cgi_len);
-                 lstr(".");
-                 lstr(cgi_buffer);
+                 //lstr(".");
+                 //lstr(cgi_buffer);
                  lstr(">");
 #else
                  uri = g_pCGIs[i].pfnCGIHandler(i, count, hs->params,
@@ -1480,7 +1491,7 @@ http_accept(void *arg, struct tcp_pcb *pcb, err_t err)
 {
   struct http_state *hs;
 
-  //lstr("\n_accept\n");
+  lstr("\n_accept\n");
 
   LWIP_UNUSED_ARG(arg);
   LWIP_UNUSED_ARG(err);
