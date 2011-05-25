@@ -662,6 +662,7 @@ if (ipCfg->IPMode == IPADDR_USE_STATIC)
 #endif
 #endif
 	httpd_init();
+	lstr("httpd done");
 
 	// Nothing else to do.  No point hanging around.
 	vTaskDelete( NULL);
