@@ -18,13 +18,13 @@ static struct usercfg_s default_usercfg = {
 	.length = sizeof(struct usercfg_s),
 	.version = 1,
 
-	.assy_pn = "8A7W5 100542-001 Rev x1",
-	.assy_sn = "20110214001",
+	.assy_pn = "8A7W5 100xxx-001 Rev x1",
+	.assy_sn = "2011mmdd001",
 
 	.ip[0] = 192,
 	.ip[1] = 168,
 	.ip[2] = 8,
-	.ip[3] = 29,
+	.ip[3] = 199,
 
 	.netmask[0] = 255,
 	.netmask[1] = 255,
@@ -36,7 +36,7 @@ static struct usercfg_s default_usercfg = {
 	.gateway[2] = 8,
 	.gateway[3] = 1,
 
-	.IPMode = IPADDR_USE_DHCP,
+	.IPMode = IPADDR_USE_STATIC,
 
 	.notes = {0},
 
