@@ -84,7 +84,7 @@ err_t LWIPServiceTaskIPConfigGet(struct netif *netif, IP_CONFIG * ipCfg);
 // The lwIP network interface structure for the Stellaris Ethernet MAC.
 //
 //*****************************************************************************
-static struct netif lwip_netif;
+struct netif lwip_netif;
 
 //*****************************************************************************
 //
@@ -663,9 +663,6 @@ if (ipCfg->IPMode == IPADDR_USE_STATIC)
 #endif
 	httpd_init();
 	lstr("httpd done");
-
-	// Nothing else to do.  No point hanging around.
-	vTaskDelete( NULL);
 
 }
 

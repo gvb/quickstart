@@ -36,7 +36,8 @@ typedef struct
 //! Prototypes for the APIs.
 //
 //*****************************************************************************
-extern void LWIPServiceTaskInit(IP_CONFIG *ipCfg);
+extern struct netif lwip_netif;
+void LWIPServiceTaskInit(IP_CONFIG *ipCfg);
 #if NETIF_DEBUG
 void stellarisif_debug_print(struct pbuf *p);
 #else

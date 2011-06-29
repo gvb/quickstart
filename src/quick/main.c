@@ -87,6 +87,7 @@ large successful programs.
 #include "buildDate.h"
 #include "inc/lm3s8962.h"
 
+#include "syslog.h"
 
 #if USE_PROGRAM_STARTUP
 #include "program-startup.h"
@@ -395,6 +396,12 @@ void ethernetThread(void *pParams)
 	}
 
 	LWIPServiceTaskInit(&ipconfig);
+	syslogInit();
+
+	syslog(facility_local0 , level_err, "A message from QuickStart" );
+
+	/* Nothing else to do.  No point hanging around. */
+	vTaskDelete( NULL);
 
 	/* We should not get here. */
 	return;
