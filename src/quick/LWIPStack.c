@@ -77,7 +77,6 @@ static void ethernetif_input(void *pParams);
 static struct pbuf * low_level_input(struct netif *netif);
 static err_t low_level_output(struct netif *netif, struct pbuf *p);
 static err_t low_level_transmit(struct netif *netif, struct pbuf *p);
-err_t LWIPServiceTaskIPConfigGet(struct netif *netif, IP_CONFIG * ipCfg);
 
 //*****************************************************************************
 //

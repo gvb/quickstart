@@ -3,6 +3,7 @@
  */
 
 #include <stdarg.h>
+#include <ustdlib.h>
 #include <syslog.h>
 #include <lwip/udp.h>
 #include <LWIPStack.h>
@@ -23,7 +24,7 @@ void syslogInit(void)
 
 	IP_CONFIG currentIPConfig;
 
-	LWIPServiceTaskIPConfigGet(lwip_netif, &currentIPConfig);
+	LWIPServiceTaskIPConfigGet(&lwip_netif, &currentIPConfig);
 
 	if (!sysLogIni.initialized) {
 		sysLogIni.initialized = 1;

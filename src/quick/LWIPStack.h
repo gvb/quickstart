@@ -1,6 +1,10 @@
 #ifndef LWIPSTACK_H_
 #define LWIPSTACK_H_
 
+#include <lwip/init.h>
+#include <lwip/api.h>
+#include <lwip/netifapi.h>
+
 #define netifINTERFACE_TASK_STACK_SIZE				( 350 )
 #define netifINTERFACE_TASK_PRIORITY				( configMAX_PRIORITIES)
 #define netifBUFFER_WAIT_ATTEMPTS					10
@@ -37,6 +41,8 @@ typedef struct
 //
 //*****************************************************************************
 extern struct netif lwip_netif;
+err_t LWIPServiceTaskIPConfigGet(struct netif *netif, IP_CONFIG * ipCfg);
+
 void LWIPServiceTaskInit(IP_CONFIG *ipCfg);
 #if NETIF_DEBUG
 void stellarisif_debug_print(struct pbuf *p);
