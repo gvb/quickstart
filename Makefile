@@ -162,6 +162,7 @@ SOURCE =\
 	$(SRC_DIR)/quick/fs.c \
 	$(SRC_DIR)/quick/httpd.c \
 	$(SRC_DIR)/quick/httpd-cgi.c \
+	$(SRC_DIR)/quick/syslog.c \
 	$(SRC_DIR)/quick/debugSupport.c \
 	$(STELLARISWARE)/utils/ustdlib.c \
 	$(STELLARISWARE)/boards/ek-lm3s8962/drivers/rit128x96x4.c \

@@ -77,14 +77,13 @@ static void ethernetif_input(void *pParams);
 static struct pbuf * low_level_input(struct netif *netif);
 static err_t low_level_output(struct netif *netif, struct pbuf *p);
 static err_t low_level_transmit(struct netif *netif, struct pbuf *p);
-err_t LWIPServiceTaskIPConfigGet(struct netif *netif, IP_CONFIG * ipCfg);
 
 //*****************************************************************************
 //
 // The lwIP network interface structure for the Stellaris Ethernet MAC.
 //
 //*****************************************************************************
-static struct netif lwip_netif;
+struct netif lwip_netif;
 
 //*****************************************************************************
 //
@@ -663,9 +662,6 @@ if (ipCfg->IPMode == IPADDR_USE_STATIC)
 #endif
 	httpd_init();
 	lstr("httpd done");
-
-	// Nothing else to do.  No point hanging around.
-	vTaskDelete( NULL);
 
 }
 
