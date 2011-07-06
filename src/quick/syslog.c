@@ -29,7 +29,7 @@ void syslogInit(void)
 	if (!sysLogIni.initialized) {
 		sysLogIni.initialized = 1;
 		sysLogIni.localIp.addr = currentIPConfig.IPAddr;
-		sysLogIni.remotIp.addr = htonl((192<<24|168<<16|8<<8|160));
+		sysLogIni.remotIp.addr = htonl((192<<24|168<<16|8<<8|173));
 		sysLogIni.localPort = 6719;
 		sysLogIni.remotPort = 6719;
 	}
