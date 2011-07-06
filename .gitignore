@@ -3,6 +3,7 @@
 *.bin
 *.axf
 *.map
+*.dump
 obj/depend
 obj/buildDate.c
 obj/fsdata.c
