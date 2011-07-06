@@ -7,3 +7,4 @@ obj/depend
 obj/buildDate.c
 obj/fsdata.c
 obj/fsdata-stats.c
+doc/
