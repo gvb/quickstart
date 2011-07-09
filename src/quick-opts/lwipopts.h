@@ -50,8 +50,9 @@
  * To turn on debugging:
  * #define LWIP_DBG_TYPES_ON               LWIP_DBG_ON
  */
-#define LWIP_DBG_MIN_LEVEL              0
-#define MEMP_SANITY_CHECK               1
+#define LWIP_DBG_MIN_LEVEL		0
+#define MEMP_SANITY_CHECK		0
+#define MEMP_OVERFLOW_CHECK	0
 #define ARP_QUEUEING                    1
 
 #define LWIP_DHCP_AUTOIP_COOP           ((LWIP_DHCP) && (LWIP_AUTOIP))
