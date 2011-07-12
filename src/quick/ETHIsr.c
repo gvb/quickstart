@@ -23,6 +23,7 @@
 #include "ETHIsr.h"
 
 #include "logger.h"
+#include "partnum.h"
 
 //*****************************************************************************
 //
@@ -198,9 +199,6 @@ void ETH0IntHandler(void)
 //*****************************************************************************
 int ETHServiceTaskInit(const unsigned long ulPort)
 {
-	unsigned char hwaddr[ETH_HWADDR_LEN];
-	unsigned long ulUser0,ulUser1;
-
 	if (ulPort < MAX_ETH_PORTS)
 	{
 		// Check if peripheral is present
@@ -225,30 +223,9 @@ int ETHServiceTaskInit(const unsigned long ulPort)
 		GPIOPadConfigSet(ETHPortBase[ulPort], ETHPins[ulPort], GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD);
 
 		// Configure the hardware MAC address for Ethernet Controller filtering of
-			// incoming packets.
-			//
-			// For the LM3S6965 Evaluation Kit, the MAC address will be stored in the
-			// non-volatile USER0 and USER1 registers.  These registers can be read
-			// using the FlashUserGet function, as illustrated below.
-			//
-			// \todo Rationalize the MAC address from here and from the
-			// the configuration record.
-			//
-			FlashUserGet(&ulUser0, &ulUser1);
-			if ((ulUser0 == 0xffffffff) || (ulUser1 == 0xffffffff))
-			{
-				// \todo : do something...
-			}
-
-			hwaddr[0] = ((ulUser0 >> 0) & 0xff);
-			hwaddr[1] = ((ulUser0 >> 8) & 0xff);
-			hwaddr[2] = ((ulUser0 >> 16) & 0xff);
-			hwaddr[3] = ((ulUser1 >> 0) & 0xff);
-			hwaddr[4] = ((ulUser1 >> 8) & 0xff);
-			hwaddr[5] = ((ulUser1 >> 16) & 0xff);
-
-			// set MAC hardware address
-			EthernetMACAddrSet(ETHBase[ulPort], &(hwaddr[0]));
+		// incoming packets.
+		//
+		EthernetMACAddrSet(ETHBase[ulPort], &permcfg.mac[0]);
 
 		// Ethernet controller is a little complicated, all is done in user defined
 		// task(thread), thus no open is needed.

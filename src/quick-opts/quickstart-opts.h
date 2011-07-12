@@ -16,4 +16,8 @@
 #define PROTECT_PERMCFG 1
 #endif
 
+#ifndef ERASE_PERMCFG
+#define ERASE_PERMCFG 0
+#endif
+
 #endif /* QUICKSTARTOPTS_H_ */

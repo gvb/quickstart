@@ -661,7 +661,7 @@ if (ipCfg->IPMode == IPADDR_USE_STATIC)
 #endif
 #endif
 	httpd_init();
-	lstr("httpd done");
+	lstr("httpd done\r\n");
 
 }
 

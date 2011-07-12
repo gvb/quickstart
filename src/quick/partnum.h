@@ -109,5 +109,13 @@ int usercfg_valid(void);
  */
 int usercfg_save(void);
 
+/**
+ * Erase the permanent configuration structure in flash
+ * \returns
+ *  - TRUE => perm configuration page erased/blank.
+ *  - FALSE => perm configuration page not erased/blank.
+ */
+int permcfg_erase(void);
+
 #endif /* PARTNUM_H_ */
 /** \} */

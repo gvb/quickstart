@@ -74,6 +74,7 @@ large successful programs.
 #include "uart.h"
 #include "drivers/rit128x96x4.h"
 #include "interrupt.h"
+#include "ethernet.h"
 
 #include "LWIPStack.h"
 #include "ETHIsr.h"
@@ -130,6 +131,7 @@ int main(void)
 
 	prvSetupHardware();
 	init_logger();
+	RIT128x96x4Init(1000000);
 
 	/*
 	 * \todo maybe this needs to be earlier or later in the code.
@@ -138,6 +140,30 @@ int main(void)
 	NVIC_SYS_HND_CTRL_R |= NVIC_SYS_HND_CTRL_USAGE
 			              |NVIC_SYS_HND_CTRL_BUS
 			              |NVIC_SYS_HND_CTRL_MEM;
+
+	/*
+	 * Allow the following to erase the permanent configuration flash page:
+	 *
+	 * make PROTECT_PERMCFG="-D PROTECT_PERMCFG=0" \
+	 * ERASE_PERMCFG="-D ERASE_PERMCFG=1"
+	 *
+	 * The program will continue to erase the permanent configuration structure
+	 * at every powerup, so the program must be recompiled without the
+	 * ERASE_PERMCFG=1 part and reloaded to allow a permanent configuration
+	 * record to persist through power cycles.
+	 */
+#if ERASE_PERMCFG
+#if !PROTECT_PERMCFG
+
+	if (permcfg_erase())
+		RIT128x96x4StringDraw("permcfg Blank",
+							0, RITLINE(10), 15);
+	else
+		RIT128x96x4StringDraw("permcfg Not Blank",
+							0, RITLINE(10), 15);
+
+#endif
+#endif
 
 	config_init();
 	/**
@@ -159,19 +185,11 @@ int main(void)
 	lprintf("Assembly Serial Number: %s\n", usercfg.assy_sn);
 	lprintf("     Board Part Number: %s\n", permcfg.bd_pn);
 	lprintf("   Board Serial Number: %s\n", permcfg.bd_sn);
-	lprintf("                   MAC: %02x:%02x:%02x:%02x:%02x:%02x\n",
-		permcfg.mac[0], permcfg.mac[1], permcfg.mac[2],
-		permcfg.mac[3], permcfg.mac[4], permcfg.mac[5]);
-	lprintf("                    IP: %d.%d.%d.%d\r\n",
-		usercfg.ip[0], usercfg.ip[1], usercfg.ip[2], usercfg.ip[3]);
-
 	lprintf("Notes:\r\n %s\r\n", usercfg.notes);
 
 	/*
 	 * Display our configuration on the OLED display.
 	 */
-	RIT128x96x4Init(1000000);
-
 	RIT128x96x4StringDraw("CRI Quickstart", 0, RITLINE(0), 15);
 	RIT128x96x4StringDraw("LM3S8962", 0, RITLINE(1), 15);
 
@@ -193,15 +211,6 @@ int main(void)
 	s[16]=0;
 	RIT128x96x4StringDraw(s, 0, RITLINE(2), 15);
 	RIT128x96x4StringDraw(&s[17], 0, RITLINE(3), 15);
-
-	sprintf(s, "MAC %02x:%02x:%02x:%02x:%02x:%02x", 
-		permcfg.mac[0], permcfg.mac[1], permcfg.mac[2],
-		permcfg.mac[3], permcfg.mac[4], permcfg.mac[5]);
-	RIT128x96x4StringDraw(s, 0, RITLINE(5), 15);
-
-	sprintf(s, "IP  %d.%d.%d.%d\r\n",
-		usercfg.ip[0], usercfg.ip[1], usercfg.ip[2], usercfg.ip[3]);
-	RIT128x96x4StringDraw(s, 0, RITLINE(6), 15);
 
 	/**
 	 * \req \req_id The \program \shall identify:
@@ -232,8 +241,6 @@ int main(void)
 #endif
 
 	util_init();
-
-
 
 	/**
 	 * \req \req_tcpip The \program \shall support TCP/IP communications.
@@ -354,6 +361,8 @@ void prvSetupHardware(void)
 void ethernetThread(void *pParams)
 {
 	IP_CONFIG ipconfig;
+	unsigned char hwaddr[6] = {0, 0, 0, 0, 0, 0};
+	char s[64];		/* sprintf string */
 
 	ETHServiceTaskInit(0);
 	ETHServiceTaskFlush(0,ETH_FLUSH_RX | ETH_FLUSH_TX);
@@ -396,6 +405,42 @@ void ethernetThread(void *pParams)
 	}
 
 	LWIPServiceTaskInit(&ipconfig);
+
+	/*
+	 * Get actual MAC and IP address programmed
+	 */
+	EthernetMACAddrGet(ETH_BASE, &hwaddr[0]);
+	LWIPServiceTaskIPConfigGet(&lwip_netif, &ipconfig);
+
+	/*
+	 * Print Ethernet configuration to serial
+	 */
+	lprintf("\r\n");
+	lprintf("MAC: %02X:%02X:%02X:%02X:%02X:%02X\r\n", hwaddr[0],
+		hwaddr[1], hwaddr[2], hwaddr[3], hwaddr[4], hwaddr[5]);
+
+	lprintf(" IP: %d.%d.%d.%d\r\n",
+		ipconfig.IPAddr>>0 & 0xff,
+		ipconfig.IPAddr>>8 & 0xff,
+		ipconfig.IPAddr>>16 & 0xff,
+		ipconfig.IPAddr>>24 & 0xff	);
+
+	lprintf("\r\n");
+
+	/*
+	 * Print Ethernet configuration to OLED screen
+	 */
+	sprintf(s, "MAC %02X:%02X:%02X:%02X:%02X:%02X", hwaddr[0],
+		hwaddr[1], hwaddr[2], hwaddr[3], hwaddr[4], hwaddr[5]);
+	RIT128x96x4StringDraw(s, 0, RITLINE(5), 15);
+
+	sprintf(s, "IP  %d.%d.%d.%d",
+			ipconfig.IPAddr>>0 & 0xff,
+			ipconfig.IPAddr>>8 & 0xff,
+			ipconfig.IPAddr>>16 & 0xff,
+			ipconfig.IPAddr>>24 & 0xff	);
+	RIT128x96x4StringDraw(s, 0, RITLINE(6), 15);
+
 	syslogInit();
 
 	syslog(facility_local0 , level_err, "A message from QuickStart" );

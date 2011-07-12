@@ -37,12 +37,12 @@ static struct permcfg_s default_permcfg = {
 	.version  = -1,
 	.bd_pn    = "8A7W5 100569-001 Rev x1",
 	.bd_sn    = "20110214001",
-	.mac[0]   = 0xa8,
-	.mac[1]   = 0xfc,
-	.mac[2]   = 0xb7,
-	.mac[3]   = 0x00,
-	.mac[4]   = 0x00,
-	.mac[5]   = 0x00,
+	.mac[0]   = 0x12,
+	.mac[1]   = 0x34,
+	.mac[2]   = 0x56,
+	.mac[3]   = 0x78,
+	.mac[4]   = 0x9A,
+	.mac[5]   = 0xBC,
 	.mac[6]   = 0x00,
 	.mac[7]   = 0x00,
 	.checksum = 0,
@@ -79,13 +79,36 @@ static int32_t cksum(int32_t *ptr, int size)
  */
 int config_init(void)
 {
+	unsigned long ulUser0,ulUser1;
 	struct permcfg_s *permcfg_p = (struct permcfg_s*)PERMCFG_ADDR;
 	struct usercfg_s *usercfg_p = (struct usercfg_s*)USERCFG_ADDR;
 
+	/*
+	 * For the LM3S8962 Evaluation Kit, the MAC address will be stored in
+	 * the non-volatile USER0 and USER1 registers.  These registers start
+	 * as all ones.  Each bit can be set to a zero, once.  A zero cannot
+	 * be changed back to a one.
+	 *
+	 * The MAC address used is chosen based on the following order of
+	 * precedence:
+	 * 	1) permcfg in partnum.c
+	 * 	2) preloaded MAC at User0/User1
+	 * 	3) default_permcfg in partnum.c
+	 */
 	if (permcfg_valid())
 		permcfg = *permcfg_p;
-	else
+	else {
+		FlashUserGet(&ulUser0, &ulUser1);
+		if (~ulUser0 && ~ulUser1) {
+			default_permcfg.mac[0] = ((ulUser0 >> 0) & 0xff);
+			default_permcfg.mac[1] = ((ulUser0 >> 8) & 0xff);
+			default_permcfg.mac[2] = ((ulUser0 >> 16) & 0xff);
+			default_permcfg.mac[3] = ((ulUser1 >> 0) & 0xff);
+			default_permcfg.mac[4] = ((ulUser1 >> 8) & 0xff);
+			default_permcfg.mac[5] = ((ulUser1 >> 16) & 0xff);
+		}
 		permcfg = default_permcfg;
+	}
 
 	if (usercfg_valid())
 		usercfg = *usercfg_p;
@@ -197,5 +220,28 @@ int usercfg_save(void)
 		sizeof(struct usercfg_s));
 
 	return usercfg_valid();
+}
+
+/*
+ * Erase the permanent configuration flash page
+ */
+int permcfg_erase(void)
+{
+#if ERASE_PERMCFG
+#if !PROTECT_PERMCFG
+
+	/*
+	 * Verify that the permanent area is not already erased/blank.
+	 */
+	if (permcfg_virgin())
+		return TRUE;
+
+	FlashUsecSet(configCPU_CLOCK_HZ / 1000000);
+	FlashErase(PERMCFG_ADDR);
+
+#endif
+#endif
+
+	return permcfg_valid();
 }
 /** \} */
