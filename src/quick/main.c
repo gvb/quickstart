@@ -72,7 +72,6 @@ large successful programs.
 #include "sysctl.h"
 #include "gpio.h"
 #include "uart.h"
-#include "drivers/rit128x96x4.h"
 #include "interrupt.h"
 #include "ethernet.h"
 
@@ -86,9 +85,18 @@ large successful programs.
 #include "io.h"
 #include "debugSupport.h"
 #include "buildDate.h"
+
+#if (PART == LM3S8962)
 #include "inc/lm3s8962.h"
+#elif (PART == LM3S9B96)
+#include "inc/lm3s9b96.h"
+#endif
 
 #include "syslog.h"
+
+#if (PART == LM3S8962)
+#include "drivers/rit128x96x4.h"
+#endif
 
 #if USE_PROGRAM_STARTUP
 #include "program-startup.h"
@@ -102,8 +110,6 @@ void prvSetupHardware(void);
 #define RITLINE(ln)	(ln * 8)
 
 #endif
-
-
 
 /****************************************************************************/
 
@@ -131,7 +137,10 @@ int main(void)
 
 	prvSetupHardware();
 	init_logger();
+
+#if PART == LM3S8962
 	RIT128x96x4Init(1000000);
+#endif
 
 	/*
 	 * \todo maybe this needs to be earlier or later in the code.
@@ -156,11 +165,15 @@ int main(void)
 #if !PROTECT_PERMCFG
 
 	if (permcfg_erase())
+#if (PART == LM3S8962)
 		RIT128x96x4StringDraw("permcfg Blank",
 							0, RITLINE(10), 15);
+#endif
 	else
+#if (PART == LM3S8962)
 		RIT128x96x4StringDraw("permcfg Not Blank",
 							0, RITLINE(10), 15);
+#endif
 
 #endif
 #endif
@@ -187,12 +200,12 @@ int main(void)
 	lprintf("   Board Serial Number: %s\n", permcfg.bd_sn);
 	lprintf("Notes:\r\n %s\r\n", usercfg.notes);
 
+#if (PART == LM3S8962)
 	/*
 	 * Display our configuration on the OLED display.
 	 */
 	RIT128x96x4StringDraw("CRI Quickstart", 0, RITLINE(0), 15);
 	RIT128x96x4StringDraw("LM3S8962", 0, RITLINE(1), 15);
-
 	/*
 	 * Split date
 	 * 0123456789012345678901234567890
@@ -211,6 +224,7 @@ int main(void)
 	s[16]=0;
 	RIT128x96x4StringDraw(s, 0, RITLINE(2), 15);
 	RIT128x96x4StringDraw(&s[17], 0, RITLINE(3), 15);
+#endif
 
 	/**
 	 * \req \req_id The \program \shall identify:
@@ -276,7 +290,6 @@ int main(void)
 
 #if !USE_PROGRAM_STARTUP
 /*****************************************************************************/
-
 /**
  * Initialize the processor hardware.
  *
@@ -295,9 +308,19 @@ void prvSetupHardware(void)
 	/**
 	 * Set the clocking to run from the PLL at 50 MHz
 	 */
+#if (PART == LM3S8962)
+
 	SysCtlClockSet(
 		SYSCTL_SYSDIV_4
 		| SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_8MHZ );
+
+#elif (PART == LM3S9B96)
+
+	SysCtlClockSet(
+		SYSCTL_SYSDIV_4
+		| SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_16MHZ );
+
+#endif
 
 	/*
 	 * Initialize the ARM peripherals that are used.  All the GPIOs
@@ -427,6 +450,7 @@ void ethernetThread(void *pParams)
 
 	lprintf("\r\n");
 
+#if (PART == LM3S8962)
 	/*
 	 * Print Ethernet configuration to OLED screen
 	 */
@@ -440,9 +464,9 @@ void ethernetThread(void *pParams)
 			ipconfig.IPAddr>>16 & 0xff,
 			ipconfig.IPAddr>>24 & 0xff	);
 	RIT128x96x4StringDraw(s, 0, RITLINE(6), 15);
+#endif
 
 	syslogInit();
-
 	syslog(facility_local0 , level_err, "A message from QuickStart" );
 
 	/* Nothing else to do.  No point hanging around. */

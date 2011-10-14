@@ -98,7 +98,6 @@ struct netif lwip_netif;
 //*****************************************************************************
 static err_t low_level_init(struct netif *netif)
 {
-
 	ETHServiceTaskDisable(0);
 
 	// set MAC hardware address length
@@ -130,12 +129,11 @@ static err_t low_level_init(struct netif *netif)
 			netifINTERFACE_TASK_PRIORITY,
 			NULL))
 	{
-		ETHServiceTaskEnable(0);LWIP_DEBUGF(NETIF_DEBUG, ("low_level_input: Waiting for Ethernet to become ready\n"));
+		ETHServiceTaskEnable(0);
+		LWIP_DEBUGF(NETIF_DEBUG, ("low_level_input: Waiting for Ethernet to become ready\n"));
 		ETHServiceTaskWaitReady(0);
 		netif->flags |= NETIF_FLAG_LINK_UP;
-
 		LWIP_DEBUGF(NETIF_DEBUG, ("low_level_init: Ethernet link is up\n"));
-
 		return ERR_OK;
 
 	}
@@ -144,6 +142,7 @@ static err_t low_level_init(struct netif *netif)
 		LWIP_DEBUGF(NETIF_DEBUG, ("low_level_init: create receive task error\n"));
 		return ERR_IF;
 	}
+
 }
 
 /**
@@ -385,7 +384,8 @@ static err_t low_level_transmit(struct netif *netif, struct pbuf *p)
 	if (0 == ETHServiceTaskLinkStatus(0))
 	{
 		// ~ bitwise negation, all bit except NETIF_FLAG_LINK_UP set to 1 and AND with current flag
-		netif->flags &= ~NETIF_FLAG_LINK_UP;LWIP_DEBUGF(NETIF_DEBUG, ("low_level_transmit: link is down\n"));
+		netif->flags &= ~NETIF_FLAG_LINK_UP;
+		LWIP_DEBUGF(NETIF_DEBUG, ("low_level_transmit: link is down\n"));
 		LINK_STATS_INC(link.err);
 		return (ERR_IF);
 	}

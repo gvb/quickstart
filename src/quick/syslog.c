@@ -54,9 +54,7 @@ void syslog(enum facility_vals fac, enum level_vals lev, char * fmt, ...)
 	eos += sprintf(eos,"<%d>", lev+fac*8 );
 
 	vsnprintf(eos, rfc3164_max_packet_size-(eos-(char *)p->payload), fmt, argptr);
-
 	udp_sendto(pcb, p, &sysLogIni.remotIp, sysLogIni.remotPort);
-
 	pbuf_free(p);
 	udp_remove(pcb);
 

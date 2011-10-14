@@ -27,10 +27,15 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
+#To find appropriate part, navigate to:
+#../StellarisWare/boards/(pick your board)/(pick an example)/Makefile
+#look for PART=LM3Sxxxx
+ifndef PART
+PART=LM3S8962
+endif
+
 COMPILER=GCC
 SUBARCH=ARM_CM3
-#PROC=LM3S8962
-BOARD=LM3S8962_EVB
 
 # Where we get pieces from...
 SRC_DIR=src
@@ -45,6 +50,12 @@ RTOS_INCLUDE_DIR=$(FREERTOS)/Common/include
 LUMINARY_DRIVER_LIB=$(STELLARISWARE)/driverlib/gcc
 LWIP_INCLUDE_DIR=$(LWIP)/src/include
 
+ifeq ($(PART),LM3S9B96)
+BOARD_DIR=$(STELLARISWARE)/boards/dk-lm3s9b96
+else
+BOARD_DIR=$(STELLARISWARE)/boards/ek-lm3s8962
+endif
+
 ifndef WDT_ENABLE
 WDT_ENABLE=1
 endif
@@ -55,9 +66,10 @@ CROSS_COMPILE = arm-none-eabi-
 RM=/bin/rm
 DOXYGEN=/usr/bin/doxygen
 
-PROG=LM3S8962_EVB
-LDSCRIPT=standalone.ld
+PROG=$(PART)_EVB
 
+# Make a new .ld file for each controller (defines the memory map)
+LDSCRIPT=$(PART).ld
 
 #
 # The flags passed to the assembler.
@@ -121,7 +133,7 @@ CPPFLAGS +=\
 	-I $(STELLARISWARE)/inc \
 	-I $(STELLARISWARE)/utils \
 	-I $(STELLARISWARE)/driverlib \
-	-I $(STELLARISWARE)/boards/ek-lm3s8962 \
+	-I $(BOARD_DIR) \
 	-I $(SRC_DIR)/webserver \
 	-I $(LWIP_INCLUDE_DIR) \
 	-I $(LWIP_INCLUDE_DIR)/ipv4 \
@@ -133,9 +145,9 @@ CPPFLAGS +=\
 	-D ALIGN_STRUCT_END=__attribute\(\(aligned\(4\)\)\) \
 	-D sprintf=usprintf -D snprintf=usnprintf \
 	-D vsnprintf=uvsnprintf -D printf=uipprintf \
-	-D $(BOARD) \
+	-D PART=$(PART) \
 	-D DEPRECATED \
-	-D WDT_ENABLE=$(WDT_ENABLE)\
+	-D WDT_ENABLE=$(WDT_ENABLE) \
 	$(SET_IP_ADR) $(PROTECT_PERMCFG) $(ERASE_PERMCFG)
 
 CFLAGS +=\
@@ -165,13 +177,17 @@ SOURCE =\
 	$(SRC_DIR)/quick/syslog.c \
 	$(SRC_DIR)/quick/debugSupport.c \
 	$(STELLARISWARE)/utils/ustdlib.c \
-	$(STELLARISWARE)/boards/ek-lm3s8962/drivers/rit128x96x4.c \
 	$(RTOS_SOURCE_DIR)/list.c \
 	$(RTOS_SOURCE_DIR)/queue.c \
 	$(RTOS_SOURCE_DIR)/tasks.c \
 	$(RTOS_SOURCE_DIR)/portable/$(COMPILER)/$(SUBARCH)/port.c \
 	$(RTOS_SOURCE_DIR)/portable/MemMang/heap_2.c \
 	$(BUILD_DIR)buildDate.c
+
+ifeq ($(PART),LM3S8962)
+SOURCE +=\
+	$(STELLARISWARE)/boards/ek-lm3s8962/drivers/rit128x96x4.c
+endif
 
 VPATH	= $(sort $(dir $(SOURCE)))
 

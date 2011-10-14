@@ -8,6 +8,7 @@
 
 
 #include "hw_ethernet.h"
+#include "config.h"
 
 //*****************************************************************************
 //
@@ -48,24 +49,54 @@ extern "C"
 //*****************************************************************************		
 #define	ETH_DEFAULT_LINK_SPEED 100
 	
-//*****************************************************************************
-//
-//! Mask for PHY interrupt(MR17) register to detect link up/down.
-//
-//*****************************************************************************	
-#define ETH_PHY_INT_MASK ((PHY_MR17_LSCHG_IE | PHY_MR17_ANEGCOMP_IE))
-#define ETH_PHY_INT_MASKED ((ETH_PHY_INT_MASK) >> 8)	
-#define ETH_PHY_LINK_UP PHY_MR1_LINK
-#define ETH_LINK_DOWN  (PHY_MR17_LSCHG_INT)
-#define ETH_LINK_UP  (PHY_MR17_LSCHG_INT | PHY_MR17_ANEGCOMP_INT)	
+/*
+ * This set of defines specifies the locations of the phy registers required
+ * to use lwip.  The stellaris line has a built in phy, but not all phys are
+ * created equal.  Check the part data sheet to verify register numbers and
+ * bit locations for a specific part number.  The header
+ * ~/StellarisWare/inc/hw_ethernet.h includes a superset of all phys' register
+ * and bit locations.
+ */
+
+#if (PART == LM3S9B96)
+
+#define ETH_STATUS_REG			PHY_MR1
+#define ETH_AUTONEGCOMP_BIT		PHY_MR1_ANEGC
+#define ETH_LINKMADE_BIT		PHY_MR1_LINK
+#define ETH_INTCONFIG_REG		PHY_MR30
+#define ETH_INTAUTONEGCONFIG_BIT	PHY_MR30_ANCOMPIM
+#define ETH_INTLINKDNCONFIG_BIT		PHY_MR30_LDIM
+#define ETH_INTSTATUS_REG		PHY_MR29
+#define ETH_INTAUTONEGSTATUS_BIT	PHY_MR29_ANCOMPIS
+#define ETH_INTLINKDNSTATUS_BIT		PHY_MR29_LDIS
+
+#elif (PART == LM3S8962)
+
+#define ETH_STATUS_REG			PHY_MR1
+#define ETH_AUTONEGCOMP_BIT		PHY_MR1_ANEGC
+#define ETH_LINKMADE_BIT		PHY_MR1_LINK
+#define ETH_INTCONFIG_REG		PHY_MR17
+#define ETH_INTAUTONEGCONFIG_BIT	PHY_MR17_ANEGCOMP_IE
+#define ETH_INTLINKDNCONFIG_BIT		PHY_MR17_LSCHG_IE
+#define ETH_INTSTATUS_REG		PHY_MR17
+#define ETH_INTAUTONEGSTATUS_BIT	PHY_MR17_ANEGCOMP_INT
+#define ETH_INTLINKDNSTATUS_BIT		PHY_MR17_LSCHG_INT
+
+#endif
+
+#define ETH_PHY_INT_MASK (ETH_INTLINKDNCONFIG_BIT | ETH_INTAUTONEGCONFIG_BIT)
+#define ETH_PHY_INT_MASKED (ETH_INTAUTONEGSTATUS_BIT | ETH_INTLINKDNSTATUS_BIT)
+#define ETH_PHY_LINK_UP 	(ETH_LINKMADE_BIT)
+#define ETH_LINK_DOWN 		(ETH_INTLINKDNSTATUS_BIT)
+#define ETH_LINK_UP 		(ETH_PHY_INT_MASKED)
 
 //*****************************************************************************
 //
-//! Eth bit position states for device.
+//! Eth bit position states for ETHDevice.
 //
 //*****************************************************************************	
 #define ETH_ERROR			0x00
-#define ETH_OVERFLOW		0x01
+#define ETH_OVERFLOW			0x01
 #define	ETH_LINK_OK			0x02	
 #define ETH_EBADF			0x03
 #define ETH_ENABLED			0x04

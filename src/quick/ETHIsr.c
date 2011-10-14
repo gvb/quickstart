@@ -120,7 +120,7 @@ void ETH0IntHandler(void)
 {
 	static portBASE_TYPE xHigherPriorityTaskWoken;
 
-	unsigned long ulStatus;
+	unsigned long ulStatus, phyStatus;
 
 	// Read and Clear the interrupt.
 	ulStatus = EthernetIntStatus(ETHBase[0], false);
@@ -168,19 +168,25 @@ void ETH0IntHandler(void)
 		// no need to worry about while loop in EthernetPHYRead
 		// Ethernet PHY Management Register 17 - Interrupt Control/Status
 		// Read and Clear the interrupt.
-		unsigned long phyStatus = EthernetPHYRead(ETHBase[0], PHY_MR17);
+		phyStatus = EthernetPHYRead(ETHBase[0],ETH_INTSTATUS_REG);
 
+		lstr("phy_int");
+		lprintf("int_status:%x", phyStatus);
 		switch (phyStatus & ETH_PHY_INT_MASKED)
 		{
 		case ETH_LINK_DOWN:
+			lstr("link_down");
 			HWREGBITW(&ETHDevice[0], ETH_ERROR) = 0;
 			HWREGBITW(&ETHDevice[0], ETH_LINK_OK) = 0;
 			break;
 		case ETH_LINK_UP:
+			lstr("link_up");
 			HWREGBITW(&ETHDevice[0], ETH_ERROR) = 0;
 			HWREGBITW(&ETHDevice[0], ETH_LINK_OK) = 1;
 			break;
 		}
+
+		//EthernetPHYRead(ETHBase[0],ETH_INTSTATUS_REG);
 		// no need immediately to switch context
 		xHigherPriorityTaskWoken = 0;
 	}
@@ -359,25 +365,9 @@ int ETHServiceTaskEnable(unsigned long ulPort)
 		EthernetConfigSet(ETHBase[ulPort], (ETH_CFG_TX_DPLXEN |ETH_CFG_TX_CRCEN
 				| ETH_CFG_TX_PADEN | ETH_CFG_RX_AMULEN));
 
-		// Enable the Ethernet Controller transmitter and receiver.
-		EthernetEnable(ETHBase[ulPort]);
-
-		// Determine if link is up
-		// no need to worry about while loop in EthernetPHYRead
-		// Ethernet PHY Management Register 1 - Status
-		phyStatus = EthernetPHYRead(ETH_BASE, PHY_MR1);
-		if (phyStatus & ETH_PHY_LINK_UP)
-		{
-			// set link up flag
-			HWREGBITW(&ETHDevice[ulPort], ETH_LINK_OK) = 1;
-		}
-		else
-		{
-			HWREGBITW(&ETHDevice[ulPort], ETH_LINK_OK) = 0;
-		}
-
 		// Configure the Ethernet PHY interrupt management register.
-		EthernetPHYWrite(ETHBase[ulPort], PHY_MR17, ETH_PHY_INT_MASK);
+		EthernetPHYWrite(ETHBase[ulPort], ETH_INTCONFIG_REG,
+				 ETH_PHY_INT_MASK);
 
 		// Enable the Ethernet Interrupt handler.
 		IntEnable(ETHInterrupt[ulPort]);
@@ -393,6 +383,9 @@ int ETHServiceTaskEnable(unsigned long ulPort)
 		// Enable Ethernet RX, PHY and RXOF Packet Interrupts.
 		EthernetIntEnable(ETHBase[ulPort], ETH_INT_RX | ETH_INT_PHY | ETH_INT_RXOF | ETH_INT_TXER);
 
+		// Enable the Ethernet Controller transmitter and receiver.
+		EthernetEnable(ETHBase[ulPort]);
+
 		HWREGBITW(&ETHDevice[ulPort], ETH_ENABLED) = 1;
 
 		return 0;
@@ -407,10 +400,13 @@ int ETHServiceTaskEnable(unsigned long ulPort)
 //!
 int ETHServiceTaskWaitReady(const unsigned long ulPort)
 {
+	unsigned long a;
+
 	if ((ulPort < MAX_ETH_PORTS) && (HWREGBITW(&ETHDevice[ulPort], ETH_ENABLED)))
 	{
 			// See if Ethernet completed autonegation,
-			while (!(PHY_MR1_ANEGC & EthernetPHYRead(ETHBase[0], PHY_MR1)))
+			while (!(ETH_AUTONEGCOMP_BIT &
+				 EthernetPHYRead(ETHBase[0], ETH_STATUS_REG)))
 			{
 				/*
 				 * vTaskDelay() does not provide a good method of controlling the frequency
@@ -422,6 +418,23 @@ int ETHServiceTaskWaitReady(const unsigned long ulPort)
 				// immediate reaction, remove this function.
 				vTaskDelay(1);
 			}
+
+			/*
+			 * Now that autonegotiation is complete, the link
+			 * should be up, but check to be sure.
+			 */
+			if (EthernetPHYRead(ETH_BASE, ETH_STATUS_REG) &
+					    ETH_PHY_LINK_UP)
+			{
+				// set link up flag
+				HWREGBITW(&ETHDevice[ulPort], ETH_LINK_OK) = 1;
+			}
+			else
+			{
+				HWREGBITW(&ETHDevice[ulPort], ETH_LINK_OK) = 0;
+			}
+
+
 			return (0);
 	}
 	HWREGBITW(&ETHDevice[ulPort], ETH_ERROR) = 1;

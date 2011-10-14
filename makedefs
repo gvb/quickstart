@@ -41,7 +41,8 @@ CFLAGS_GCOV	= -fprofile-arcs -ftest-coverage
 #
 # Which part we are using
 #
-PART =		LM3S8962
+#Moved by Bresnahan to Makefile
+#PART =		LM3S8962
 
 
 #

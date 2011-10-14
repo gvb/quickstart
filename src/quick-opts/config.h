@@ -23,6 +23,12 @@
 #endif
 
 /*
+ * The part number being used will be passed in from make
+ */
+#define LM3S8962	1
+#define LM3S9B96	2
+
+/*
  * RTOS configuration choices.
  */
 #define IO_TASK_PRIORITY		3	/* I/O polling */
