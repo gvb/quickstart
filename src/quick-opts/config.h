@@ -41,13 +41,6 @@
 #define IDLE_STACK_SIZE			120
 #define WEB_STACK_SIZE			512
 
-
-/* The period of the system clock in nano seconds. */
-
-#define NS_PER_CLOCK  \
-	((unsigned portLONG) \
-		((1.0 / (double)configCPU_CLOCK_HZ) * 1000000000.0))
-
 /*
  * Stellaris built-in reference.
  */
