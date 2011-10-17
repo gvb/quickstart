@@ -264,9 +264,14 @@ int main(void)
 	 */
 
 #if QUICK_ETHERNET
+
 	if( SysCtlPeripheralPresent( SYSCTL_PERIPH_ETH ) ) {
-		xTaskCreate( ethernetThread,(signed char *)"ethernet",
-				5000, NULL, 3, NULL);
+		xTaskCreate(ethernetThread,
+			    (signed char *)"eth-init",
+			    DEFAULT_STACK_SIZE,
+			    NULL,
+			    3,
+			    NULL);
 	}
 #endif
 
@@ -320,6 +325,11 @@ void prvSetupHardware(void)
 		SYSCTL_SYSDIV_4
 		| SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_16MHZ );
 
+	/* 80MHz operation, change FreeRTOSConfig.h too */
+ /* 	SysCtlClockSet(
+		SYSCTL_SYSDIV_2_5
+		| SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_16MHZ );
+*/
 #endif
 
 	/*
@@ -352,12 +362,14 @@ void prvSetupHardware(void)
 	GPIOPadConfigSet(GPIO_PORTF_BASE, GPIO_PIN_1, GPIO_STRENGTH_2MA,
 		GPIO_PIN_TYPE_STD_WPU);
 
+#if (PART==LM3S8962)
 	/*
 	 * Configure the LED and speaker GPIOs.
 	 */
 	GPIOPinTypePWM(GPIO_PORTG_BASE, GPIO_PIN_1);
 	GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_0);
 	GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0, 0);
+#endif
 
 	/*
 	 * UART0 is our debug ("spew") I/O.  Configure it for 115200,
@@ -476,7 +488,6 @@ void ethernetThread(void *pParams)
 	return;
 }
 #endif
-
 /****************************************************************************/
 
 /**

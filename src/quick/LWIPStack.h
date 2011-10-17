@@ -12,6 +12,8 @@
 #define IFNAME0 'l'
 #define IFNAME1 'm'
 #define ETH_BLOCK_TIME_WAITING_FOR_INPUT_MS (5000)
+#define ETH_LINK_TASK_WAIT_MS (50)
+#define ETH_LINK_TASK_PRIORITY (2)
 
 typedef struct
 {
@@ -43,7 +45,10 @@ typedef struct
 extern struct netif lwip_netif;
 err_t LWIPServiceTaskIPConfigGet(struct netif *netif, IP_CONFIG * ipCfg);
 
+extern xTaskHandle ethLink_task_handle;
+
 void LWIPServiceTaskInit(IP_CONFIG *ipCfg);
+
 #if NETIF_DEBUG
 void stellarisif_debug_print(struct pbuf *p);
 #else

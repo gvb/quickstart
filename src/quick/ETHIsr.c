@@ -21,6 +21,7 @@
 #include "flash.h"
 
 #include "ETHIsr.h"
+#include "LWIPStack.h"
 
 #include "logger.h"
 #include "partnum.h"
@@ -32,7 +33,7 @@
 // Cortex M3, bit band mapping.
 //
 //*****************************************************************************
-static volatile unsigned long ETHDevice[MAX_ETH_PORTS];
+volatile unsigned long ETHDevice[MAX_ETH_PORTS];
 
 //*****************************************************************************
 //
@@ -120,7 +121,7 @@ void ETH0IntHandler(void)
 {
 	static portBASE_TYPE xHigherPriorityTaskWoken;
 
-	unsigned long ulStatus, phyStatus;
+	unsigned long ulStatus;
 
 	// Read and Clear the interrupt.
 	ulStatus = EthernetIntStatus(ETHBase[0], false);
@@ -129,8 +130,8 @@ void ETH0IntHandler(void)
 	// See if RX event occured.
 	if (ulStatus & ETH_INT_RX)
 	{
-        // Disable Ethernet RX Interrupt.
-        EthernetIntDisable(ETH_BASE, ETH_INT_RX);
+		// Disable Ethernet RX Interrupt.
+		EthernetIntDisable(ETH_BASE, ETH_INT_RX);
 
 		HWREGBITW(&ETHDevice[0], ETH_ERROR) = 0;
 		xSemaphoreGiveFromISR(ETHRxBinSemaphore[0], &xHigherPriorityTaskWoken);
@@ -164,29 +165,18 @@ void ETH0IntHandler(void)
 	// See if PHY event occured.
 	if (ulStatus & ETH_INT_PHY)
 	{
-		// Something important was happened with network
-		// no need to worry about while loop in EthernetPHYRead
-		// Ethernet PHY Management Register 17 - Interrupt Control/Status
-		// Read and Clear the interrupt.
-		phyStatus = EthernetPHYRead(ETHBase[0],ETH_INTSTATUS_REG);
+		EthernetIntDisable(ETH_BASE, ETH_INT_PHY);
 
-		lstr("phy_int");
-		lprintf("int_status:%x", phyStatus);
-		switch (phyStatus & ETH_PHY_INT_MASKED)
-		{
-		case ETH_LINK_DOWN:
-			lstr("link_down");
-			HWREGBITW(&ETHDevice[0], ETH_ERROR) = 0;
-			HWREGBITW(&ETHDevice[0], ETH_LINK_OK) = 0;
-			break;
-		case ETH_LINK_UP:
-			lstr("link_up");
-			HWREGBITW(&ETHDevice[0], ETH_ERROR) = 0;
-			HWREGBITW(&ETHDevice[0], ETH_LINK_OK) = 1;
-			break;
-		}
+		/*
+		 * Since we are only monitoring the phy interrupts for link
+		 * down and autonegotiation complete, the link is not up when
+		 * they trigger.
+		 */
+		HWREGBITW(&ETHDevice[0], ETH_ERROR) = 0;
+		HWREGBITW(&ETHDevice[0], ETH_LINK_OK) = 0;
 
-		//EthernetPHYRead(ETHBase[0],ETH_INTSTATUS_REG);
+		xTaskResumeFromISR(ethLink_task_handle);
+
 		// no need immediately to switch context
 		xHigherPriorityTaskWoken = 0;
 	}
@@ -225,8 +215,11 @@ int ETHServiceTaskInit(const unsigned long ulPort)
 		// Enable Port for Ethernet LEDs.
 		//  LED0        Bit 3   Output
 		//  LED1        Bit 2   Output
-		GPIODirModeSet(ETHPortBase[ulPort], ETHPins[ulPort], GPIO_DIR_MODE_HW);
-		GPIOPadConfigSet(ETHPortBase[ulPort], ETHPins[ulPort], GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD);
+#if (PART == LM3S9B96)
+		GPIOPinConfigure(GPIO_PF2_LED1);
+		GPIOPinConfigure(GPIO_PF3_LED0);
+#endif
+		GPIOPinTypeEthernetLED(ETHPortBase[ulPort], ETHPins[ulPort]);
 
 		// Configure the hardware MAC address for Ethernet Controller filtering of
 		// incoming packets.
@@ -340,7 +333,6 @@ int ETHServiceTaskFlush(const unsigned long ulPort, const unsigned long flCmd)
 int ETHServiceTaskEnable(unsigned long ulPort)
 {
 	unsigned long temp;
-	unsigned long phyStatus;
 
 	if (ulPort < MAX_ETH_PORTS)
 	{
@@ -381,7 +373,7 @@ int ETHServiceTaskEnable(unsigned long ulPort)
 		IntPrioritySet(ETHInterrupt[ulPort], SET_SYSCALL_INTERRUPT_PRIORITY(6));
 
 		// Enable Ethernet RX, PHY and RXOF Packet Interrupts.
-		EthernetIntEnable(ETHBase[ulPort], ETH_INT_RX | ETH_INT_PHY | ETH_INT_RXOF | ETH_INT_TXER);
+		EthernetIntEnable(ETHBase[ulPort], ETH_INT_RX | ETH_INT_RXOF | ETH_INT_TXER);
 
 		// Enable the Ethernet Controller transmitter and receiver.
 		EthernetEnable(ETHBase[ulPort]);
@@ -400,42 +392,21 @@ int ETHServiceTaskEnable(unsigned long ulPort)
 //!
 int ETHServiceTaskWaitReady(const unsigned long ulPort)
 {
-	unsigned long a;
 
 	if ((ulPort < MAX_ETH_PORTS) && (HWREGBITW(&ETHDevice[ulPort], ETH_ENABLED)))
 	{
-			// See if Ethernet completed autonegation,
-			while (!(ETH_AUTONEGCOMP_BIT &
-				 EthernetPHYRead(ETHBase[0], ETH_STATUS_REG)))
-			{
-				/*
-				 * vTaskDelay() does not provide a good method of controlling the frequency
-				 * of a cyclical task as the path taken through the code, as well as other task and
-				 * interrupt activity, will effect the frequency at which vTaskDelay() gets called
-				 * and therefore the time at which the task next executes.
-				 */
-				// The shortest time to wait with respect to other tasks. If you need
-				// immediate reaction, remove this function.
-				vTaskDelay(1);
-			}
+		/*
+		 * Wait for the link to come up.
+		 */
+		while (!(EthernetPHYRead(ETH_BASE, ETH_STATUS_REG) &
+							ETH_PHY_LINK_UP)) {
+			vTaskDelay(50);
+		}
 
-			/*
-			 * Now that autonegotiation is complete, the link
-			 * should be up, but check to be sure.
-			 */
-			if (EthernetPHYRead(ETH_BASE, ETH_STATUS_REG) &
-					    ETH_PHY_LINK_UP)
-			{
-				// set link up flag
-				HWREGBITW(&ETHDevice[ulPort], ETH_LINK_OK) = 1;
-			}
-			else
-			{
-				HWREGBITW(&ETHDevice[ulPort], ETH_LINK_OK) = 0;
-			}
+		// set link up flag
+		HWREGBITW(&ETHDevice[ulPort], ETH_LINK_OK) = 1;
 
-
-			return (0);
+		return (0);
 	}
 	HWREGBITW(&ETHDevice[ulPort], ETH_ERROR) = 1;
 	HWREGBITW(&ETHDevice[ulPort], ETH_EBADF) = 1;

@@ -48,7 +48,7 @@ extern "C"
 //
 //*****************************************************************************		
 #define	ETH_DEFAULT_LINK_SPEED 100
-	
+
 /*
  * This set of defines specifies the locations of the phy registers required
  * to use lwip.  The stellaris line has a built in phy, but not all phys are
@@ -61,34 +61,26 @@ extern "C"
 #if (PART == LM3S9B96)
 
 #define ETH_STATUS_REG			PHY_MR1
-#define ETH_AUTONEGCOMP_BIT		PHY_MR1_ANEGC
 #define ETH_LINKMADE_BIT		PHY_MR1_LINK
 #define ETH_INTCONFIG_REG		PHY_MR30
 #define ETH_INTAUTONEGCONFIG_BIT	PHY_MR30_ANCOMPIM
 #define ETH_INTLINKDNCONFIG_BIT		PHY_MR30_LDIM
 #define ETH_INTSTATUS_REG		PHY_MR29
-#define ETH_INTAUTONEGSTATUS_BIT	PHY_MR29_ANCOMPIS
-#define ETH_INTLINKDNSTATUS_BIT		PHY_MR29_LDIS
 
 #elif (PART == LM3S8962)
 
 #define ETH_STATUS_REG			PHY_MR1
-#define ETH_AUTONEGCOMP_BIT		PHY_MR1_ANEGC
 #define ETH_LINKMADE_BIT		PHY_MR1_LINK
 #define ETH_INTCONFIG_REG		PHY_MR17
 #define ETH_INTAUTONEGCONFIG_BIT	PHY_MR17_ANEGCOMP_IE
 #define ETH_INTLINKDNCONFIG_BIT		PHY_MR17_LSCHG_IE
 #define ETH_INTSTATUS_REG		PHY_MR17
-#define ETH_INTAUTONEGSTATUS_BIT	PHY_MR17_ANEGCOMP_INT
-#define ETH_INTLINKDNSTATUS_BIT		PHY_MR17_LSCHG_INT
 
 #endif
 
 #define ETH_PHY_INT_MASK (ETH_INTLINKDNCONFIG_BIT | ETH_INTAUTONEGCONFIG_BIT)
-#define ETH_PHY_INT_MASKED (ETH_INTAUTONEGSTATUS_BIT | ETH_INTLINKDNSTATUS_BIT)
-#define ETH_PHY_LINK_UP 	(ETH_LINKMADE_BIT)
-#define ETH_LINK_DOWN 		(ETH_INTLINKDNSTATUS_BIT)
-#define ETH_LINK_UP 		(ETH_PHY_INT_MASKED)
+#define ETH_PHY_LINK_UP 		ETH_LINKMADE_BIT
+
 
 //*****************************************************************************
 //
@@ -117,6 +109,8 @@ extern "C"
 //! Prototypes for the APIs.
 //
 //*****************************************************************************
+extern volatile unsigned long ETHDevice[MAX_ETH_PORTS];
+
 extern xSemaphoreHandle ETHRxBinSemaphore[MAX_ETH_PORTS];
 extern xSemaphoreHandle ETHTxBinSemaphore[MAX_ETH_PORTS];
 extern xSemaphoreHandle ETHTxAccessMutex[MAX_ETH_PORTS];

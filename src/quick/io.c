@@ -363,7 +363,6 @@ static void io_task(void *params)
 {
 	portTickType last_wake_time;
 	int ticks=0;
-	unsigned long a;
 
 	adc_setup();
 
@@ -387,11 +386,6 @@ static void io_task(void *params)
 			ticks=0;
 		}
 		ticks++;
-
-		a = EthernetPHYRead(ETH_BASE, ETH_INTSTATUS_REG);
-		lprintf(" phy_int_status:%x ", a);
-		a = EthernetPHYRead(ETH_BASE, ETH_STATUS_REG);
-		lprintf(" phy_link_status:%x ", a & ETH_LINKMADE_BIT);
 
 		vTaskDelayUntil(&last_wake_time, POLL_DELAY);
 	}
