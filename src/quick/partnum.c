@@ -22,6 +22,7 @@
 #include "quickstart-opts.h"
 #include "config.h"
 #include "partnum.h"
+#include "partnum-initial.h"
 #include "LWIPStack.h"
 /**
  * Default permanent configuration data.
@@ -47,8 +48,6 @@ static struct permcfg_s default_permcfg = {
 	.mac[7]   = 0x00,
 	.checksum = 0,
 };
-
-#include <partnum-initial.c>
 
 /*
  * Globally accessible configuration values.  This allows quick access

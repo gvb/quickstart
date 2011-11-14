@@ -49,7 +49,9 @@
 /*
  * To turn on debugging:
  */
-#define LWIP_DBG_TYPES_ON               LWIP_DBG_ON
+/*
+ * #define LWIP_DBG_TYPES_ON               LWIP_DBG_ON
+ */
 
 #define LWIP_DBG_MIN_LEVEL		0
 #define MEMP_SANITY_CHECK		0
@@ -61,6 +63,7 @@
 #define LWIP_TCP                        1
 
 #define LWIP_UDP			1
+#define CHECKSUM_GEN_UDP		1
 
 #define LWIP_PLATFORM_DIAG(x) {lprintf x;}
 

@@ -154,8 +154,6 @@ void wdt_isr(void)
  */
 xTaskHandle util_task_handle;	/**< Utility task handle */
 
-#include <utilwdtcfg.c>
-
 /*
  * Things we are monitoring need to reset their counter to zero
  * periodically, or we reset the system.  The WDT ISR increments

@@ -130,7 +130,7 @@ int main(void)
 {
 
 #if USE_PROGRAM_STARTUP
-	program-startup();
+	program_startup();
 #else
 	char s[64];		/* sprintf string */
 	unsigned long why;	/* Why did we get reset? Why? */
@@ -270,7 +270,7 @@ int main(void)
 			    (signed char *)"eth-init",
 			    DEFAULT_STACK_SIZE,
 			    NULL,
-			    3,
+			    ETH_INIT_PRIORITY,
 			    NULL);
 	}
 #endif

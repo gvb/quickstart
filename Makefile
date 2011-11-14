@@ -176,6 +176,8 @@ SOURCE =\
 	$(SRC_DIR)/quick/httpd-cgi.c \
 	$(SRC_DIR)/quick/syslog.c \
 	$(SRC_DIR)/quick/debugSupport.c \
+	$(SRC_DIR)/quick-opts/partnum-initial.c \
+	$(SRC_DIR)/quick-opts/utilwdtcfg.c \
 	$(STELLARISWARE)/utils/ustdlib.c \
 	$(RTOS_SOURCE_DIR)/list.c \
 	$(RTOS_SOURCE_DIR)/queue.c \

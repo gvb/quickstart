@@ -5,6 +5,10 @@
  *      Author: mikes
  */
 
+#include "partnum.h"
+#include "partnum-initial.h"
+#include "LWIPStack.h"
+
 /**
  * Default user configuration data.
  *
@@ -14,7 +18,7 @@
  * \req \req_config The \program \shall use default configuration values
  *   if they have not been set previously.
  */
-static struct usercfg_s default_usercfg = {
+struct usercfg_s default_usercfg = {
 	.length = sizeof(struct usercfg_s),
 	.version = 1,
 

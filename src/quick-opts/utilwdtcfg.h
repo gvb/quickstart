@@ -8,6 +8,8 @@
 #ifndef __UTILWDTCFG_H__
 #define __UTILWDTCFG_H__
 
+extern int wdt_limit[];
+
 /**
  * Things we are monitoring.
  */

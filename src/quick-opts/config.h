@@ -31,6 +31,7 @@
 /*
  * RTOS configuration choices.
  */
+#define ETH_INIT_PRIORITY		3	/* Ethernet initialization */
 #define IO_TASK_PRIORITY		3	/* I/O polling */
 #define WEB_TASK_PRIORITY		2	/* Web server */
 #define UIP_TASK_PRIORITY		1	/* ethernet / MAC */
