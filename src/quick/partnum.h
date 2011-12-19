@@ -19,11 +19,18 @@
 #include <stdint.h>
 
 /*
- * Where to store our configuration data.  Store in the last and
- * second-to-last pages in flash.  Pages are 1K in this processor.
+ * Where to store our configuration data.  The flash configuration is
+ * different between the Fury and Tempest class devices. Fury class devices
+ * are only page (1kB) aligned. Tempest class devices are sector aligned
+ * (4 - 1kB pages), which is the worst case between the two. Writing each
+ * configuration structure to its own flash sector wastes a bunch of flash
+ * space, but avoids having to rewrite both configurations when only one is
+ * changed.  This means the last 8kB of flash (two sectors) are reserved.
+ * Writing into one of these sectors with the application data (or other)
+ * jeopardizes the configuration data also in that sector.
  */
-#define PERMCFG_ADDR	(0x00040000 - 0x0400)	/**< Permanent config */
-#define USERCFG_ADDR	(0x00040000 - 0x0800)	/**< User config */
+#define PERMCFG_ADDR	(0x00040000 - 0x00400)	/**< Permanent config */
+#define USERCFG_ADDR	(0x00040000 - 0x01000)	/**< User config */
 
 /**
  * struct permcfg_s - Permanent configuration data structure (write once).
