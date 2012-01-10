@@ -694,18 +694,6 @@ if (ipCfg->IPMode == IPADDR_USE_STATIC)
 		}
 #endif
 	}
-	/*
-	 * Report Our IP Setup
-	 */
-	{
-		IP_CONFIG reportIP;
-
-		LWIPServiceTaskIPConfigGet(&lwip_netif, &reportIP);
-		lstr("IPMode:");lhex(reportIP.IPMode);crlf();
-		lstr("IPAddr:");lhex(reportIP.IPAddr);crlf();
-		lstr("GWAddr:");lhex(reportIP.GWAddr);crlf();
-		lstr("NtMask:");lhex(reportIP.NetMask);crlf();
-	}
 
 	/* Initialize HTTP */
 
@@ -717,8 +705,6 @@ if (ipCfg->IPMode == IPADDR_USE_STATIC)
 #endif
 #endif
 	httpd_init();
-	lstr("httpd done\r\n");
-
 }
 
 //*****************************************************************************

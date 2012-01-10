@@ -1262,7 +1262,6 @@ http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
 #endif
 #endif
 
-  lstr("\n_recv\n");
   LWIP_DEBUGF(HTTPD_DEBUG, ("http_recv 0x%08x\n", pcb));
 
   hs = arg;
@@ -1490,8 +1489,6 @@ static err_t
 http_accept(void *arg, struct tcp_pcb *pcb, err_t err)
 {
   struct http_state *hs;
-
-  lstr("\n_accept\n");
 
   LWIP_UNUSED_ARG(arg);
   LWIP_UNUSED_ARG(err);
