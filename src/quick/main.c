@@ -90,6 +90,8 @@ large successful programs.
 #include "inc/lm3s8962.h"
 #elif (PART == LM3S9B96)
 #include "inc/lm3s9b96.h"
+#elif (PART == LM3S2110)
+#include "inc/lm3s2110.h"
 #endif
 
 #include "syslog.h"
@@ -150,6 +152,7 @@ int main(void)
 			              |NVIC_SYS_HND_CTRL_BUS
 			              |NVIC_SYS_HND_CTRL_MEM;
 
+#if (PART != LM3S2110)
 	/*
 	 * Allow the following to erase the permanent configuration flash page:
 	 *
@@ -164,21 +167,23 @@ int main(void)
 #if ERASE_PERMCFG
 #if !PROTECT_PERMCFG
 
-	if (permcfg_erase())
+	if (permcfg_erase()) {
 #if (PART == LM3S8962)
 		RIT128x96x4StringDraw("permcfg Blank",
 							0, RITLINE(10), 15);
 #endif
-	else
+	}
+	else {
 #if (PART == LM3S8962)
 		RIT128x96x4StringDraw("permcfg Not Blank",
 							0, RITLINE(10), 15);
 #endif
-
+	}
 #endif
 #endif
 
 	config_init();
+#endif
 	/**
 	 * \req \req_id The \program \shall identify:
 	 * - The program version.
@@ -190,16 +195,24 @@ int main(void)
 	 * \todo Issue #1175 Add software build time, git hash, software
 	 *    version to build.
 	 */
-	lprintf("\r\nCRI Quickstart\r\n"
-		"LM3S8962 Eval Board\r\n"
-		"Copyright (C) 2011 Consolidated Resource Imaging\r\n");
+	lstr("\r\nCRI Quickstart\r\n");
+#if (PART == LM3S2110)
+	lstr("LM3S2110 Eval Board\r\n");
+#elif (PART == LM3S8962)
+	lstr("LM3S8962 Eval Board\r\n");
+#elif (PART == LM3S9B96)
+	lstr("LM3S9B96 Eval Board\r\n");
+#endif
+	lstr("Copyright (C) 2011 Consolidated Resource Imaging\r\n");
+
 	lprintf("   Software Build Date: %s\n", buildDate);
+#if (PART != LM3S2110)
 	lprintf("  Assembly Part Number: %s\n", usercfg.assy_pn);
 	lprintf("Assembly Serial Number: %s\n", usercfg.assy_sn);
 	lprintf("     Board Part Number: %s\n", permcfg.bd_pn);
 	lprintf("   Board Serial Number: %s\n", permcfg.bd_sn);
 	lprintf("Notes:\r\n %s\r\n", usercfg.notes);
-
+#endif
 #if (PART == LM3S8962)
 	/*
 	 * Display our configuration on the OLED display.
@@ -330,6 +343,13 @@ void prvSetupHardware(void)
 		SYSCTL_SYSDIV_2_5
 		| SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_16MHZ );
 */
+
+#elif (PART == LM3S2110)
+	//
+	// Set the clocking to run directly from the PLL at 25MHz.
+	//
+	SysCtlClockSet(SYSCTL_SYSDIV_8 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN |
+		       SYSCTL_XTAL_8MHZ);
 #endif
 
 	/*
@@ -348,8 +368,12 @@ void prvSetupHardware(void)
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_WDOG0);
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_PWM);
-	SysCtlPeripheralEnable(SYSCTL_PERIPH_ADC0);
 
+#if (PART != LM3S2110)
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_ADC0);
+#endif
+
+#if (PART==LM3S8962)
 	/*
 	 * Configure the GPIOs used to read the on-board buttons.
 	 */
@@ -362,7 +386,6 @@ void prvSetupHardware(void)
 	GPIOPadConfigSet(GPIO_PORTF_BASE, GPIO_PIN_1, GPIO_STRENGTH_2MA,
 		GPIO_PIN_TYPE_STD_WPU);
 
-#if (PART==LM3S8962)
 	/*
 	 * Configure the LED and speaker GPIOs.
 	 */

@@ -10,7 +10,11 @@
 
 #define USE_PROGRAM_STARTUP 0
 
+#if (PART == LM3S2110)
+#define QUICK_ETHERNET 0
+#else
 #define QUICK_ETHERNET 1
+#endif
 
 #ifndef PROTECT_PERMCFG
 #define PROTECT_PERMCFG 1

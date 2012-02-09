@@ -32,6 +32,8 @@
 #include "inc/lm3s8962.h"
 #elif (PART == LM3S9B96)
 #include "inc/lm3s9b96.h"
+#elif (PART == LM3S2110)
+#include "inc/lm3s2110.h"
 #endif
 
 //*****************************************************************************
@@ -139,7 +141,11 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // CAN0
     IntDefaultHandler,                      // CAN1
     IntDefaultHandler,                      // Reserved
+#if (PART == LM3S2110)
+    IntDefaultHandler,                      // Ethernet
+#else
     ETH0IntHandler,                         // Ethernet
+#endif
     IntDefaultHandler                       // Hibernate
 };
 

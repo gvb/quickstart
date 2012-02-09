@@ -169,12 +169,6 @@ SOURCE =\
 	$(SRC_DIR)/quick/partnum.c \
 	$(SRC_DIR)/quick/logger.c \
 	$(SRC_DIR)/quick/timertest.c \
-	$(SRC_DIR)/quick/ETHIsr.c \
-	$(SRC_DIR)/quick/LWIPStack.c \
-	$(SRC_DIR)/quick/fs.c \
-	$(SRC_DIR)/quick/httpd.c \
-	$(SRC_DIR)/quick/httpd-cgi.c \
-	$(SRC_DIR)/quick/syslog.c \
 	$(SRC_DIR)/quick/debugSupport.c \
 	$(SRC_DIR)/quick-opts/partnum-initial.c \
 	$(SRC_DIR)/quick-opts/utilwdtcfg.c \
@@ -185,6 +179,16 @@ SOURCE =\
 	$(RTOS_SOURCE_DIR)/portable/$(COMPILER)/$(SUBARCH)/port.c \
 	$(RTOS_SOURCE_DIR)/portable/MemMang/heap_2.c \
 	$(BUILD_DIR)buildDate.c
+
+ifneq ($(PART),LM3S2110)
+SOURCE +=\
+	$(SRC_DIR)/quick/ETHIsr.c \
+	$(SRC_DIR)/quick/LWIPStack.c \
+	$(SRC_DIR)/quick/fs.c \
+	$(SRC_DIR)/quick/httpd.c \
+	$(SRC_DIR)/quick/httpd-cgi.c \
+	$(SRC_DIR)/quick/syslog.c
+endif
 
 ifeq ($(PART),LM3S8962)
 SOURCE +=\

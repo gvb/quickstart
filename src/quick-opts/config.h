@@ -27,6 +27,7 @@
  */
 #define LM3S8962	1
 #define LM3S9B96	2
+#define LM3S2110	3
 
 /*
  * RTOS configuration choices.

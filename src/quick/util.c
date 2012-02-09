@@ -187,6 +187,18 @@ void wdt_isr(void)
 	for (j = 0; j < wdt_last; j++) {
 		if (++wdt_checkin[j] > wdt_limit[j]) {
 			lputchar('A' + j);
+#if (PART == LM3S2110)
+			/*
+			 * The LM3S2110 will not come out of reset after the
+			 * WDT bites otherwise.  This will only fix the
+			 * problem if this code is still executing before the
+			 * WDT bites.  If this limitation becomes problematic,
+			 * it seems like an equivalent could be moved into the
+			 * reset ISR, as long as it doesn't adversely affect
+			 * other controller types.
+			 */
+			IntMasterDisable();
+#endif
 			return;		/* this will cause us to die */
 		}
 	}

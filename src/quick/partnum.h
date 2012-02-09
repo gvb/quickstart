@@ -18,6 +18,13 @@
 
 #include <stdint.h>
 
+
+#if (PART == LM3S2110)
+#define FLASH_END	(0x00010000)
+#else
+#define FLASH_END	(0x00040000)
+#endif
+
 /*
  * Where to store our configuration data.  The flash configuration is
  * different between the Fury and Tempest class devices. Fury class devices
@@ -29,8 +36,8 @@
  * Writing into one of these sectors with the application data (or other)
  * jeopardizes the configuration data also in that sector.
  */
-#define PERMCFG_ADDR	(0x00040000 - 0x00400)	/**< Permanent config */
-#define USERCFG_ADDR	(0x00040000 - 0x01000)	/**< User config */
+#define PERMCFG_ADDR	(FLASH_END - 0x00400)	/**< Permanent config */
+#define USERCFG_ADDR	(FLASH_END - 0x01000 - 0x00400)	/**< User config */
 
 /**
  * struct permcfg_s - Permanent configuration data structure (write once).

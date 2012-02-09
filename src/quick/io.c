@@ -364,7 +364,9 @@ static void io_task(void *params)
 	portTickType last_wake_time;
 	int ticks=0;
 
+#if (PART != LM3S2110)
 	adc_setup();
+#endif
 
 #if (DEBUG > 0)
 	lprintf("io_task() running.\r\n");
@@ -376,8 +378,9 @@ static void io_task(void *params)
 	while(1) {	/* forever loop */
 		wdt_checkin[wdt_io] = 0;
 
+#if (PART != LM3S2110)
 		scan_proc_adc();
-
+#endif
 		/*
 		 * Send a char out the serial port every 10 sec.
 		 */
