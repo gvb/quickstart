@@ -5,6 +5,8 @@
  *      Author: mikes
  */
 
+#include "config.h"
+
 #include "partnum.h"
 #include "partnum-initial.h"
 #include "LWIPStack.h"

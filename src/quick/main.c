@@ -54,6 +54,7 @@ large successful programs.
 
 *****************************************************************************/
 
+#include "config.h"
 #include "quickstart-opts.h"
 
 #include <stdint.h>
@@ -78,7 +79,6 @@ large successful programs.
 #include "LWIPStack.h"
 #include "ETHIsr.h"
 
-#include "config.h"
 #include "partnum.h"
 #include "util.h"
 #include "logger.h"

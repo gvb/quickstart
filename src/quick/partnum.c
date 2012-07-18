@@ -19,8 +19,8 @@
 #include <hw_types.h>
 #include "../../StellarisWare/driverlib/flash.h"
 
-#include "quickstart-opts.h"
 #include "config.h"
+#include "quickstart-opts.h"
 #include "partnum.h"
 #include "partnum-initial.h"
 #include "LWIPStack.h"

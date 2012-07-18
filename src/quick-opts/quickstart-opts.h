@@ -8,8 +8,6 @@
 #ifndef QUICKSTARTOPTS_H_
 #define QUICKSTARTOPTS_H_
 
-#include "config.h"
-
 #define USE_PROGRAM_STARTUP 0
 
 #if (PART == LM3S2110)
