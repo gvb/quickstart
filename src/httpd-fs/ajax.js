@@ -118,7 +118,7 @@ window.onbeforeunload = function() {
  */
 function btnReport(which) {
   var btnReportMsg = createXMLHttpRequest();
-  btnReportMsg.open("GET", "/button.html?" + which, true);
+  btnReportMsg.open("GET", "/button?" + which, true);
   btnReportMsg.send();
 }
 

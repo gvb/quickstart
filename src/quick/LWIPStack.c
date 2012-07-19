@@ -60,7 +60,6 @@
 #include "LWIPStack.h"
 #include "fs.h"
 #include "fsdata.h"
-#include "fsdata-stats.h"
 
 #include <httpd-cgi.h>
 

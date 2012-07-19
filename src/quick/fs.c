@@ -33,7 +33,7 @@
 #include "lwip/def.h"
 #include "fs.h"
 #include "fsdata.h"
-#include "fsdata-stats.h"
+#include "../../obj/fsdata-stats.c"
 #include "../../obj/fsdata.c"
 #include <string.h>
 #include "logger.h"
@@ -129,7 +129,9 @@ fs_open_get_access(char *name)
   }
 
   for(f = FS_ROOT; f != NULL; f = f->next) {
+    //lstr(name);lstr(" ?= ");lstr(f->name);
     if (!strcmp(name, (char *)f->name)) {
+      //lstr(" Yes\n");
       file->data = (char *)f->data;
       file->len = f->len;
 #if !USER_PROVIDES_ZERO_COPY_STATIC_TAGS
@@ -146,6 +148,8 @@ fs_open_get_access(char *name)
       //lstr(">");
       return file;
     }
+    //else
+      //lstr(" No.\n");
   }
   //lstr("n>");
   fs_free(file);

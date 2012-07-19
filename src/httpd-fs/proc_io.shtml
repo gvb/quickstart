@@ -1,0 +1,223 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<!--# /header.inc -->
+</head>
+<body onload="startPoll('/proc_io_upd', 500)">
+<!--# /nav.inc -->
+<table>
+<tr>
+<td valign="top">
+<table>
+<tr><th colspan="2">Port A</th></tr>
+<tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pA7"><img src="/warn.png" /></button></td>
+	<td>7</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pA6"><img src="/warn.png" /></button></td>
+	<td>6</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pA5"><img src="/warn.png" /></button></td>
+	<td>5</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pA4"><img src="/warn.png" /></button></td>
+	<td>4</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pA3"><img src="/warn.png" /></button></td>
+	<td>3</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pA2"><img src="/warn.png" /></button></td>
+	<td>2</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pA1"><img src="/warn.png" /></button></td>
+	<td>1</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pA0"><img src="/warn.png" /></button></td>
+	<td>0</td>
+</tr>
+</table>
+</td>
+<td valign="top">
+<table>
+<tr><th colspan="5">Port B</th></tr>
+<tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pB7"><img src="/warn.png" /></button></td>
+	<td>7</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pB6"><img src="/warn.png" /></button></td>
+	<td>6</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pB5"><img src="/warn.png" /></button></td>
+	<td>5</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pB4"><img src="/warn.png" /></button></td>
+	<td>4</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pB3"><img src="/warn.png" /></button></td>
+	<td>3</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pB2"><img src="/warn.png" /></button></td>
+	<td>2</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pB1"><img src="/warn.png" /></button></td>
+	<td>1</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pB0"><img src="/warn.png" /></button></td>
+	<td>0</td>
+</tr>
+</table>
+</td>
+<td valign="top">
+<table>
+<tr><th colspan="5">Port C</th></tr>
+<tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pC7"><img src="/warn.png" /></button></td>
+	<td>7</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pC6"><img src="/warn.png" /></button></td>
+	<td>6</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pC5"><img src="/warn.png" /></button></td>
+	<td>5</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pC4"><img src="/warn.png" /></button></td>
+	<td>4</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pC3"><img src="/warn.png" /></button></td>
+	<td>3</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pC2"><img src="/warn.png" /></button></td>
+	<td>2</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pC1"><img src="/warn.png" /></button></td>
+	<td>1</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pC0"><img src="/warn.png" /></button></td>
+	<td>0</td>
+</tr>
+</table>
+</td>
+<td valign="top">
+<table>
+<tr><th colspan="5">Port D</th></tr>
+<tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pD7"><img src="/warn.png" /></button></td>
+	<td>7</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pD6"><img src="/warn.png" /></button></td>
+	<td>6</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pD5"><img src="/warn.png" /></button></td>
+	<td>5</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pD4"><img src="/warn.png" /></button></td>
+	<td>4</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pD3"><img src="/warn.png" /></button></td>
+	<td>3</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pD2"><img src="/warn.png" /></button></td>
+	<td>2</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pD1"><img src="/warn.png" /></button></td>
+	<td>1</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pD0"><img src="/warn.png" /></button></td>
+	<td>0</td>
+</tr>
+</table>
+</td>
+<td valign="top">
+<table>
+<tr><th colspan="5">Port E</th></tr>
+<tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pE7"><img src="/warn.png" /></button></td>
+	<td>7</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pE6"><img src="/warn.png" /></button></td>
+	<td>6</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pE5"><img src="/warn.png" /></button></td>
+	<td>5</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pE4"><img src="/warn.png" /></button></td>
+	<td>4</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pE3"><img src="/warn.png" /></button></td>
+	<td>3</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pE2"><img src="/warn.png" /></button></td>
+	<td>2</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pE1"><img src="/warn.png" /></button></td>
+	<td>1</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pE0"><img src="/warn.png" /></button></td>
+	<td>0</td>
+</tr>
+</table>
+</td>
+<td valign="top">
+<table>
+<tr><th colspan="5">Port F</th></tr>
+<tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pF7"><img src="/warn.png" /></button></td>
+	<td>7</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pF6"><img src="/warn.png" /></button></td>
+	<td>6</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pF5"><img src="/warn.png" /></button></td>
+	<td>5</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pF4"><img src="/warn.png" /></button></td>
+	<td>4</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pF3"><img src="/warn.png" /></button></td>
+	<td>3</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pF2"><img src="/warn.png" /></button></td>
+	<td>2</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pF1"><img src="/warn.png" /></button></td>
+	<td>1</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pF0"><img src="/warn.png" /></button></td>
+	<td>0</td>
+</tr>
+</table>
+</td>
+<td valign="top">
+<table>
+<tr><th colspan="5">Port G</th></tr>
+<tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pG7"><img src="/warn.png" /></button></td>
+	<td>7</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pG6"><img src="/warn.png" /></button></td>
+	<td>6</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pG5"><img src="/warn.png" /></button></td>
+	<td>5</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pG4"><img src="/warn.png" /></button></td>
+	<td>4</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pG3"><img src="/warn.png" /></button></td>
+	<td>3</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pG2"><img src="/warn.png" /></button></td>
+	<td>2</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pG1"><img src="/warn.png" /></button></td>
+	<td>1</td>
+</tr><tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="pG0"><img src="/warn.png" /></button></td>
+	<td>0</td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+</body>
+</html>

@@ -59,13 +59,17 @@
 #include <httpd.h>
 #include <httpd-cgi.h>
 
-#include <config.h>
+#include <hw_types.h>
+#include <hw_memmap.h>
 #include <io.h>
+#include <gpio.h>
+
+#include <config.h>
 #include <partnum.h>
 
 #include <fs.h>
 #include <fsdata.h>
-#include <fsdata-stats.h>
+#include <../../obj/fsdata-stats.c>
 #include <logger.h>
 #include <quickstart-opts.h>
 
@@ -87,35 +91,32 @@ static const char *greenball = "<img src='/green.png' />";
 static const char *offball   = "<img src='/off.png' />";
 static const char *redball   = "<img src='/red.png' />";
 
+#ifdef NOT_USED_IN_QUICKSTART
+
+/*
+ * Split a fixed point number into the integer and fraction parts.
+ */
 static inline void split_eng(int a, int *integer, int *fract)
 {
 	*fract = a;
 	*integer = *fract / 1000;
 	*fract = *fract - (*integer * 1000);
 }
+#endif
 
-
-
-extern void vTaskList( signed char *pcWriteBuffer );
-static char cCountBuf[ 32 ];
-unsigned int refreshCount = 0;
-static int
-generate_rtos_stats(void)
-{
-	//\todo checkfor buffer overrun;
-	refreshCount++;
-	sprintf( cCountBuf, "<p><br>Refresh count = %u", refreshCount );
-	vTaskList( (signed char *)uip_appdata );
-	strcat( uip_appdata, cCountBuf );
-
-	return strlen( uip_appdata );
-}
 /*---------------------------------------------------------------------------*/
 
+unsigned int refreshCount = 0;
+static char cCountBuf[32];
+
 extern void vTaskGetRunTimeStats( signed char *pcWriteBuffer );
-static int
-generate_runtime_stats(void)
+
+int run_time(int index, int iNumParams,
+		char *pcParam[], char *pcValue[], char **resultBuffer)
 {
+	uip_appdata[0] = 0;
+	*resultBuffer = uip_appdata;
+
 	//\todo checkfor buffer overrun;
 	refreshCount++;
 	sprintf( cCountBuf, "<p><br>Refresh count = %u", refreshCount );
@@ -124,27 +125,26 @@ generate_runtime_stats(void)
 
 	return strlen( uip_appdata );
 }
+
 /*---------------------------------------------------------------------------*/
 
-int run_time(int index, int iNumParams,
-		char *pcParam[], char *pcValue[], char **resultBuffer)
-{
-
-	uip_appdata[0]=0;
-	*resultBuffer = uip_appdata;
-
-	return generate_runtime_stats();
-}
-/*---------------------------------------------------------------------------*/
+extern void vTaskList( signed char *pcWriteBuffer );
 
 static int rtos_stats(int index, int iNumParams,
 		char *pcParam[], char *pcValue[], char **resultBuffer)
 {
-	uip_appdata[0]=0;
+	uip_appdata[0] = 0;
 	*resultBuffer = uip_appdata;
 
-	return generate_rtos_stats();
+	//\todo checkfor buffer overrun;
+	refreshCount++;
+	sprintf( cCountBuf, "<p><br>Refresh count = %u", refreshCount );
+	vTaskList( (signed char *)uip_appdata );
+	strcat( uip_appdata, cCountBuf );
+
+	return strlen( uip_appdata );
 }
+
 /*---------------------------------------------------------------------------*/
 
 int perm_config(int index, int iNumParams,
@@ -157,9 +157,8 @@ int perm_config(int index, int iNumParams,
 	 */
 
 	int pcvalid = permcfg_valid();
-    int pcprot  = PROTECT_PERMCFG && pcvalid;
+	int pcprot  = PROTECT_PERMCFG && pcvalid;
 
-	uip_appdata[0]=0;
 	*resultBuffer = uip_appdata;
 
 	return snprintf((char *)uip_appdata, UIP_APPDATA_SIZE,
@@ -196,6 +195,7 @@ int perm_config(int index, int iNumParams,
 		permcfg.mac[5], pcprot ? "disabled=\"disabled\"" : ""
 	);
 }
+
 /*---------------------------------------------------------------------------*/
 
 int user_config(int index, int iNumParams,
@@ -203,7 +203,6 @@ int user_config(int index, int iNumParams,
 {
 	int ucvalid = usercfg_valid();
 
-	uip_appdata[0]=0;
 	*resultBuffer = uip_appdata;
 
 	return snprintf((char *)uip_appdata, UIP_APPDATA_SIZE,
@@ -243,7 +242,7 @@ int user_config(int index, int iNumParams,
 "<td> Notes: </td><td>"
 "	<textarea name=\"NOTES\" rows=\"4\" cols=\"63\">%s</textarea></td>"
 "</tr>",
-        ucvalid ? "valid" : "invalid",
+		ucvalid ? "valid" : "invalid",
 		usercfg.assy_pn,
 		usercfg.assy_sn,
 
@@ -268,10 +267,7 @@ int user_config(int index, int iNumParams,
 	);
 }
 
-/*
- * Process the form input sent by the config.shtml page.
- */
-// static void process_form_config(portCHAR *pcInputString, portBASE_TYPE xInputLength)
+/*---------------------------------------------------------------------------*/
 
 #define STRNCMP(a, b)	strncmp(a, b, strlen(b))
 
@@ -313,8 +309,12 @@ static int strncpy_html(char *dp, char *cp, int max)
 	return len;
 }
 
+/*---------------------------------------------------------------------------*/
 
-static int process_form_config(int index, int iNumParams,
+/*
+ * Process the form input sent by the config.shtml page.
+ */
+static int config_form(int index, int iNumParams,
 		char *pcParam[], char *pcValue[], char **resultBuffer)
 {
 	char *c;
@@ -470,737 +470,227 @@ next_param:;
 	if (permcfg_virgin())
 #endif
 	{
-	    lstr("<ps>");
+		lstr("<ps>");
 		permcfg_save();
 	}
 	usercfg_save();
 	return 0;
 }
 
-
 /*---------------------------------------------------------------------------*/
-#if LRU_IS_GCU
-static int exp1_upd(int index, int iNumParams,
+
+static int proc_io_upd(int index, int iNumParams,
 		char *pcParam[], char *pcValue[], char **resultBuffer)
 {
-	uip_appdata[0]=0;
 	*resultBuffer = uip_appdata;
 
 	return snprintf((char *)uip_appdata, UIP_APPDATA_SIZE,
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\",",
-		dioxlate[dioGpsReset_].str,
-			dio(dioGpsReset_) ? offball : greenball,
-		dioxlate[dioCpuLed1].str,
-			dio(dioCpuLed1) ? greenball : offball,
-		dioxlate[dioCpuLed2].str,
-			dio(dioCpuLed2) ? greenball : offball,
-		dioxlate[dioArmPc4].str,
-			dio(dioArmPc4) ? greenball : offball,
-		dioxlate[dioArmPc6].str,
-			dio(dioArmPc6) ? greenball : offball,
-		dioxlate[dioArmProc].str,
-			dio(dioArmProc) ? greenball : offball,
-		dioxlate[dioGpsPosValid].str,
-			dio(dioGpsPosValid) ? greenball : offball,
-		dioxlate[dioOpenGnd2IsOn].str,
-			dio(dioOpenGnd2IsOn) ? greenball : offball,
-		dioxlate[dioVicor3xBInputPower].str,
-			dio(dioVicor3xBInputPower) ? greenball : offball,
-		dioxlate[dioVicor3xCInputPower].str,
-			dio(dioVicor3xCInputPower) ? greenball : offball,
-		dioxlate[dioUnused1].str,
-			dio(dioUnused1) ? greenball : offball,
-		dioxlate[dioVicor1xStatus].str,
-			dio(dioVicor1xStatus) ? greenball : offball,
-		dioxlate[dioVicorSpareEnable].str,
-			dio(dioVicorSpareEnable) ? greenball : offball,
-		dioxlate[dioVicorSpareStatus].str,
-			dio(dioVicorSpareStatus) ? greenball : offball,
-		dioxlate[dioVicor1xInputPower].str,
-			dio(dioVicor1xInputPower) ? greenball : offball,
-		dioxlate[dioVicor3xAInputPower].str,
-			dio(dioVicor3xAInputPower) ? greenball : offball
+		"{"
+		/* Port A */
+		"\"pA0\": \"%d\""
+		",\"pA1\": \"%d\""
+		",\"pA2\": \"%d\""
+		",\"pA3\": \"%d\""
+		",\"pA4\": \"%d\""
+		",\"pA5\": \"%d\""
+		",\"pA6\": \"%d\""
+		",\"pA7\": \"%d\""
+		/* Port B */
+		",\"pB0\": \"%d\""
+		",\"pB1\": \"%d\""
+		",\"pB2\": \"%d\""
+		",\"pB3\": \"%d\""
+		",\"pB4\": \"%d\""
+		",\"pB5\": \"%d\""
+		",\"pB6\": \"%d\""
+		",\"pB7\": \"%d\""
+		/* Port C */
+		",\"pC0\": \"%d\""
+		",\"pC1\": \"%d\""
+		",\"pC2\": \"%d\""
+		",\"pC3\": \"%d\""
+		",\"pC4\": \"%d\""
+		",\"pC5\": \"%d\""
+		",\"pC6\": \"%d\""
+		",\"pC7\": \"%d\""
+		/* Port D */
+		",\"pD0\": \"%d\""
+		",\"pD1\": \"%d\""
+		",\"pD2\": \"%d\""
+		",\"pD3\": \"%d\""
+		",\"pD4\": \"%d\""
+		",\"pD5\": \"%d\""
+		",\"pD6\": \"%d\""
+		",\"pD7\": \"%d\""
+		/* Port E */
+		",\"pE0\": \"%d\""
+		",\"pE1\": \"%d\""
+		",\"pE2\": \"%d\""
+		",\"pE3\": \"%d\""
+		",\"pE4\": \"%d\""
+		",\"pE5\": \"%d\""
+		",\"pE6\": \"%d\""
+		",\"pE7\": \"%d\""
+		/* Port F */
+		",\"pF0\": \"%d\""
+		",\"pF1\": \"%d\""
+		",\"pF2\": \"%d\""
+		",\"pF3\": \"%d\""
+		",\"pF4\": \"%d\""
+		",\"pF5\": \"%d\""
+		",\"pF6\": \"%d\""
+		",\"pF7\": \"%d\""
+		/* Port G */
+		",\"pG0\": \"%d\""
+		",\"pG1\": \"%d\""
+		",\"pG2\": \"%d\""
+		",\"pG3\": \"%d\""
+		",\"pG4\": \"%d\""
+		",\"pG5\": \"%d\""
+		",\"pG6\": \"%d\""
+		",\"pG7\": \"%d\""
+		"}",
+
+		GPIOPinRead(GPIO_PORTA_BASE, GPIO_PIN_0) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTA_BASE, GPIO_PIN_1) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTA_BASE, GPIO_PIN_2) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTA_BASE, GPIO_PIN_3) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTA_BASE, GPIO_PIN_4) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTA_BASE, GPIO_PIN_5) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTA_BASE, GPIO_PIN_6) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTA_BASE, GPIO_PIN_7) ? 1 : 0,
+
+		GPIOPinRead(GPIO_PORTB_BASE, GPIO_PIN_0) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTB_BASE, GPIO_PIN_1) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTB_BASE, GPIO_PIN_2) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTB_BASE, GPIO_PIN_3) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTB_BASE, GPIO_PIN_4) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTB_BASE, GPIO_PIN_5) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTB_BASE, GPIO_PIN_6) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTB_BASE, GPIO_PIN_7) ? 1 : 0,
+
+		GPIOPinRead(GPIO_PORTC_BASE, GPIO_PIN_0) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTC_BASE, GPIO_PIN_1) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTC_BASE, GPIO_PIN_2) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTC_BASE, GPIO_PIN_3) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTC_BASE, GPIO_PIN_4) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTC_BASE, GPIO_PIN_5) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTC_BASE, GPIO_PIN_6) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTC_BASE, GPIO_PIN_7) ? 1 : 0,
+
+		GPIOPinRead(GPIO_PORTD_BASE, GPIO_PIN_0) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTD_BASE, GPIO_PIN_1) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTD_BASE, GPIO_PIN_2) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTD_BASE, GPIO_PIN_3) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTD_BASE, GPIO_PIN_4) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTD_BASE, GPIO_PIN_5) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTD_BASE, GPIO_PIN_6) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTD_BASE, GPIO_PIN_7) ? 1 : 0,
+
+		GPIOPinRead(GPIO_PORTE_BASE, GPIO_PIN_0) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTE_BASE, GPIO_PIN_1) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTE_BASE, GPIO_PIN_2) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTE_BASE, GPIO_PIN_3) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTE_BASE, GPIO_PIN_4) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTE_BASE, GPIO_PIN_5) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTE_BASE, GPIO_PIN_6) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTE_BASE, GPIO_PIN_7) ? 1 : 0,
+
+		GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_0) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_1) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_2) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_3) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_4) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_5) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_6) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_7) ? 1 : 0,
+
+		GPIOPinRead(GPIO_PORTG_BASE, GPIO_PIN_0) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTG_BASE, GPIO_PIN_1) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTG_BASE, GPIO_PIN_2) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTG_BASE, GPIO_PIN_3) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTG_BASE, GPIO_PIN_4) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTG_BASE, GPIO_PIN_5) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTG_BASE, GPIO_PIN_6) ? 1 : 0,
+		GPIOPinRead(GPIO_PORTG_BASE, GPIO_PIN_7) ? 1 : 0
 	);
 }
+
 /*---------------------------------------------------------------------------*/
 
-static int exp2_upd(int index, int iNumParams,
+static int control_upd(int index, int iNumParams,
 		char *pcParam[], char *pcValue[], char **resultBuffer)
 {
-	uip_appdata[0]=0;
 	*resultBuffer = uip_appdata;
 
 	return snprintf((char *)uip_appdata, UIP_APPDATA_SIZE,
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\",",
-		dioxlate[dioFan].str,
-			dio(dioFan) ? greenball : offball,
-		dioxlate[dioFanStatus].str,
-			dio(dioFanStatus) ? greenball : offball,
-		dioxlate[dioPayloadReset].str,
-			dio(dioPayloadReset) ? greenball : offball,
-		dioxlate[dioUnused2].str,
-			dio(dioUnused2) ? greenball : offball,
-		dioxlate[dioPc104Power].str,
-			dio(dioPc104Power) ? greenball : offball,
-		dioxlate[dioGpsPower].str,
-			dio(dioGpsPower) ? greenball : offball,
-		dioxlate[dioVicor3xEnable].str,
-			dio(dioVicor3xEnable) ? greenball : offball,
-		dioxlate[dioVicor1xEnable].str,
-			dio(dioVicor1xEnable) ? greenball : offball,
-		dioxlate[dioLedPowerOK].str,
-			dio(dioLedPowerOK) ? greenball : offball,
-		dioxlate[dioLedGpsOK].str,
-			dio(dioLedGpsOK) ? greenball : offball,
-		dioxlate[dioLedGimbalLockOK].str,
-			dio(dioLedGimbalLockOK) ? greenball : offball,
-		dioxlate[dioLedGimbalLockFault].str,
-			dio(dioLedGimbalLockFault) ? greenball : offball,
-		dioxlate[dioLedInputPowerFault].str,
-			dio(dioLedInputPowerFault) ? greenball : offball,
-		dioxlate[dioLedOutputPowerFault].str,
-			dio(dioLedOutputPowerFault) ? greenball : offball,
-		dioxlate[dioSwPowerOn].str,
-			dio(dioSwPowerOn) ? greenball : offball,
-		dioxlate[dioSwLdgOn].str,
-			dio(dioSwLdgOn) ? greenball : offball
+		"{"
+		"\"%s\": \"%s\""
+		",\"%s\": \"%s\""
+		",\"%s\": \"%s\""
+		",\"%s\": \"%s\""
+		",\"%s\": \"%s\""
+		",\"%s\": \"%s\""
+		",\"%s\": \"%d\"," "\"%smV\": \"%d\""
+		",\"%s\": \"%d\"," "\"%smV\": \"%d\""
+		",\"%s\": \"%d\"," "\"%smV\": \"%d\""
+		",\"%s\": \"%d\"," "\"%smV\": \"%d\""
+		",\"%s\": \"%d\"," "\"%sEng\": \"%d\""
+		"}",
+
+		dioxlate[dioUp].str, dio(dioUp) ? offball : greenball,
+		dioxlate[dioDown].str, dio(dioDown) ? offball : greenball,
+		dioxlate[dioLeft].str, dio(dioLeft) ? offball : greenball,
+		dioxlate[dioRight].str, dio(dioRight) ? offball : greenball,
+		dioxlate[dioSelect].str, dio(dioSelect) ? offball : greenball,
+		dioxlate[dioLed0].str, dio(dioLed0) ? greenball : offball,
+
+		adcxlate[adcProc0].str,
+			adc(adcProc0, raw),
+			adcxlate[adcProc0].str,
+			adc(adcProc0, millivolts),
+		adcxlate[adcProc1].str,
+			adc(adcProc1, raw),
+			adcxlate[adcProc1].str,
+			adc(adcProc1, millivolts),
+		adcxlate[adcProc2].str,
+			adc(adcProc2, raw),
+			adcxlate[adcProc2].str,
+			adc(adcProc2, millivolts),
+		adcxlate[adcProc3].str,
+			adc(adcProc3, raw),
+			adcxlate[adcProc3].str,
+			adc(adcProc3, millivolts),
+		adcxlate[adcProcTemp].str,
+			adc(adcProcTemp, raw),
+			adcxlate[adcProcTemp].str,
+			adc(adcProcTemp, engineering) / 1000
 	);
 }
+
 /*---------------------------------------------------------------------------*/
 
-static int exp3_upd(int index, int iNumParams,
+static int button(int index, int iNumParams,
 		char *pcParam[], char *pcValue[], char **resultBuffer)
 {
+	int j;
+
+	enum dio_sel whichdio;
+
 	uip_appdata[0]=0;
 	*resultBuffer = uip_appdata;
-
-	return snprintf((char *)uip_appdata, UIP_APPDATA_SIZE,
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\",",
-		dioxlate[dioNe28vConnect].str,
-			dio(dioNe28vConnect) ? greenball : offball,
-		dioxlate[dioNe28vCapConnect].str,
-			dio(dioNe28vCapConnect) ? greenball : offball,
-		dioxlate[dio5vAuxA].str,
-			dio(dio5vAuxA) ? greenball : offball,
-		dioxlate[dio5vAuxB].str,
-			dio(dio5vAuxB) ? greenball : offball,
-		dioxlate[dio12vAuxAOn_].str,
-			dio(dio12vAuxAOn_) ? offball : greenball,
-		dioxlate[dio12vAuxBOn_].str,
-			dio(dio12vAuxBOn_) ? offball : greenball,
-		dioxlate[dio12vAuxCOn_].str,
-			dio(dio12vAuxCOn_) ? offball : greenball,
-		dioxlate[dio41v_].str,
-			dio(dio41v_) ? offball : greenball,
-		dioxlate[dio15vAux_].str,
-			dio(dio15vAux_) ? offball : greenball,
-		dioxlate[dio19vAux_].str,
-			dio(dio19vAux_) ? offball : greenball,
-		dioxlate[dioLdgBusCapConnect].str,
-			dio(dioLdgBusCapConnect) ? greenball : offball,
-		dioxlate[dioSuPowerOn_].str,
-			dio(dioSuPowerOn_) ? offball : greenball,
-		dioxlate[dioServoPowerOn_].str,
-			dio(dioServoPowerOn_) ? offball : greenball,
-		dioxlate[dio28vAuxCOn_].str,
-			dio(dio28vAuxCOn_) ? offball : greenball,
-		dioxlate[dio28vAuxDOn_].str,
-			dio(dio28vAuxDOn_) ? offball : greenball,
-		dioxlate[dioOpenGnd1On_].str,
-			dio(dioOpenGnd1On_) ? offball : greenball
-	);
-}
-/*---------------------------------------------------------------------------*/
-
-static int exp4_upd(int index, int iNumParams,
-		char *pcParam[], char *pcValue[], char **resultBuffer)
-{
-	uip_appdata[0]=0;
-	*resultBuffer = uip_appdata;
-
-	return snprintf((char *)uip_appdata, UIP_APPDATA_SIZE,
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\",",
-		dioxlate[dio5vAuxAIsOn_].str,
-			dio(dio5vAuxAIsOn_) ? offball : greenball,
-		dioxlate[dio5vAuxBIsOn_].str,
-			dio(dio5vAuxBIsOn_) ? offball : greenball,
-		dioxlate[dioLdgBusPrecharge_].str,
-			dio(dioLdgBusPrecharge_) ? offball : greenball,
-		dioxlate[dioSuPowerIsOn].str,
-			dio(dioSuPowerIsOn) ? greenball : offball,
-		dioxlate[dioServoPowerIsOn].str,
-			dio(dioServoPowerIsOn) ? greenball : offball,
-		dioxlate[dio28vAuxCIsOn].str,
-			dio(dio28vAuxCIsOn) ? greenball : offball,
-		dioxlate[dio28vAuxDIsOn].str,
-			dio(dio28vAuxDIsOn) ? greenball : offball,
-		dioxlate[dioOpenGnd1IsOn].str,
-			dio(dioOpenGnd1IsOn) ? greenball : offball,
-		dioxlate[dioSuPowerOff_].str,
-			dio(dioSuPowerOff_) ? offball : greenball,
-		dioxlate[dioServoPowerOff_].str,
-			dio(dioServoPowerOff_) ? offball : greenball,
-		dioxlate[dio28vAuxCOff_].str,
-			dio(dio28vAuxCOff_) ? offball : greenball,
-		dioxlate[dio28vAuxDOff_].str,
-			dio(dio28vAuxDOff_) ? offball : greenball,
-		dioxlate[dioOpenGnd1Off_].str,
-			dio(dioOpenGnd1Off_) ? offball : greenball,
-		dioxlate[dioRccbTripped].str,
-			dio(dioRccbTripped) ? redball : greenball,
-		dioxlate[dioSpare2].str,
-			dio(dioSpare2) ? greenball : offball,
-		dioxlate[dioSpare3].str,
-			dio(dioSpare3) ? greenball : offball
-	);
-}
-/*---------------------------------------------------------------------------*/
-
-static int ctl_upd(int index, int iNumParams,
-		char *pcParam[], char *pcValue[], char **resultBuffer)
-{
-	int vicor1x_currentv, vicor1x_currentmv;
-	int vicor3xa_currentv, vicor3xa_currentmv;
-	int vicor3xb_currentv, vicor3xb_currentmv;
-	int vicor3xc_currentv, vicor3xc_currentmv;
-	int ne28v_currentv, ne28v_currentmv;
-	int vicor1x_voltagev, vicor1x_voltagemv;
-	int vicor3x_voltagev, vicor3x_voltagemv;
-	int ne28v_voltagev, ne28v_voltagemv;
-
-	split_eng(adc(adcVicor1xI, engineering),
-			&vicor1x_currentv, &vicor1x_currentmv);
-	split_eng(adc(adcVicor3xAI, engineering),
-			&vicor3xa_currentv, &vicor3xa_currentmv);
-	split_eng(adc(adcVicor3xBI, engineering),
-			&vicor3xb_currentv, &vicor3xb_currentmv);
-	split_eng(adc(adcVicor3xCI, engineering),
-			&vicor3xc_currentv, &vicor3xc_currentmv);
-	split_eng(adc(adcNe28vInI, engineering),
-			&ne28v_currentv, &ne28v_currentmv);
-	split_eng(adc(adcVicor1x, engineering),
-			&vicor1x_voltagev, &vicor1x_voltagemv);
-	split_eng(adc(adcVicor3x, engineering),
-			&vicor3x_voltagev, &vicor3x_voltagemv);
-	split_eng(adc(adcNe28vIn, engineering),
-			&ne28v_voltagev, &ne28v_voltagemv);
 
 	/*
-	 * Suppress the distracting noise when unpowered.
+	 * Parse the button string.
 	 */
-	if (vicor1x_voltagev <= 20)
-		vicor1x_currentmv = 0;
-	if (vicor3x_voltagev <= 20) {
-		vicor3xb_currentmv = 0;
-		vicor3xc_currentmv = 0;
-		vicor3xa_currentmv = 0;
+	for (j = 0; j < iNumParams; j++) {
+		whichdio = strtodio(pcParam[j]);
+		if (whichdio != dioInvalid)
+			dio_set(whichdio, !dio(whichdio));
 	}
-
-	uip_appdata[0]=0;
-	*resultBuffer = uip_appdata;
-
-	return snprintf((char *)uip_appdata, UIP_APPDATA_SIZE,
-		"{"
-		/**** Power Control Buttons ****/
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		/**** Input Power ****/
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		/**** Output Control ****/
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		/**** Voltage and Current ****/
-		"\"%s\": %d.%03d, \"%s\": %d.%03d,"
-		"\"%s\": %d.%03d, \"%s\": %d.%03d,"
-		"\"%s\": %d.%03d, \"%s\": %d.%03d,"
-		"\"%s\": %d.%03d,"
-		"\"%s\": %d.%03d"
-		"}",
-		/* Power Control Buttons */
-		pwrxlate[pwrMaster].str,
-			pwr_state(pwrMaster) ? greenball : offball,
-		pwrxlate[pwrGCC].str,
-			pwr_state(pwrGCC) ? greenball : offball,
-		pwrxlate[pwrLdg].str,
-			pwr_state(pwrLdg) ? greenball : offball,
-		pwrxlate[pwrSu].str,
-			pwr_state(pwrSu) ? greenball : offball,
-		pwrxlate[pwr5vAuxA].str,
-			pwr_state(pwr5vAuxA) ? greenball : offball,
-		pwrxlate[pwr5vAuxB].str,
-			pwr_state(pwr5vAuxB) ? greenball : offball,
-		pwrxlate[pwr12vAuxA].str,
-			pwr_state(pwr12vAuxA) ? greenball : offball,
-		pwrxlate[pwr12vAuxB].str,
-			pwr_state(pwr12vAuxB) ? greenball : offball,
-		pwrxlate[pwr12vAuxC].str,
-			pwr_state(pwr12vAuxC) ? greenball : offball,
-		pwrxlate[pwr15vAux].str,
-			pwr_state(pwr15vAux) ? greenball : offball,
-		pwrxlate[pwr19vAux].str,
-			pwr_state(pwr19vAux) ? greenball : offball,
-		pwrxlate[pwr28vAuxC].str,
-			pwr_state(pwr28vAuxC) ? greenball : offball,
-		pwrxlate[pwr28vAuxD].str,
-			pwr_state(pwr28vAuxD) ? greenball : offball,
-		pwrxlate[pwrOG1].str,
-			pwr_state(pwrOG1) ? greenball : offball,
-		pwrxlate[pwrOG2].str,
-			pwr_state(pwrOG2) ? greenball : offball,
-
-		/* Input Power */
-		dioxlate[dioVicor1xInputPower].str,
-			dio(dioVicor1xInputPower) ? greenball : offball,
-		dioxlate[dioVicor3xAInputPower].str,
-			dio(dioVicor3xAInputPower) ? greenball : offball,
-		dioxlate[dioVicor3xBInputPower].str,
-			dio(dioVicor3xBInputPower) ? greenball : offball,
-		dioxlate[dioVicor3xCInputPower].str,
-			dio(dioVicor3xCInputPower) ? greenball : offball,
-
-		/* Output Control */
-		dioxlate[dioSuPowerIsOn].str,
-			dio(dioSuPowerIsOn) ? greenball : offball,
-		dioxlate[dioServoPowerIsOn].str,
-			dio(dioServoPowerIsOn) ? greenball : offball,
-		dioxlate[dio5vAuxAIsOn_].str,
-			dio(dio5vAuxAIsOn_) ? offball :	greenball,
-		dioxlate[dio5vAuxBIsOn_].str,
-			dio(dio5vAuxBIsOn_) ? offball : greenball,
-		dioxlate[dioOpenGnd1IsOn].str,
-			dio(dioOpenGnd1IsOn) ? greenball : offball,
-		dioxlate[dioOpenGnd2IsOn].str,
-			dio(dioOpenGnd2IsOn) ? greenball : offball,
-		dioxlate[dioFanStatus].str,
-			dio(dioFanStatus) ? greenball : offball,
-		dioxlate[dioRccbTripped].str,
-			dio(dioRccbTripped) ? redball : greenball,
-
-		/* ADC */
-		adcxlate[adcNe28vIn].str,
-        		ne28v_voltagev,
-			ne28v_voltagemv,
-		adcxlate[adcNe28vInI].str,
-        		ne28v_currentv,
-			ne28v_currentmv,
-		adcxlate[adcVicor1x].str,
-        		vicor1x_voltagev,
-			vicor1x_voltagemv,
-		adcxlate[adcVicor1xI].str,
-        		vicor1x_currentv,
-			vicor1x_currentmv,
-		adcxlate[adcVicor3x].str,
-        		vicor3x_voltagev,
-			vicor3x_voltagemv,
-		adcxlate[adcVicor3xAI].str,
-        		vicor3xa_currentv,
-			vicor3xa_currentmv,
-		adcxlate[adcVicor3xBI].str,
-        		vicor3xb_currentv,
-			vicor3xb_currentmv,
-		adcxlate[adcVicor3xCI].str,
-        		vicor3xc_currentv,
-			vicor3xc_currentmv
-	);
 }
+
 /*---------------------------------------------------------------------------*/
-
-static int proc_upd(int index, int iNumParams,
-		char *pcParam[], char *pcValue[], char **resultBuffer)
-{
-	/*
-	 * The following are used to generate engineering units in integer
-	 * units plus milli-units to avoid floating point calculations.
-	 */
-	int ne28v, ne28mv;
-	int vref_2048v, vref_2048mv;
-	int bootstrap_p5v, bootstrap_p5mv;
-
-	split_eng(adc(adcNe28vProc, engineering),
-			&ne28v, &ne28mv);
-	split_eng(adc(adcVref2048, engineering),
-			&vref_2048v, &vref_2048mv);
-	split_eng(adc(adcBootStrap5v, engineering),
-			&bootstrap_p5v, &bootstrap_p5mv);
-
-	uip_appdata[0]=0;
-	*resultBuffer = uip_appdata;
-
-	return snprintf((char *)uip_appdata, UIP_APPDATA_SIZE,
-		"{"
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%s\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d.%01d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d.%03d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d.%03d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\""
-		"}",
-		dioxlate[dioGpsPps].str,
-			dio(dioGpsPps) ? greenball : offball,
-		dioxlate[dioOpenGnd1OverI].str,
-			dio(dioOpenGnd1OverI) ? greenball : offball,
-		dioxlate[dioOpenGnd2Off_].str,
-			dio(dioOpenGnd2Off_) ? offball : greenball,
-		dioxlate[dioNe28vOverVInt].str,
-			dio(dioNe28vOverVInt) ? greenball : offball,
-		dioxlate[dioNe28vCapConnected_].str,
-			dio(dioNe28vCapConnected_) ? offball : greenball,
-		dioxlate[dioNe28vOverV_].str,
-			dio(dioNe28vOverV_) ? greenball : redball,
-		dioxlate[dioSuOverI].str,
-			dio(dioSuOverI) ? redball : greenball,
-		dioxlate[dioVicor3xLossedBus_].str,
-			dio(dioVicor3xLossedBus_) ? greenball : redball,
-		dioxlate[dioRccbOverI].str,
-			dio(dioRccbOverI) ? redball : greenball,
-		dioxlate[dioVicor1xLossedBus_].str,
-			dio(dioVicor1xLossedBus_) ? greenball : redball,
-		dioxlate[dio28vAuxBOverI].str,
-			dio(dio28vAuxBOverI) ? redball : greenball,
-		dioxlate[dioNe28vUnderV_].str,
-			dio(dioNe28vUnderV_) ? greenball : redball,
-		dioxlate[dio28vAuxAOverI].str,
-			dio(dio28vAuxAOverI) ? redball : greenball,
-		dioxlate[dioMasterArm_].str,
-			dio(dioMasterArm_) ? offball : greenball,
-		dioxlate[dioOpenGnd2OverI].str,
-			dio(dioOpenGnd2OverI) ? redball : greenball,
-		dioxlate[dioOpenGnd2On_].str,
-			dio(dioOpenGnd2On_) ? offball : greenball,
-
-		adcxlate[adcNe28vProc].str,
-			adc(adcNe28vProc, raw),
-			adcxlate[adcNe28vProc].str,
-			adc(adcNe28vProc, millivolts),
-			adcxlate[adcNe28vProc].str,
-			ne28v, ne28mv / 100,
-		adcxlate[adcVref2048].str,
-			adc(adcVref2048, raw),
-			adcxlate[adcVref2048].str,
-			adc(adcVref2048, millivolts),
-			adcxlate[adcVref2048].str,
-			vref_2048v, vref_2048mv,
-		adcxlate[adcBootStrap5v].str,
-			adc(adcBootStrap5v, raw),
-			adcxlate[adcBootStrap5v].str,
-			adc(adcBootStrap5v, millivolts),
-			adcxlate[adcBootStrap5v].str,
-			bootstrap_p5v, bootstrap_p5mv,
-		adcxlate[adcBoardTemp].str,
-			adc(adcBoardTemp, raw),
-			adcxlate[adcBoardTemp].str,
-			adc(adcBoardTemp, millivolts),
-			adcxlate[adcBoardTemp].str,
-			adc(adcBoardTemp, engineering) / 1000,
-		adcxlate[adcProcTemp1].str,
-			adc(adcProcTemp1, raw),
-			adcxlate[adcProcTemp1].str,
-			adc(adcProcTemp1, millivolts),
-			adcxlate[adcProcTemp1].str,
-			adc(adcProcTemp1, engineering) / 1000
-	);
-}
-/*---------------------------------------------------------------------------*/
-
-static int adc_spi_upd(int index, int iNumParams,
-		char *pcParam[], char *pcValue[], char **resultBuffer)
-{
-	/*
-	 * SPI ADS7844
-	 */
-	uip_appdata[0]=0;
-	*resultBuffer = uip_appdata;
-
-	return snprintf((char *)uip_appdata, UIP_APPDATA_SIZE,
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-		,
-		ADCEXPAND(adcVicor1xI),
-		ADCEXPAND(adcVicor3xAI),
-		ADCEXPAND(adcVicor3xBI),
-		ADCEXPAND(adcVicor3xCI),
-		ADCEXPAND(adcNe28vInI),
-		ADCEXPAND(adcVicor1x),
-		ADCEXPAND(adcVicor3x),
-		ADCEXPAND(adcNe28vIn)
-	);
-}
-/*---------------------------------------------------------------------------*/
-
-static int adc0_upd(int index, int iNumParams,
-		char *pcParam[], char *pcValue[], char **resultBuffer)
-{
-	/*
-	 * SPI ADS7844 Mux 0
-	 */
-	uip_appdata[0]=0;
-	*resultBuffer = uip_appdata;
-
-	return snprintf((char *)uip_appdata, UIP_APPDATA_SIZE,
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-#if (LRU_IS_GCU == 2)
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-#endif
-		,
-#if (LRU_IS_GCU == 2)
-		ADCEXPAND(adcExpADC0),
-#endif
-		ADCEXPAND(adc2048vRefB),
-		ADCEXPAND(adcNe28vIn1),
-		ADCEXPAND(adc19vAux),
-		ADCEXPAND(adcAircraft28v),
-		ADCEXPAND(adcSuI),
-#if (LRU_IS_GCU == 2)
-		ADCEXPAND(adcSu),
-#endif
-		ADCEXPAND(adc12vAuxB)
-	);
-}
-/*---------------------------------------------------------------------------*/
-
-static int adc1_upd(int index, int iNumParams,
-		char *pcParam[], char *pcValue[], char **resultBuffer)
-{
-	/*
-	 * SPI ADS7844 Mux 1
-	 */
-	uip_appdata[0]=0;
-	*resultBuffer = uip_appdata;
-
-	return snprintf((char *)uip_appdata, UIP_APPDATA_SIZE,
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-#if (LRU_IS_GCU == 2)
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-#endif
-		,
-#if (LRU_IS_GCU == 2)
-		ADCEXPAND(adcExpADC1),
-		ADCEXPAND(adcExpADC2),
-#endif
-		ADCEXPAND(adc28vHoldup),
-		ADCEXPAND(adc15vAux),
-		ADCEXPAND(adcLdgBusCap),
-		ADCEXPAND(adcRccbI),
-		ADCEXPAND(adc28vAuxDI),
-		ADCEXPAND(adc12vAuxAI)
-	);
-}
-/*---------------------------------------------------------------------------*/
-
-static int adc2_upd(int index, int iNumParams,
-		char *pcParam[], char *pcValue[], char **resultBuffer)
-{
-	/*
-	 * SPI ADS7844 Mux 2
-	 */
-	uip_appdata[0]=0;
-	*resultBuffer = uip_appdata;
-
-	return snprintf((char *)uip_appdata, UIP_APPDATA_SIZE,
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-#if (LRU_IS_GCU == 2)
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-#endif
-		,
-		ADCEXPAND(adcBoardTemp1),
-#if (LRU_IS_GCU == 2)
-		ADCEXPAND(adcOpenGnd1I),
-#endif
-		ADCEXPAND(adcCapFetGate),
-		ADCEXPAND(adc2048vRefA),
-		ADCEXPAND(adc5vAuxAbcdI),
-#if (LRU_IS_GCU == 2)
-		ADCEXPAND(adc28vAuxCI),
-#endif
-		ADCEXPAND(adcChassisFans),
-		ADCEXPAND(adc12vAuxA)
-	);
-}
-/*---------------------------------------------------------------------------*/
-
-int adc3_upd(int index, int iNumParams,
-		char *pcParam[], char *pcValue[], char **resultBuffer)
-{
-	/*
-	 * SPI ADS7844 Mux 3
-	 */
-	uip_appdata[0]=0;
-	*resultBuffer = uip_appdata;
-
-	return snprintf((char *)uip_appdata, UIP_APPDATA_SIZE,
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-#if (LRU_IS_GCU == 2)
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-		"\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\","
-#endif
-		,
-#if (LRU_IS_GCU == 2)
-		ADCEXPAND(adc28vAuxC),
-		ADCEXPAND(adcOpenGnd2I),
-#endif
-		ADCEXPAND(adc19vAuxI),
-		ADCEXPAND(adc15vAuxI),
-		ADCEXPAND(adcBoardTemp2),
-		ADCEXPAND(adc5vAuxEfgI),
-		ADCEXPAND(adc12vAuxCI),
-		ADCEXPAND(adc12vAuxBI)
-	);
-}
-#endif
-/*---------------------------------------------------------------------------*/
-
-static int adc_cpu_upd(int index, int iNumParams,
-		char *pcParam[], char *pcValue[], char **resultBuffer)
-{
-	/*
-	 * Unboard ADC
-	 */
-	uip_appdata[0]=0;
-	*resultBuffer = uip_appdata;
-
-	return snprintf((char *)uip_appdata, UIP_APPDATA_SIZE,
-		"{\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\""
-		",\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\""
-		",\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\""
-		",\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\""
-		",\"%s\": \"%d\"," "\"%smV\": \"%d\"," "\"%sEng\": \"%d\""
-		"}",
-		ADCEXPAND(adcProc0),		/**< Processor ADC */
-		ADCEXPAND(adcProc1),		/**< Processor ADC */
-		ADCEXPAND(adcProc2),		/**< Processor ADC */
-		ADCEXPAND(adcProc3),		/**< Processor ADC */
-		ADCEXPAND(adcProcTemp)
-
-	);
-}
-/*---------------------------------------------------------------------------*/
-
 
 static const tCGI ssi_cgi_funcs[] = {
 
@@ -1210,23 +700,14 @@ static const tCGI ssi_cgi_funcs[] = {
 		/* Configuration */
 		{ "/perm_config", perm_config },
 		{ "/user_config", user_config },
-		{ "/config_form", process_form_config },
-		{ "/adc_cpu_upd", adc_cpu_upd }
-#if LRU_IS_GCU
-								,
-		/* Page updates */
-		{ "/ctl_upd", ctl_upd },
-		{ "/exp1_upd", exp1_upd },
-		{ "/exp2_upd", exp2_upd },
-		{ "/exp3_upd", exp3_upd },
-		{ "/exp4_upd", exp4_upd },
-		{ "/adc_spi_upd", adc_spi_upd },
-		{ "/adc0_upd", adc0_upd },
-		{ "/adc1_upd", adc1_upd },
-		{ "/adc2_upd", adc2_upd },
-		{ "/adc3_upd", adc3_upd },
-		{ "/proc_upd", proc_upd }
-#endif
+		{ "/config_form", config_form },
+
+		/* AJAX page updates */
+		{ "/control_upd", control_upd },
+		{ "/proc_io_upd", proc_io_upd },
+
+		/* Button press reports */
+		{ "/button", button },
 };
 #define NUM_SSI_CGI_FUNCTIONS (sizeof(ssi_cgi_funcs) / sizeof(ssi_cgi_funcs[0]))
 #define NUM_SSI_CGI_ENTRIES (NUM_SSI_CGI_FUNCTIONS+FS_NUMFILES)
@@ -1302,7 +783,6 @@ void init_ssi_cgi_handlers(void)
 	// \to combine ssi_handlers and cgi_handlers
 	http_set_ssi_handler(SSIHandler, calls, NUM_SSI_CGI_ENTRIES);
 	http_set_cgi_handlers(calls, NUM_SSI_CGI_FUNCTIONS);
-
 }
 
 /** @} */
