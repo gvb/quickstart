@@ -1,0 +1,62 @@
+<html>
+<head>
+<!--# /header.inc -->
+</head>
+<body onload="startPoll('/control_upd', 500)">
+<!--# /nav.inc -->
+<table>
+<tr>
+<td valign="top">
+<!-- Software Buttons -->
+<table>
+<tr><th colspan="2">LEDs</th></tr>
+<tr>
+	<td><button type="button" OnClick="btnReport(this.id);" id="dioLed0"><img src="/warn.png" /></button></td>
+	<td>LED 0</td>
+</tr>
+</table>
+</td>
+<td>&nbsp; &nbsp;</td> <!-- manual spacing between columns (ugly) -->
+<td valign="top">
+<!-- User Buttons -->
+<table>
+<tr><th colspan="3">User Buttons</th></tr>
+<tr><td></td><td id="dioUp"><img src="/warn.png" /></td><td></td></tr>
+<tr>
+<td id="dioLeft"><img src="/warn.png" /></td>
+<td id="dioSelect"><img src="/warn.png" /></td>
+<td id="dioRight"><img src="/warn.png" /></td>
+</tr>
+<tr><td></td><td id="dioDown"><img src="/warn.png" /></td><td></td></tr>
+</table>
+</td>
+<td valign="top">
+<table>
+<tr><th colspan=3>Processor A/D</th></tr>
+<tr><th>Input</th><th>Raw</th><th colspan=2>Engineering</th><th></th></tr>
+<tr><td class="r">Proc 0</td>
+	<td id="adcProc0" class="r">0</td>
+	<td id="adcProc0mV" class="r">0</td>
+	<td>mV</td></tr>
+<tr><td class="r">Proc 1</td>
+	<td id="adcProc1" class="r">0</td>
+	<td id="adcProc1mV" class="r">0</td>
+	<td>mV</td></tr>
+<tr><td class="r">Proc 2</td>
+	<td id="adcProc2" class="r">0</td>
+	<td id="adcProc2mV" class="r">0</td>
+	<td>mV</td></tr>
+<tr><td class="r">Proc 3</td>
+	<td id="adcProc3" class="r">0</td>
+	<td id="adcProc3mV" class="r">0</td>
+	<td>mV</td></tr>
+<tr><td class="r">uP Temp</td>
+	<td id="adcProcTemp" class="r">0</td>
+	<td id="adcProcTempEng" class="r">0</td>
+	<td>&deg;C</td></tr>
+</table>
+</td>
+</tr>
+</table>
+</body>
+</html>

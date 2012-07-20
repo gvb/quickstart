@@ -53,39 +53,49 @@ while($file = <FILES>) {
 
     open(HEADER, "> /tmp/header") || die $!;
     if($file =~ /404/) {
-    print(HEADER "HTTP/1.0 404 File not found\r\n");
+    print(HEADER "HTTP/1.1 404 File not found\r\n");
     } else {
-    print(HEADER "HTTP/1.0 200 OK\r\n");
+    print(HEADER "HTTP/1.1 200 OK\r\n");
     }
     print(HEADER "Server: lwIP/1.2.0 (http://www.sics.se/~adam/lwip/)\r\n");
     if(($file =~ /\.html$/) || ($file =~ /\.htm$/)) {
     print(HEADER "Content-type: text/html\r\n");
+    print(HEADER "Expires: Tue, 19 Jan 2038 03:14:06 GMT\r\n");
     } elsif(($file =~ /\.shtml$/) || ($file =~ /\.shtm$/) ||
             ($file =~ /\.ssi$/)){
     print(HEADER "Content-type: text/html\r\n");
-    print(HEADER "Expires: Fri, 10 Apr 2008 14:00:00 GMT\r\n");
-    print(HEADER "Pragma: no-cache\r\n");
+    print(HEADER "Cache-Control: no-cache\r\n");
     } elsif($file =~ /\.gif$/) {
     print(HEADER "Content-type: image/gif\r\n");
+    print(HEADER "Expires: Tue, 19 Jan 2038 03:14:06 GMT\r\n");
     } elsif($file =~ /\.png$/) {
     print(HEADER "Content-type: image/png\r\n");
+    print(HEADER "Expires: Tue, 19 Jan 2038 03:14:06 GMT\r\n");
     } elsif($file =~ /\.jpg$/) {
     print(HEADER "Content-type: image/jpeg\r\n");
+    print(HEADER "Expires: Tue, 19 Jan 2038 03:14:06 GMT\r\n");
     } elsif($file =~ /\.class$/) {
     print(HEADER "Content-type: application/octet-stream\r\n");
     } elsif($file =~ /\.ram$/) {
     print(HEADER "Content-type: audio/x-pn-realaudio\r\n");
+    print(HEADER "Cache-Control: no-cache\r\n");
     } elsif($file =~ /\.bmp$/) {
     print(HEADER "Content-type: image/bmp\r\n");
+    print(HEADER "Expires: Tue, 19 Jan 2038 03:14:06 GMT\r\n");
     } elsif($file =~ /\.css$/) {
     print(HEADER "Content-type: text/css\r\n");
+    print(HEADER "Expires: Tue, 19 Jan 2038 03:14:06 GMT\r\n");
+    } elsif($file =~ /\.js$/) {
+    print(HEADER "Content-type: application/ecmascript\r\n");
+    print(HEADER "Expires: Tue, 19 Jan 2038 03:14:06 GMT\r\n");
     } else {
     print(HEADER "Content-type: text/plain\r\n");
+    print(HEADER "Cache-Control: no-cache\r\n");
     }
     print(HEADER "\r\n");
     close(HEADER);
 
-    unless($file =~ /\.plain$/ || $file =~ /cgi/ || $file =~ /\.inc$/ || $file =~ /\.js$/) {
+    unless($file =~ /\.plain$/ || $file =~ /cgi/ || $file =~ /\.inc$/) {
     system("cat /tmp/header $file > /tmp/file");
     } else {
     system("cp $file /tmp/file");

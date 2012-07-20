@@ -136,7 +136,7 @@ enum adc_sel strtoadc(const char *which)
  */
 const struct enumxlate_s dioxlate[] = {
 	/*
-	 * Processor discretes.
+	 * Mnemonic discretes.
 	 */
 	{"dioUp", sizeof("dioUp") - 1},
 	{"dioDown", sizeof("dioDown") - 1},
@@ -144,13 +144,78 @@ const struct enumxlate_s dioxlate[] = {
 	{"dioRight", sizeof("dioRight") - 1},
 	{"dioSelect", sizeof("dioSelect") - 1},
 	{"dioLed0", sizeof("dioLed0") - 1},
+	/*
+	 * Processor discretes.
+	 */
+	{"pA0", sizeof("pA0") - 1},
+	{"pA1", sizeof("pA1") - 1},
+	{"pA2", sizeof("pA2") - 1},
+	{"pA3", sizeof("pA3") - 1},
+	{"pA4", sizeof("pA4") - 1},
+	{"pA5", sizeof("pA5") - 1},
+	{"pA6", sizeof("pA6") - 1},
+	{"pA7", sizeof("pA7") - 1},
+
+	{"pB0", sizeof("pB0") - 1},
+	{"pB1", sizeof("pB1") - 1},
+	{"pB2", sizeof("pB2") - 1},
+	{"pB3", sizeof("pB3") - 1},
+	{"pB4", sizeof("pB4") - 1},
+	{"pB5", sizeof("pB5") - 1},
+	{"pB6", sizeof("pB6") - 1},
+	{"pB7", sizeof("pB7") - 1},
+
+	{"pC0", sizeof("pC0") - 1},
+	{"pC1", sizeof("pC1") - 1},
+	{"pC2", sizeof("pC2") - 1},
+	{"pC3", sizeof("pC3") - 1},
+	{"pC4", sizeof("pC4") - 1},
+	{"pC5", sizeof("pC5") - 1},
+	{"pC6", sizeof("pC6") - 1},
+	{"pC7", sizeof("pC7") - 1},
+
+	{"pD0", sizeof("pD0") - 1},
+	{"pD1", sizeof("pD1") - 1},
+	{"pD2", sizeof("pD2") - 1},
+	{"pD3", sizeof("pD3") - 1},
+	{"pD4", sizeof("pD4") - 1},
+	{"pD5", sizeof("pD5") - 1},
+	{"pD6", sizeof("pD6") - 1},
+	{"pD7", sizeof("pD7") - 1},
+
+	{"pE0", sizeof("pE0") - 1},
+	{"pE1", sizeof("pE1") - 1},
+	{"pE2", sizeof("pE2") - 1},
+	{"pE3", sizeof("pE3") - 1},
+	{"pE4", sizeof("pE4") - 1},
+	{"pE5", sizeof("pE5") - 1},
+	{"pE6", sizeof("pE6") - 1},
+	{"pE7", sizeof("pE7") - 1},
+
+	{"pF0", sizeof("pF0") - 1},
+	{"pF1", sizeof("pF1") - 1},
+	{"pF2", sizeof("pF2") - 1},
+	{"pF3", sizeof("pF3") - 1},
+	{"pF4", sizeof("pF4") - 1},
+	{"pF5", sizeof("pF5") - 1},
+	{"pF6", sizeof("pF6") - 1},
+	{"pF7", sizeof("pF7") - 1},
+
+	{"pG0", sizeof("pG0") - 1},
+	{"pG1", sizeof("pG1") - 1},
+	{"pG2", sizeof("pG2") - 1},
+	{"pG3", sizeof("pG3") - 1},
+	{"pG4", sizeof("pG4") - 1},
+	{"pG5", sizeof("pG5") - 1},
+	{"pG6", sizeof("pG6") - 1},
+	{"pG7", sizeof("pG7") - 1},
 
 	{"dioInvalid", sizeof("dioInvalid") - 1}
 };
 
 const char *diotostr(enum dio_sel which)
 {
-	if ((which < dioUp) || (which > dioInvalid))
+	if ((which < 0) || (which > dioInvalid))
 		return dioxlate[dioInvalid].str;
 	return dioxlate[which].str;
 }
@@ -159,11 +224,12 @@ enum dio_sel strtodio(const char *which)
 {
 	int j;
 
-	if ((which[0] != 'd') || (which[1] != 'i') || (which[2] != 'o'))
-		return dioInvalid;
-	for (j = 0; j < dioInvalid; j++) {
-		if (strncmp(which, dioxlate[j].str, dioxlate[j].len) == 0)
-			return j;
+	if ((which[0] == 'd') && (which[1] == 'i') && (which[2] == 'o') ||
+	    (which[0] == 'p')) {
+		for (j = 0; j < dioInvalid; j++) {
+			if (strncmp(which, dioxlate[j].str, dioxlate[j].len) == 0)
+				return j;
+		}
 	}
 	return dioInvalid;
 }
@@ -175,15 +241,16 @@ enum dio_sel strtodio(const char *which)
  */
 int dio(enum dio_sel which)
 {
+	int bit;
 	/*
 	 * Note: This does not use the mutex to lock the I/O because it
 	 * is single bit (byte) reads that will be inherently atomic.
 	 */
 
-	/*
-	 * Processor discretes.
-	 */
 	switch (which) {
+	/*
+	 * Mnemonic discretes.
+	 */
 	case dioUp:
 		return GPIOPinRead(GPIO_PORTE_BASE, GPIO_PIN_0) ? 1 : 0;
 	case dioDown:
@@ -196,6 +263,80 @@ int dio(enum dio_sel which)
 		return GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_1) ? 1 : 0;
 	case dioLed0:
 		return GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_0) ? 1 : 0;
+	/*
+	 * Processor discretes.
+	 */
+	case pA0:
+	case pA1:
+	case pA2:
+	case pA3:
+	case pA4:
+	case pA5:
+	case pA6:
+	case pA7:
+		bit = 1 << (which - pA0);
+		return GPIOPinRead(GPIO_PORTA_BASE, bit) ? 1 : 0;
+	case pB0:
+	case pB1:
+	case pB2:
+	case pB3:
+	case pB4:
+	case pB5:
+	case pB6:
+	case pB7:
+		bit = 1 << (which - pB0);
+		return GPIOPinRead(GPIO_PORTB_BASE, bit) ? 1 : 0;
+	case pC0:
+	case pC1:
+	case pC2:
+	case pC3:
+	case pC4:
+	case pC5:
+	case pC6:
+	case pC7:
+		bit = 1 << (which - pC0);
+		return GPIOPinRead(GPIO_PORTC_BASE, bit) ? 1 : 0;
+	case pD0:
+	case pD1:
+	case pD2:
+	case pD3:
+	case pD4:
+	case pD5:
+	case pD6:
+	case pD7:
+		bit = 1 << (which - pD0);
+		return GPIOPinRead(GPIO_PORTD_BASE, bit) ? 1 : 0;
+	case pE0:
+	case pE1:
+	case pE2:
+	case pE3:
+	case pE4:
+	case pE5:
+	case pE6:
+	case pE7:
+		bit = 1 << (which - pE0);
+		return GPIOPinRead(GPIO_PORTE_BASE, bit) ? 1 : 0;
+	case pF0:
+	case pF1:
+	case pF2:
+	case pF3:
+	case pF4:
+	case pF5:
+	case pF6:
+	case pF7:
+		bit = 1 << (which - pF0);
+lprintf("pF%d bitmask 0x%02X\n", (which - pF0), bit);
+		return GPIOPinRead(GPIO_PORTF_BASE, bit) ? 1 : 0;
+	case pG0:
+	case pG1:
+	case pG2:
+	case pG3:
+	case pG4:
+	case pG5:
+	case pG6:
+	case pG7:
+		bit = 1 << (which - pG0);
+		return GPIOPinRead(GPIO_PORTG_BASE, bit) ? 1 : 0;
 	default:
 		return -1;	/* Shouldn't get here */
 	}
@@ -227,16 +368,108 @@ int dio_setif(enum dio_sel which, int value)
 int dio_set(enum dio_sel which, int value)
 {
 	int ret   = -1;	/* default return: invalid */
+	int bit;
 
 	/*
 	 * Protect the read/modify/write operation.
 	 */
 	if (xSemaphoreTake(io_mutex, IO_TIMEOUT) == pdTRUE) {
 		switch (which) {
+		/*
+		 * Mnemonic discretes.
+		 */
 		case dioLed0:
 			ret = GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_0) ? 1 : 0;
 			GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0,
 				value ? GPIO_PIN_0 : 0);
+			break;
+		/*
+		 * Processor discretes.
+		 */
+		case pA0:
+		case pA1:
+		case pA2:
+		case pA3:
+		case pA4:
+		case pA5:
+		case pA6:
+		case pA7:
+			bit = 1 << (which - pA0);
+			ret = GPIOPinRead(GPIO_PORTA_BASE, bit) ? 1 : 0;
+			GPIOPinWrite(GPIO_PORTA_BASE, bit, value ? bit : 0);
+			break;
+		case pB0:
+		case pB1:
+		case pB2:
+		case pB3:
+		case pB4:
+		case pB5:
+		case pB6:
+		case pB7:
+			bit = 1 << (which - pB0);
+			ret = GPIOPinRead(GPIO_PORTB_BASE, bit) ? 1 : 0;
+			GPIOPinWrite(GPIO_PORTB_BASE, bit, value ? bit : 0);
+			break;
+		case pC0:
+		case pC1:
+		case pC2:
+		case pC3:
+		case pC4:
+		case pC5:
+		case pC6:
+		case pC7:
+			bit = 1 << (which - pC0);
+			ret = GPIOPinRead(GPIO_PORTC_BASE, bit) ? 1 : 0;
+			GPIOPinWrite(GPIO_PORTC_BASE, bit, value ? bit : 0);
+			break;
+		case pD0:
+		case pD1:
+		case pD2:
+		case pD3:
+		case pD4:
+		case pD5:
+		case pD6:
+		case pD7:
+			bit = 1 << (which - pD0);
+			ret = GPIOPinRead(GPIO_PORTD_BASE, bit) ? 1 : 0;
+			GPIOPinWrite(GPIO_PORTD_BASE, bit, value ? bit : 0);
+			break;
+		case pE0:
+		case pE1:
+		case pE2:
+		case pE3:
+		case pE4:
+		case pE5:
+		case pE6:
+		case pE7:
+			bit = 1 << (which - pE0);
+			ret = GPIOPinRead(GPIO_PORTE_BASE, bit) ? 1 : 0;
+			GPIOPinWrite(GPIO_PORTE_BASE, bit, value ? bit : 0);
+			break;
+		case pF0:
+		case pF1:
+		case pF2:
+		case pF3:
+		case pF4:
+		case pF5:
+		case pF6:
+		case pF7:
+			bit = 1 << (which - pF0);
+			ret = GPIOPinRead(GPIO_PORTF_BASE, bit) ? 1 : 0;
+			GPIOPinWrite(GPIO_PORTF_BASE, bit, value ? bit : 0);
+lprintf("pF%d bitmask 0x%02X was %d set to %d\n", (which - pF0), bit, ret, value ? bit : 0);
+			break;
+		case pG0:
+		case pG1:
+		case pG2:
+		case pG3:
+		case pG4:
+		case pG5:
+		case pG6:
+		case pG7:
+			bit = 1 << (which - pG0);
+			ret = GPIOPinRead(GPIO_PORTG_BASE, bit) ? 1 : 0;
+			GPIOPinWrite(GPIO_PORTG_BASE, bit, value ? bit : 0);
 			break;
 		default:
 			lprintf("dio_set(%d) - Invalid discrete.\r\n", which);

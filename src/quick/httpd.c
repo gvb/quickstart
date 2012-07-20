@@ -234,21 +234,21 @@ typedef struct
 
 const char *g_psHTTPHeaderStrings[] =
 {
- "Content-type: text/html\r\n\r\n",
+ "Content-type: text/html\r\nExpires: Tue, 19 Jan 2038 03:14:06 GMT\r\n\r\n",
  "Content-type: text/html\r\nExpires: Fri, 10 Apr 2008 14:00:00 GMT\r\n"    \
    "Pragma: no-cache\r\n\r\n",
- "Content-type: image/gif\r\n\r\n",
- "Content-type: image/png\r\n\r\n",
- "Content-type: image/jpeg\r\n\r\n",
- "Content-type: image/bmp\r\n\r\n",
- "Content-type: image/x-icon\r\n\r\n",
+ "Content-type: image/gif\r\nExpires: Tue, 19 Jan 2038 03:14:06 GMT\r\n\r\n",
+ "Content-type: image/png\r\nExpires: Tue, 19 Jan 2038 03:14:06 GMT\r\n\r\n",
+ "Content-type: image/jpeg\r\nExpires: Tue, 19 Jan 2038 03:14:06 GMT\r\n\r\n",
+ "Content-type: image/bmp\r\nExpires: Tue, 19 Jan 2038 03:14:06 GMT\r\n\r\n",
+ "Content-type: image/x-icon\r\nExpires: Tue, 19 Jan 2038 03:14:06 GMT\r\n\r\n",
  "Content-type: application/octet-stream\r\n\r\n",
- "Content-type: application/x-javascript\r\n\r\n",
+ "Content-type: application\r\nExpires: Tue, 19 Jan 2038 03:14:06 GMT/x-javascript\r\n\r\n",
  "Content-type: audio/x-pn-realaudio\r\n\r\n",
- "Content-type: text/css\r\n\r\n",
+ "Content-type: text/css\r\nExpires: Tue, 19 Jan 2038 03:14:06 GMT\r\n\r\n",
  "Content-type: application/x-shockwave-flash\r\n\r\n",
  "Content-type: text/xml\r\n\r\n",
- "Content-type: text/plain\r\n\r\n",
+ "Content-type: text/plain\r\nExpires: Tue, 19 Jan 2038 03:14:06 GMT\r\n\r\n",
  "HTTP/1.0 200 OK\r\n",
  "HTTP/1.0 404 File not found\r\n",
  "Server: lwIP/1.3.2 (http://www.sics.se/~adam/lwip/)\r\n",
@@ -430,7 +430,6 @@ get_tag_insert(struct http_state *hs)
         if(strcmp(hs->tag_name, g_ppcTags[loop].pcCGIName) == 0) {
           hs->tag_insert_len = g_pfnSSIHandler(loop, 0, NULL, NULL,
         		  &(hs->tag_insert));
-          //lstr("<get.");lstr(hs->tag_name);lstr(".");lhex(hs->tag_insert_len);lstr(">");
           return;
         }
 #else
@@ -640,6 +639,7 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
                             hs->hdr_pos), sendlen, 0);
             if (err == ERR_MEM) {
               sendlen /= 2;
+              LWIP_DEBUGF(HTTPD_DEBUG, ("sendlen = \n", sendlen));
             }
             else if (err == ERR_OK) {
               /* Remember that we added some more data to be transmitted. */
@@ -675,8 +675,6 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
   err = ERR_OK;
 #endif
 
-  //lstr("{");
-
   /* Have we run out of file data to send? If so, we need to read the next
    * block from the file.
    */
@@ -704,7 +702,6 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
       /* Did we get a send buffer? If not, return immediately. */
       if(hs->buf == NULL) {
         LWIP_DEBUGF(HTTPD_DEBUG, ("No buff\n"));
-        //lstr("\n:E1}");
         return;
       }
     }
@@ -716,7 +713,6 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
         // No - close the connection.
         //
         close_conn(pcb, hs);
-        //lstr("\n:E2}");
         return;
     }
 
@@ -725,7 +721,6 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
     fs_close(hs->handle);
     hs->handle = NULL;
     close_conn(pcb, hs);
-    //lstr("\n:EoF}");
     return;
   }
 
@@ -760,6 +755,7 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
                         (hs->file < (char *)0x20000000) ? 0 : 1);
         if (err == ERR_MEM) {
           len /= 2;
+          LWIP_DEBUGF(HTTPD_DEBUG, ("len = \n", len));
         }
       } while (err == ERR_MEM && len > 1);
 
@@ -799,6 +795,7 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
           err = tcp_write(pcb, hs->file, len, 0);
           if (err == ERR_MEM) {
             len /= 2;
+            LWIP_DEBUGF(HTTPD_DEBUG, ("len = \n", len));
           }
         } while (err == ERR_MEM && len > 1);
 
@@ -825,7 +822,7 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
     /* We have sent all the data that was already parsed so continue parsing
      * the buffer contents looking for SSI tags.
      */
-    while((hs->parse_left) && (err == ERR_OK)) {
+    while((hs->parse_left) && (err == ERR_OK) && (tcp_sndbuf(pcb) > 0)) {
       switch(hs->tag_state) {
         case TAG_NONE:
           /* We are not currently processing an SSI tag so scan for the
@@ -993,6 +990,7 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
                   err = tcp_write(pcb, hs->file, len, 0);
                   if (err == ERR_MEM) {
                     len /= 2;
+                    LWIP_DEBUGF(HTTPD_DEBUG, ("len = \n", len));
                   }
                 } while (err == ERR_MEM && (len > 1));
 
@@ -1039,6 +1037,7 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
               err = tcp_write(pcb, hs->file, len, 0);
               if (err == ERR_MEM) {
                 len /= 2;
+                LWIP_DEBUGF(HTTPD_DEBUG, ("len = \n", len));
               }
             } while (err == ERR_MEM && (len > 1));
 
@@ -1061,9 +1060,6 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
 
         case TAG_SENDING:
           /* Do we still have insert data left to send? */
-          //lstr("<sending.");lstr(hs->tag_name);lstr(".");
-          //lhex(hs->tag_insert_len);lstr(".");
-          //lhex(hs->tag_index);lstr(">");
           if(hs->tag_index < hs->tag_insert_len) {
               /* We are sending the insert string itself. How much of the
                * insert can we send? */
@@ -1083,13 +1079,10 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
                  * this, insert corruption can occur if more than one insert
                  * is processed before we call tcp_output.
                  */
-                //lstr("<tcp_write.");lstr(hs->tag_name);lstr(".");
-                //lhex(len);lstr(".");
-                //lhex(hs->tag_index);lstr(">");
                 err = tcp_write(pcb, &(hs->tag_insert[hs->tag_index]), len, 1);
                 if (err == ERR_MEM) {
-                  //lstr("<em>");
                   len /= 2;
+                  LWIP_DEBUGF(HTTPD_DEBUG, ("len = \n", len));
                 }
               } while (err == ERR_MEM && (len > 1));
 
@@ -1101,7 +1094,6 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
               /* We have sent all the insert data so go back to looking for
                * a new tag.
                */
-              //lstr("<none.");lstr(hs->tag_name);lstr(">");
               LWIP_DEBUGF(HTTPD_DEBUG, ("Everything sent.\n"));
               hs->tag_index = 0;
               hs->tag_state = TAG_NONE;
@@ -1133,6 +1125,7 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
         err = tcp_write(pcb, hs->file, len, 0);
         if (err == ERR_MEM) {
           len /= 2;
+          LWIP_DEBUGF(HTTPD_DEBUG, ("len = \n", len));
         }
       } while (err == ERR_MEM && len > 1);
 
@@ -1152,7 +1145,6 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
   }
 
   LWIP_DEBUGF(HTTPD_DEBUG, ("send_data end.\n"));
-  //lstr("\n:ok}");
 
 }
 
@@ -1161,8 +1153,6 @@ static err_t
 http_poll(void *arg, struct tcp_pcb *pcb)
 {
   struct http_state *hs;
-
-  //lstr("\n_poll\n");
 
   hs = arg;
 
@@ -1196,7 +1186,6 @@ http_sent(void *arg, struct tcp_pcb *pcb, u16_t len)
 {
   struct http_state *hs;
 
-  //lstr("\n_sent\n");
   LWIP_DEBUGF(HTTPD_DEBUG, ("http_sent 0x%08x\n", pcb));
 
   LWIP_UNUSED_ARG(len);
@@ -1346,8 +1335,6 @@ http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
           }
 
           /* Does the base URI we have isolated correspond to a CGI handler? */
-          //lstr("<cs.");lhex((int)g_iNumCGIs);lstr(".");lhex((int)g_pCGIs);
-          //lstr(uri);lstr(">");
           if(g_iNumCGIs && g_pCGIs) {
             for(i = 0; i < g_iNumCGIs; i++) {
               if(strcmp(uri, g_pCGIs[i].pcCGIName) == 0) {
@@ -1357,13 +1344,8 @@ http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
                  */
                  count = extract_uri_parameters(hs, params);
 #if HTTPD_CGI_USE_STATIC_BUFFER
-                 //lstr("<cf.");lstr(g_pCGIs[i].pcCGIName);
                  cgi_len = g_pCGIs[i].pfnCGIHandler(i, count, hs->params,
                          hs->param_vals, &cgi_buffer);
-                 //lstr(".");lhex(cgi_len);
-                 //lstr(".");
-                 //lstr(cgi_buffer);
-                 //lstr(">");
 #else
                  uri = g_pCGIs[i].pfnCGIHandler(i, count, hs->params,
                                                 hs->param_vals);
