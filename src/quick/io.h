@@ -68,7 +68,7 @@ enum adc_sel strtoadc(const char *which);
  */
 enum dio_sel {
 	/*
-	 * Processor discretes.
+	 * Symbolic names for EVB discretes.
 	 */
 	dioUp,				/**< Up button */
 	dioDown,			/**< Down button */
@@ -76,6 +76,16 @@ enum dio_sel {
 	dioRight,			/**< Right button */
 	dioSelect,			/**< Select button */
 	dioLed0,			/**< output: on-board LED */
+	/*
+	 * Processor discretes.
+	 */
+	pA0, pA1, pA2, pA3, pA4, pA5, pA6, pA7,
+	pB0, pB1, pB2, pB3, pB4, pB5, pB6, pB7,
+	pC0, pC1, pC2, pC3, pC4, pC5, pC6, pC7,
+	pD0, pD1, pD2, pD3, pD4, pD5, pD6, pD7,
+	pE0, pE1, pE2, pE3, pE4, pE5, pE6, pE7,
+	pF0, pF1, pF2, pF3, pF4, pF5, pF6, pF7,
+	pG0, pG1, pG2, pG3, pG4, pG5, pG6, pG7,
 
 	dioInvalid			/**< Invalid flag, MUST BE LAST */
 };
