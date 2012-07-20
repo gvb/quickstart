@@ -242,7 +242,7 @@ int user_config(int index, int iNumParams,
 "<td> Notes: </td><td>"
 "	<textarea name=\"NOTES\" rows=\"4\" cols=\"63\">%s</textarea></td>"
 "</tr>",
-		ucvalid ? "valid" : "invalid",
+		ucvalid ? "Valid" : "Invalid",
 		usercfg.assy_pn,
 		usercfg.assy_sn,
 
@@ -339,7 +339,7 @@ static int config_form(int index, int iNumParams,
 				sizeof(permcfg.bd_pn) - 1);
 			permcfg.bd_pn[len] = '\0';
 			lstr("bd_pn=");lstr(permcfg.bd_pn);
-			goto next_param;
+			continue;
 		}
 		/*
 		 * Ditto for the board serial number
@@ -348,7 +348,7 @@ static int config_form(int index, int iNumParams,
 			len = strncpy_html(permcfg.bd_sn, pcValue[i],
 				sizeof(permcfg.bd_sn) - 1);
 			permcfg.bd_sn[len] = '\0';
-			goto next_param;
+			continue;
 		}
 		/*
 		 * Ditto for the assembly part number
@@ -357,7 +357,7 @@ static int config_form(int index, int iNumParams,
 			len = strncpy_html(usercfg.assy_pn, pcValue[i],
 				sizeof(usercfg.assy_pn) - 1);
 			usercfg.assy_pn[len] = '\0';
-			goto next_param;
+			continue;
 		}
 		/*
 		 * Ditto for the assembly serial number
@@ -366,7 +366,7 @@ static int config_form(int index, int iNumParams,
 			len = strncpy_html(usercfg.assy_sn, pcValue[i],
 				sizeof(usercfg.assy_sn) - 1);
 			usercfg.assy_sn[len] = '\0';
-			goto next_param;
+			continue;
 		}
 		/*
 		 * Parse the MAC addresses.
@@ -382,7 +382,7 @@ static int config_form(int index, int iNumParams,
 
 			if (isxdigit(*pcValue[i]))
 				permcfg.mac[idx] = strtol(pcValue[i], NULL, 16) & 0xFF;
-			goto next_param;
+			continue;
 		}
 		/*
 		 * Parse the IP Mode (Static, DHCP, AUTOIP).
@@ -403,7 +403,7 @@ static int config_form(int index, int iNumParams,
 				usercfg.IPMode = IPMode;
 			}
 			lstr(">");
-			goto next_param;
+			continue;
 		}
 		/*
 		 * Parse the IP addresses.
@@ -419,7 +419,7 @@ static int config_form(int index, int iNumParams,
 				return 0;
 			if (isdigit(*pcValue[i]))
 				usercfg.ip[idx] = strtol(pcValue[i], NULL, 10) & 0xFF;
-			goto next_param;
+			continue;
 		}
 		/*
 		 * Parse the netmask.
@@ -434,7 +434,7 @@ static int config_form(int index, int iNumParams,
 				return 0;
 			if (isdigit(*pcValue[i]))
 				usercfg.netmask[idx] = strtol(pcValue[i], NULL, 10) & 0xFF;
-			goto next_param;
+			continue;
 		}
 		/*
 		 * Parse the gateway.
@@ -449,7 +449,7 @@ static int config_form(int index, int iNumParams,
 				return 0;
 			if (isdigit(*pcValue[i]))
 				usercfg.gateway[idx] = strtol(pcValue[i], NULL, 10) & 0xFF;
-			goto next_param;
+			continue;
 		}
 		/*
 		 * Save the notes field.
@@ -458,9 +458,8 @@ static int config_form(int index, int iNumParams,
 			len = strncpy_html(usercfg.notes, pcValue[i],
 				sizeof(usercfg.notes) - 1);
 			usercfg.notes[len] = '\0';
-			goto next_param;
+			continue;
 		}
-next_param:;
 	}
 /*
  * #define PROTECT_PERMCFG 0
@@ -470,11 +469,36 @@ next_param:;
 	if (permcfg_virgin())
 #endif
 	{
-		lstr("<ps>");
 		permcfg_save();
 	}
 	usercfg_save();
-	return 0;
+
+	/*
+	 * Return a trivial save confirmation page with a button that
+	 * links back to the config.shtml page.  Other "tricks" to
+	 * return the user to the config page resulted in the browser
+	 * not actually re-reading and re-rendering the config page
+	 * (permissible behavior even with cache disabled for the pages).
+	 */
+	return snprintf((char *)uip_appdata, UIP_APPDATA_SIZE,
+		"HTTP/1.1 200 OK\r\n"
+		"Server: lwIP/CGI (FreeRTOS)\r\n"
+		"Content-type: text/html\r\n"
+		"Cache-control: no-cache\r\n\r\n"
+
+		"<html>"
+		"<head>"
+		"<title>Saving Configuration</title>"
+//no//		"<meta http-equiv=\"REFRESH\" content=\"1;url=/config.shtml\">"
+		"</head>"
+		"<body>"
+		"<center>"
+		"<p>Configuration saved.</p>"
+		"<button type=\"button\" OnClick=\"window.location.href = '/config.shtml';\">OK</button>"
+		"</center>"
+		"</body>"
+		"</html>"
+	);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -485,6 +509,11 @@ static int proc_io_upd(int index, int iNumParams,
 	*resultBuffer = uip_appdata;
 
 	return snprintf((char *)uip_appdata, UIP_APPDATA_SIZE,
+		"HTTP/1.1 200 OK\r\n"
+		"Server: lwIP/CGI (FreeRTOS)\r\n"
+		"Content-type: application/json\r\n"
+		"Cache-control: no-cache\r\n\r\n"
+
 		"{"
 		/* Port A */
 		"\"pA0\": \"%d\""
@@ -624,6 +653,11 @@ static int control_upd(int index, int iNumParams,
 	*resultBuffer = uip_appdata;
 
 	return snprintf((char *)uip_appdata, UIP_APPDATA_SIZE,
+		"HTTP/1.1 200 OK\r\n"
+		"Server: lwIP/CGI (FreeRTOS)\r\n"
+		"Content-type: application/json\r\n"
+		"Cache-control: no-cache\r\n\r\n"
+
 		"{"
 		"\"%s\": \"%s\""
 		",\"%s\": \"%s\""
@@ -688,6 +722,7 @@ static int button(int index, int iNumParams,
 		if (whichdio != dioInvalid)
 			dio_set(whichdio, !dio(whichdio));
 	}
+	return 0;
 }
 
 /*---------------------------------------------------------------------------*/
