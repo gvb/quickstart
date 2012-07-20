@@ -234,21 +234,21 @@ typedef struct
 
 const char *g_psHTTPHeaderStrings[] =
 {
- "Content-type: text/html\r\n\r\n",
+ "Content-type: text/html\r\nExpires: Tue, 19 Jan 2038 03:14:06 GMT\r\n\r\n",
  "Content-type: text/html\r\nExpires: Fri, 10 Apr 2008 14:00:00 GMT\r\n"    \
    "Pragma: no-cache\r\n\r\n",
- "Content-type: image/gif\r\n\r\n",
- "Content-type: image/png\r\n\r\n",
- "Content-type: image/jpeg\r\n\r\n",
- "Content-type: image/bmp\r\n\r\n",
- "Content-type: image/x-icon\r\n\r\n",
+ "Content-type: image/gif\r\nExpires: Tue, 19 Jan 2038 03:14:06 GMT\r\n\r\n",
+ "Content-type: image/png\r\nExpires: Tue, 19 Jan 2038 03:14:06 GMT\r\n\r\n",
+ "Content-type: image/jpeg\r\nExpires: Tue, 19 Jan 2038 03:14:06 GMT\r\n\r\n",
+ "Content-type: image/bmp\r\nExpires: Tue, 19 Jan 2038 03:14:06 GMT\r\n\r\n",
+ "Content-type: image/x-icon\r\nExpires: Tue, 19 Jan 2038 03:14:06 GMT\r\n\r\n",
  "Content-type: application/octet-stream\r\n\r\n",
- "Content-type: application/x-javascript\r\n\r\n",
+ "Content-type: application\r\nExpires: Tue, 19 Jan 2038 03:14:06 GMT/x-javascript\r\n\r\n",
  "Content-type: audio/x-pn-realaudio\r\n\r\n",
- "Content-type: text/css\r\n\r\n",
+ "Content-type: text/css\r\nExpires: Tue, 19 Jan 2038 03:14:06 GMT\r\n\r\n",
  "Content-type: application/x-shockwave-flash\r\n\r\n",
  "Content-type: text/xml\r\n\r\n",
- "Content-type: text/plain\r\n\r\n",
+ "Content-type: text/plain\r\nExpires: Tue, 19 Jan 2038 03:14:06 GMT\r\n\r\n",
  "HTTP/1.0 200 OK\r\n",
  "HTTP/1.0 404 File not found\r\n",
  "Server: lwIP/1.3.2 (http://www.sics.se/~adam/lwip/)\r\n",
@@ -639,6 +639,7 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
                             hs->hdr_pos), sendlen, 0);
             if (err == ERR_MEM) {
               sendlen /= 2;
+              LWIP_DEBUGF(HTTPD_DEBUG, ("sendlen = \n", sendlen));
             }
             else if (err == ERR_OK) {
               /* Remember that we added some more data to be transmitted. */
@@ -754,6 +755,7 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
                         (hs->file < (char *)0x20000000) ? 0 : 1);
         if (err == ERR_MEM) {
           len /= 2;
+          LWIP_DEBUGF(HTTPD_DEBUG, ("len = \n", len));
         }
       } while (err == ERR_MEM && len > 1);
 
@@ -793,6 +795,7 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
           err = tcp_write(pcb, hs->file, len, 0);
           if (err == ERR_MEM) {
             len /= 2;
+            LWIP_DEBUGF(HTTPD_DEBUG, ("len = \n", len));
           }
         } while (err == ERR_MEM && len > 1);
 
@@ -987,6 +990,7 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
                   err = tcp_write(pcb, hs->file, len, 0);
                   if (err == ERR_MEM) {
                     len /= 2;
+                    LWIP_DEBUGF(HTTPD_DEBUG, ("len = \n", len));
                   }
                 } while (err == ERR_MEM && (len > 1));
 
@@ -1033,6 +1037,7 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
               err = tcp_write(pcb, hs->file, len, 0);
               if (err == ERR_MEM) {
                 len /= 2;
+                LWIP_DEBUGF(HTTPD_DEBUG, ("len = \n", len));
               }
             } while (err == ERR_MEM && (len > 1));
 
@@ -1077,6 +1082,7 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
                 err = tcp_write(pcb, &(hs->tag_insert[hs->tag_index]), len, 1);
                 if (err == ERR_MEM) {
                   len /= 2;
+                  LWIP_DEBUGF(HTTPD_DEBUG, ("len = \n", len));
                 }
               } while (err == ERR_MEM && (len > 1));
 
@@ -1119,6 +1125,7 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
         err = tcp_write(pcb, hs->file, len, 0);
         if (err == ERR_MEM) {
           len /= 2;
+          LWIP_DEBUGF(HTTPD_DEBUG, ("len = \n", len));
         }
       } while (err == ERR_MEM && len > 1);
 
