@@ -825,7 +825,7 @@ send_data(struct tcp_pcb *pcb, struct http_state *hs)
     /* We have sent all the data that was already parsed so continue parsing
      * the buffer contents looking for SSI tags.
      */
-    while((hs->parse_left) && (err == ERR_OK)) {
+    while((hs->parse_left) && (err == ERR_OK) && (tcp_sndbuf(pcb) > 0)) {
       switch(hs->tag_state) {
         case TAG_NONE:
           /* We are not currently processing an SSI tag so scan for the
