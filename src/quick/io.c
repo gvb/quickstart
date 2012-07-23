@@ -325,7 +325,6 @@ int dio(enum dio_sel which)
 	case pF6:
 	case pF7:
 		bit = 1 << (which - pF0);
-lprintf("pF%d bitmask 0x%02X\n", (which - pF0), bit);
 		return GPIOPinRead(GPIO_PORTF_BASE, bit) ? 1 : 0;
 	case pG0:
 	case pG1:
@@ -457,7 +456,6 @@ int dio_set(enum dio_sel which, int value)
 			bit = 1 << (which - pF0);
 			ret = GPIOPinRead(GPIO_PORTF_BASE, bit) ? 1 : 0;
 			GPIOPinWrite(GPIO_PORTF_BASE, bit, value ? bit : 0);
-lprintf("pF%d bitmask 0x%02X was %d set to %d\n", (which - pF0), bit, ret, value ? bit : 0);
 			break;
 		case pG0:
 		case pG1:

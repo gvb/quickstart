@@ -45,14 +45,11 @@
 
 #define NOT_LWIP_DEBUG                  0
 #define DBG_TYPES_ON                    0x00
+/*
+ * To turn on debugging, define LWIP_DBG_TYPES_ON to be LWIP_DBG_ON
+ */
 #define LWIP_DBG_TYPES_ON               0
-/*
- * To turn on debugging:
- */
-/*
- * #define LWIP_DBG_TYPES_ON               LWIP_DBG_ON
- */
-#define LWIP_DBG_TYPES_ON               LWIP_DBG_ON
+//#define LWIP_DBG_TYPES_ON               LWIP_DBG_ON
 
 #define LWIP_DBG_MIN_LEVEL		0
 #define MEMP_SANITY_CHECK		0
@@ -73,7 +70,7 @@
 #define HTTPD_DEBUG			LWIP_DBG_ON
 #define ETHARP_DEBUG                   LWIP_DBG_OFF
 #define NETIF_DEBUG                    LWIP_DBG_OFF
-#define PBUF_DEBUG                     LWIP_DBG_OFF
+#define PBUF_DEBUG                     LWIP_DBG_ON
 #define API_LIB_DEBUG                  LWIP_DBG_OFF
 #define API_MSG_DEBUG                  LWIP_DBG_OFF
 #define SOCKETS_DEBUG                  LWIP_DBG_OFF
@@ -94,7 +91,7 @@
 #define TCP_WND_DEBUG                  LWIP_DBG_OFF
 #define TCP_OUTPUT_DEBUG               LWIP_DBG_OFF
 #define TCP_RST_DEBUG                  LWIP_DBG_OFF
-#define TCP_QLEN_DEBUG                 LWIP_DBG_OFF
+#define TCP_QLEN_DEBUG                 LWIP_DBG_ON
 #define UDP_DEBUG                      LWIP_DBG_OFF
 #define TCPIP_DEBUG                    LWIP_DBG_OFF
 #define PPP_DEBUG                      LWIP_DBG_OFF
@@ -141,7 +138,7 @@
  * MEM_SIZE: the size of the heap memory. If the application will send
  * a lot of data that needs to be copied, this should be set high.
  */
-#define MEM_SIZE                        (4*1024)
+#define MEM_SIZE                        (9*1024)
 
 /*
    ------------------------------------------------
