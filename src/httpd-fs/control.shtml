@@ -1,8 +1,33 @@
 <html>
 <head>
 <!--# /header.inc -->
+<script>
+$(document).ready(
+  function CRIrefresh() {
+    $.ajax({
+      url: 'control_upd',
+      success: function(data) {
+        // Do a text replace for all the "key" IDs.
+        for (var key in data) {
+          $('#' + key).html(data[key]);
+        };
+        setTimeout(CRIrefresh, 500);
+      },
+      error: function() {
+        setTimeout(CRIrefresh, 2000); // long poll on error
+      }
+    });
+  }
+)
+/*
+ * Report a button click.
+ */
+function btnReport(which) {
+  $.get('/button', which);
+}
+</script>
 </head>
-<body onload="startPoll('/control_upd', 500)">
+<body>
 <!--# /nav.inc -->
 <table>
 <tr>
