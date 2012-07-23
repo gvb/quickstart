@@ -68,10 +68,10 @@
  * ------------------
  *
  * The simple CGI support offered here works with GET method requests only
- * and can handle up to 16 parameters encoded into the URI. The handler
- * function may not write directly to the HTTP output but must return a
- * filename that the HTTP server will send to the browser as a response to
- * the incoming CGI request.
+ * and can handle up to MAX_CGI_PARAMETERS parameters encoded into the
+ * URI. The handler function may not write directly to the HTTP output
+ * but must return a filename that the HTTP server will send to the
+ * browser as a response to the incoming CGI request.
  *
  */
 
