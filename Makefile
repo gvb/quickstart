@@ -207,7 +207,7 @@ include makedefs
 
 .PHONY: all doxygen clean distclean get-date
 
-all: $(BUILD_DIR)$(PROG).bin
+all: $(BUILD_DIR)$(PROG).bin $(LWIP_CONTRIB)/liblwip.a
 
 # Include the dependencies if they are available
 
@@ -235,6 +235,10 @@ $(BUILD_DIR)fsdata.c $(BUILD_DIR)fsdata-stats.c : $(WEBSOURCE)
 $(BUILD_DIR)depend: $(SOURCE)
 	@echo "  generate $(BUILD_DIR)depend -> $(CC) $<"
 	$(Q)$(CC) $(CPPFLAGS) -MM $(addprefix -MT, $(OBJS)) -E $^ > $@ || rm -f $(BUILD_DIR)depend
+
+$(LWIP_CONTRIB)/liblwip.a : $(wildcard $(SRC_DIR)/quick-opts/lwipopts.h) \
+		$(wildcard $(SRC_DIR)/app-opts/lwipopts.h)
+	make -C $(LWIP_CONTRIB) $(MAKECMDGOALS)
 
 doxygen :
 	$(DOXYGEN) doxygen.cfg
