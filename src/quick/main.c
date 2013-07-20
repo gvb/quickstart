@@ -5,7 +5,7 @@
  * \addtogroup main Mainline
  * \{
  *//*
- * Copyright (C) 2011 Consolidated Resource Imaging LLC
+ * Copyright (C) 2011-2013 Consolidated Resource Imaging LLC
  *
  *       1         2         3         4         5         6         7        
  *3456789012345678901234567890123456789012345678901234567890123456789012345678
@@ -22,34 +22,34 @@ large successful programs.
 \section Building from Source
 
 -# Set up an ARM build environment (out of scope for this document).
-
+   - CodeSourcery Lite 2010 was used as of this writing http://www.codesourcery.com
 -# Create build tree
-
-     mkdir quickstart-dev
-     cd quickstart-dev
-
+\code
+mkdir quickstart-dev
+cd quickstart-dev
+\endcode
 -# Use git to clone the source.
-
-     git clone gitosis@share.cri.us.com:LM3S8962ek.git
-     git clone gitosis@share.cri.us.com:StellarisWare.git
-     git clone gitosis@share.cri.us.com:FreeRTOS.git
-     git clone gitosis@share.cri.us.com:lwip.git
-     git clone gitosis@share.cri.us.com:lwip-contrib.git
-
+     - Download StellarisWare http://www.ti.com/tool/SW-LM3S#orderoptions
+         - Expand it as \code quickstart-dev/StellarisWare \endcode
+     - Download FreeRTOS http://sourceforge.net/projects/freertos/files/FreeRTOS/
+         - Version 6.1.0 used as of this writing.
+         - Expand it as \code quickstart-dev/FreeRTOS \endcode
+     - Clone the git repositories
+\code
+git clone https://github.com/gvb/quickstart.git
+git clone https://github.com/gvb/lwip.git
+git clone https://github.com/gvb/lwip-contrib.git
+\endcode
 -# Build
-
-     pushd StellarisWare; make; popd;
-     pushd lwip-contrib/ports/cross; make; popd;
-     pushd LM3S8962ek; make; popd;
+\code
+pushd StellarisWare; make; popd;
+pushd quickstart; make; popd;
+\endcode
 
 \section See Also
 
 \sa \ref iopage1
 \sa \ref utilpage1
-
-\section Rights Proprietary and Confidential
-
-\todo Revise the copyright: use the BSD/MIT license: http://www.opensource.org/licenses/bsd-license
 
 
 *****************************************************************************/
